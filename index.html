@@ -45,12 +45,16 @@
             </div>
 
             <!-- Tab Switcher -->
-            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
-                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
+                <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-calendar-check text-[11px]"></i> Hari Ini
+                    <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                </button>
+                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking Baru
                 </button>
-                <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
-                    <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule & Paket
+                <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule
                 </button>
                 <button onclick="openModalSettings()" class="hidden sm:flex w-8 h-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg transition ml-1" title="Pengaturan URL">
                     <i class="fa-solid fa-gear text-sm"></i>
@@ -59,7 +63,32 @@
         </header>
 
         <!-- ============================================== -->
-        <!-- MODE 1: BOOKING BARU -->
+        <!-- TAB 1: JADWAL HARI INI -->
+        <!-- ============================================== -->
+        <div id="sectionTodaySchedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-4 hidden">
+            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day text-blue-600"></i> Jadwal Photoshoot Hari Ini
+                    </h2>
+                    <p id="todayDateLabel" class="text-[11px] sm:text-xs text-slate-500 mt-0.5">-</p>
+                </div>
+                <button onclick="refreshClientDatabase(true)" class="text-xs bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh
+                </button>
+            </div>
+
+            <!-- List Jadwal Hari Ini -->
+            <div id="todayScheduleList" class="space-y-3">
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
+                    Memuat data jadwal hari ini...
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: BOOKING BARU -->
         <!-- ============================================== -->
         <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
             
@@ -200,7 +229,7 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- MODE 2: RESCHEDULE JADWAL, LOKASI & GANTI PAKET -->
+        <!-- TAB 3: RESCHEDULE JADWAL, LOKASI & GANTI PAKET -->
         <!-- ============================================== -->
         <div id="sectionReschedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 hidden">
             <div class="border-b border-slate-100 pb-3 flex justify-between items-start">
@@ -409,7 +438,6 @@
     </div>
 
     <script>
-        // URL Apps Script paten VividLens
         const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
 
         const PACKAGE_DATA = {
@@ -452,12 +480,10 @@
             return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
         }
 
-        // Konversi string acak menjadi YYYY-MM-DD untuk mengisi datepicker
         function cleanToISODate(raw) {
             if (!raw) return '';
             const rawStr = String(raw).trim();
 
-            // Tangani string bawaan GMT (misal Sat Oct 03 2026 00:00:00 GMT+0700)
             if (rawStr.includes('GMT') || isNaN(rawStr[0])) {
                 const parsed = new Date(rawStr);
                 if (!isNaN(parsed.getTime())) {
@@ -488,7 +514,6 @@
             return '';
         }
 
-        // Konversi YYYY-MM-DD menjadi D-Mmm-YYYY untuk disimpan ke Sheet
         function isoToSheetDate(iso) {
             if (!iso) return '';
             const [y, m, d] = iso.split('-');
@@ -510,20 +535,30 @@
         }
 
         function switchMode(mode) {
+            const isToday = mode === 'today';
             const isNew = mode === 'new';
-            document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
-            document.getElementById('sectionReschedule').classList.toggle('hidden', isNew);
-            
-            document.getElementById('tabNewBtn').className = isNew 
-                ? "flex-1 sm:flex-none py-2.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
-                
-            document.getElementById('tabRescheduleBtn').className = !isNew 
-                ? "flex-1 sm:flex-none py-2.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+            const isResched = mode === 'reschedule';
 
-            if (!isNew && cachedClients.length === 0) {
+            document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
+            document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
+            document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
+            
+            document.getElementById('tabTodayBtn').className = isToday
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+
+            document.getElementById('tabNewBtn').className = isNew 
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+                
+            document.getElementById('tabRescheduleBtn').className = isResched 
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+
+            if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
+            } else if (isToday) {
+                renderTodaySchedule();
             }
         }
 
@@ -532,7 +567,7 @@
             if (!scriptUrl) return;
 
             const btn = document.getElementById('btnReloadClients');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i>';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i>';
             isFetchingClients = true;
 
             try {
@@ -540,14 +575,123 @@
                 const data = await res.json();
                 if (data && data.status === 'success' && data.clients) {
                     cachedClients = data.clients;
+                    renderTodaySchedule();
                     if (showToastNotice) showToast(`Berhasil memuat ${cachedClients.length} klien`);
                 }
             } catch (err) {
                 if (showToastNotice) showToast('Gagal memuat daftar klien', false);
             } finally {
-                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh';
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh';
                 isFetchingClients = false;
             }
+        }
+
+        // Render List Jadwal Hari Ini
+        function renderTodaySchedule() {
+            const container = document.getElementById('todayScheduleList');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const todayISO = `${year}-${month}-${day}`;
+
+            // Tampilkan tanggal hari ini di label
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('todayDateLabel').textContent = now.toLocaleDateString('id-ID', dateOptions);
+
+            const todayClients = cachedClients.filter(c => {
+                const cISO = cleanToISODate(c.tanggal);
+                return cISO === todayISO;
+            });
+
+            // Urutkan berdasarkan jam mulai
+            todayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
+
+            // Update badge hitungan di Tab
+            const badgeCount = document.getElementById('badgeTodayCount');
+            if (todayClients.length > 0) {
+                badgeCount.textContent = todayClients.length;
+                badgeCount.classList.remove('hidden');
+            } else {
+                badgeCount.classList.add('hidden');
+            }
+
+            if (todayClients.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <div class="w-12 h-12 bg-slate-200/70 text-slate-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                            <i class="fa-regular fa-calendar"></i>
+                        </div>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal photoshoot hari ini</p>
+                        <p class="text-[11px] text-slate-400">Selamat beristirahat atau persiapan untuk jadwal berikutnya!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = todayClients.map((c) => {
+                const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                const waLink = waClean ? `https://wa.me/${waClean}` : '';
+
+                return `
+                    <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border border-slate-200 rounded-2xl transition space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                                    ⏰ ${c.jam || '-'} WIB
+                                </span>
+                                <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
+                                <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-xl flex items-center gap-1">
+                                <i class="fa-solid fa-camera text-[10px]"></i> ${c.fg || 'Raihan'}
+                            </span>
+                        </div>
+
+                        <div class="text-xs text-slate-600 flex items-center gap-2 pt-1 border-t border-slate-200/70">
+                            <i class="fa-solid fa-location-dot text-rose-500 text-sm"></i>
+                            <span class="font-medium">${c.lokasi || '-'}</span>
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                            ${waLink ? `
+                                <a href="${waLink}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Klien
+                                </a>
+                            ` : `
+                                <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
+                                    No WA Tidak Ada
+                                </button>
+                            `}
+                            <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                <i class="fa-solid fa-comment-dots"></i> Format Chat
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
+            const chat = `Hallo Kak ${nama} 🙌🏼✨
+
+Perkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓
+
+Izin konfirmasi kembali untuk jadwal sesi foto Kakak hari ini ya:
+
+🗓️ Tanggal: ${tanggal}
+⏰ Jam: ${jam} WIB
+📍 Lokasi: ${lokasi || '-'}
+🎓 Kampus: ${kampus || '-'}
+📦 Paket: ${paket || 'Silver'}
+📱 WA: ${noWa || '-'}
+
+Apakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨
+
+Terima kasih 🙏🏼📸🎓`;
+
+            document.getElementById('fgChatPreview').value = chat;
+            document.getElementById('modalChat').classList.remove('hidden');
         }
 
         function onSearchClient(query) {
@@ -612,7 +756,6 @@
             document.getElementById('cardJadwalLama').textContent = `${cleanTgl} • ${client.jam}`;
             document.getElementById('cardFGLama').textContent = client.fg;
 
-            // Isi picker tanggal reschedule
             const iso = cleanToISODate(client.tanggal);
             if (iso) {
                 document.getElementById('reschedTanggalPicker').value = iso;
@@ -1094,7 +1237,6 @@ Terima kasih 🙏🏼📸🎓`;
             if (activeUrl) {
                 refreshClientDatabase(false);
             }
-            // Form dibiarkan bersih saat pertama dibuka
             recalculateFinancials();
         });
     </script>
