@@ -401,9 +401,9 @@
 
     <script>
         // =========================================================================
-        // TEMPELKAN URL APPS SCRIPT VIVIDLENS KAMU DI BAWAH INI SUPAYA TERKUNCI MATI
+        // URL APPS SCRIPT VIVIDLENS SUDAH TERKUNCI PERMANEN
         // =========================================================================
-        const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1-CONTOH_GANTI_DENGAN_URL_VIVIDLENS_KAMU/exec";
+        const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
         // =========================================================================
 
         const PACKAGE_DATA = {
@@ -460,7 +460,7 @@
 
         async function refreshClientDatabase(showToastNotice = true) {
             const scriptUrl = getActiveScriptUrl();
-            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) return;
+            if (!scriptUrl) return;
 
             const btn = document.getElementById('btnReloadClients');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i>';
@@ -868,11 +868,6 @@ Terima kasih 🙏🏼📸🎓`;
 
         async function syncDirectToSheetAndCalendar() {
             const scriptUrl = getActiveScriptUrl();
-            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) {
-                openModalSettings();
-                return alert('Masukkan Web App URL Apps Script (/exec) terlebih dahulu di Pengaturan!');
-            }
-
             const nama = document.getElementById('outNama').value.trim();
             if (!nama || nama === '-') return showToast('Ekstrak data booking dulu!', false);
 
@@ -936,11 +931,6 @@ Terima kasih 🙏🏼📸🎓`;
 
         async function submitReschedule() {
             const scriptUrl = getActiveScriptUrl();
-            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) {
-                openModalSettings();
-                return alert('Masukkan Web App URL Apps Script (/exec) terlebih dahulu di Pengaturan!');
-            }
-
             const nama = document.getElementById('reschedNama').value.trim();
             const rawTglBaru = document.getElementById('reschedTanggal').value.trim();
             const jamBaru = document.getElementById('reschedJam').value.trim();
@@ -1047,7 +1037,7 @@ Terima kasih 🙏🏼📸🎓`;
         window.addEventListener('DOMContentLoaded', () => {
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
-            if (activeUrl && !activeUrl.includes('CONTOH_GANTI')) {
+            if (activeUrl) {
                 refreshClientDatabase(false);
             }
 
