@@ -90,23 +90,24 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Nama Klien</label>
-                        <input type="text" id="outNama" oninput="onFieldUpdate()" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
+                        <input type="text" id="outNama" oninput="onFieldUpdate()" placeholder="Nama Klien" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
                     </div>
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Kampus</label>
-                        <input type="text" id="outKampus" oninput="onFieldUpdate()" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
+                        <input type="text" id="outKampus" oninput="onFieldUpdate()" placeholder="Nama Kampus" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
                     </div>
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi Foto</label>
-                        <input type="text" id="outLokasi" oninput="onFieldUpdate()" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
+                        <input type="text" id="outLokasi" oninput="onFieldUpdate()" placeholder="Lokasi Sesi Foto" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
                     </div>
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Tanggal Sesi</label>
-                        <input type="text" id="outTanggal" oninput="onFieldUpdate()" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
+                        <input type="date" id="outTanggalPicker" onchange="onTanggalPickerChange()" class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5 cursor-pointer">
+                        <span id="outTanggalFormatted" class="text-[11px] font-bold text-blue-700 block mt-0.5"></span>
                     </div>
                     <div class="p-2.5 bg-blue-50/70 rounded-xl border border-blue-200">
                         <label class="text-[10px] text-blue-700 uppercase font-bold block">Jam Sesi (Bisa Edit)</label>
-                        <input type="text" id="outJam" oninput="onFieldUpdate()" class="w-full font-bold text-blue-700 bg-transparent outline-none mt-0.5">
+                        <input type="text" id="outJam" oninput="onFieldUpdate()" placeholder="15:00 - 16:00" class="w-full font-bold text-blue-700 bg-transparent outline-none mt-0.5">
                     </div>
                     <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200">
                         <label class="text-[10px] text-emerald-700 uppercase font-bold block">No. WhatsApp Klien</label>
@@ -199,7 +200,7 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- MODE 2: RESCHEDULE JADWAL & GANTI PAKET -->
+        <!-- MODE 2: RESCHEDULE JADWAL, LOKASI & GANTI PAKET -->
         <!-- ============================================== -->
         <div id="sectionReschedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 hidden">
             <div class="border-b border-slate-100 pb-3 flex justify-between items-start">
@@ -207,7 +208,7 @@
                     <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-days text-blue-600"></i> Mode Reschedule / Ganti Paket & FG
                     </h2>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ketik nama klien, lalu tentukan tanggal, jam, paket, atau FG baru.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ketik nama klien, lalu tentukan tanggal, jam, lokasi, paket, atau FG baru.</p>
                 </div>
                 <button onclick="refreshClientDatabase(true)" id="btnReloadClients" class="text-xs bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
                     <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh
@@ -219,7 +220,7 @@
                 <div class="relative">
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
                     <div class="relative">
-                        <input type="text" id="reschedNama" oninput="onSearchClient(this.value)" autocomplete="off" placeholder="Ketik nama klien..." 
+                        <input type="text" id="reschedNama" onfocus="onSearchClient(this.value)" oninput="onSearchClient(this.value)" autocomplete="off" placeholder="Ketik nama klien..." 
                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 transition">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
                     </div>
@@ -240,8 +241,8 @@
                             <span id="cardNamaKampus" class="font-bold text-slate-800 leading-tight block">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block">Paket Terdaftar</span>
-                            <span id="cardPaket" class="font-bold text-slate-800 block">-</span>
+                            <span class="text-[10px] text-slate-400 block">Lokasi & Paket</span>
+                            <span id="cardLokasiPaket" class="font-bold text-slate-800 block">-</span>
                         </div>
                         <div>
                             <span class="text-[10px] text-slate-400 block">Jadwal Terdaftar</span>
@@ -296,33 +297,41 @@
                     </div>
                 </div>
 
-                <!-- Form Ganti Tanggal, Jam & FG -->
+                <!-- Form Ganti Tanggal (Date Picker) & Jam -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Tanggal Baru / Tetap</label>
-                        <input type="text" id="reschedTanggal" placeholder="Contoh: 15-Nov-2026" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Pilih Tanggal Baru / Tetap</label>
+                        <input type="date" id="reschedTanggalPicker" onchange="onReschedTanggalPickerChange()" class="w-full font-semibold bg-transparent outline-none mt-0.5 text-slate-900 cursor-pointer">
+                        <span id="reschedTanggalFormatted" class="text-[11px] font-bold text-blue-700 block mt-0.5"></span>
                     </div>
-                    <div>
-                        <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Jam Baru / Tetap</label>
-                        <input type="text" id="reschedJam" placeholder="Contoh: 09:00 - 10:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 text-blue-700">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Jam Baru / Tetap</label>
+                        <input type="text" id="reschedJam" placeholder="Contoh: 09:00 - 10:00" class="w-full font-bold text-blue-700 bg-transparent outline-none mt-0.5">
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Fotografer (FG) Baru / Tetap</label>
-                    <select id="reschedFG" onchange="onReschedFGChange(this.value)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
-                        <option value="Raihan" selected>Raihan</option>
-                        <option value="Zidane">Zidane</option>
-                        <option value="Dava">Dava</option>
-                        <option value="Riza">Riza</option>
-                        <option value="Wahyu">Wahyu</option>
-                        <option value="Dhika">Dhika</option>
-                        <option value="Surya">Surya</option>
-                        <option value="Vero">Vero</option>
-                        <option value="Satria">Satria</option>
-                        <option value="__custom_resched__">+ Ketik Manual...</option>
-                    </select>
-                    <input type="text" id="customReschedFGInput" placeholder="Ketik nama FG pengganti..." class="w-full mt-2 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none hidden">
+                <!-- Lokasi Baru & FG Baru -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi Baru / Tetap</label>
+                        <input type="text" id="reschedLokasi" placeholder="Lokasi Sesi Foto..." class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Fotografer (FG) Baru / Tetap</label>
+                        <select id="reschedFG" onchange="onReschedFGChange(this.value)" class="w-full font-semibold bg-transparent outline-none cursor-pointer text-slate-900 mt-0.5">
+                            <option value="Raihan" selected>Raihan</option>
+                            <option value="Zidane">Zidane</option>
+                            <option value="Dava">Dava</option>
+                            <option value="Riza">Riza</option>
+                            <option value="Wahyu">Wahyu</option>
+                            <option value="Dhika">Dhika</option>
+                            <option value="Surya">Surya</option>
+                            <option value="Vero">Vero</option>
+                            <option value="Satria">Satria</option>
+                            <option value="__custom_resched__">+ Ketik Manual...</option>
+                        </select>
+                        <input type="text" id="customReschedFGInput" placeholder="Ketik nama FG pengganti..." class="w-full mt-1.5 font-semibold border-t border-slate-200 pt-1 bg-transparent outline-none hidden">
+                    </div>
                 </div>
 
                 <button id="btnSubmitReschedule" onclick="submitReschedule()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-md mt-2">
@@ -400,11 +409,8 @@
     </div>
 
     <script>
-        // =========================================================================
-        // URL APPS SCRIPT VIVIDLENS SUDAH TERKUNCI PERMANEN
-        // =========================================================================
+        // URL Apps Script paten VividLens
         const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
-        // =========================================================================
 
         const PACKAGE_DATA = {
             'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, label: 'Bronze 30 Min' },
@@ -420,15 +426,21 @@
             'Couple Package': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 60, label: 'Couple Package' }
         };
 
-        const MONTHS_ID = {
-            'januari': 'Jan', 'februari': 'Feb', 'maret': 'Mar', 'april': 'Apr',
-            'mei': 'May', 'juni': 'Jun', 'juli': 'Jul', 'agustus': 'Aug',
-            'september': 'Sep', 'oktober': 'Oct', 'november': 'Nov', 'desember': 'Dec'
+        const MONTHS_MAP = {
+            'jan': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr',
+            'mei': 'May', 'may': 'May', 'jun': 'Jun', 'jul': 'Jul',
+            'agu': 'Aug', 'agt': 'Aug', 'aug': 'Aug', 'sep': 'Sep',
+            'okt': 'Oct', 'oct': 'Oct', 'nov': 'Nov', 'des': 'Dec', 'dec': 'Dec'
         };
 
         const MONTH_TO_NUM = {
             'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
             'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+        };
+
+        const NUM_TO_MONTH_NAME = {
+            '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun',
+            '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
         };
 
         let currentFinancials = null;
@@ -438,6 +450,63 @@
 
         function getActiveScriptUrl() {
             return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
+        }
+
+        // Konversi string acak menjadi YYYY-MM-DD untuk mengisi datepicker
+        function cleanToISODate(raw) {
+            if (!raw) return '';
+            const rawStr = String(raw).trim();
+
+            // Tangani string bawaan GMT (misal Sat Oct 03 2026 00:00:00 GMT+0700)
+            if (rawStr.includes('GMT') || isNaN(rawStr[0])) {
+                const parsed = new Date(rawStr);
+                if (!isNaN(parsed.getTime())) {
+                    const y = parsed.getFullYear();
+                    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const d = String(parsed.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                }
+            }
+
+            const parts = rawStr.split(/[\s\-\/\.]+/);
+            if (parts.length >= 3) {
+                let d = parseInt(parts[0], 10);
+                let m = parts[1].toLowerCase();
+                let y = parts[2];
+                if (y.length === 2) y = '20' + y;
+
+                let monthNum = '09';
+                if (!isNaN(m)) {
+                    monthNum = String(parseInt(m, 10)).padStart(2, '0');
+                } else {
+                    const key = m.substring(0, 3);
+                    const mapped = MONTHS_MAP[key] || 'Oct';
+                    monthNum = MONTH_TO_NUM[mapped] || '10';
+                }
+                return `${y}-${monthNum}-${String(d).padStart(2, '0')}`;
+            }
+            return '';
+        }
+
+        // Konversi YYYY-MM-DD menjadi D-Mmm-YYYY untuk disimpan ke Sheet
+        function isoToSheetDate(iso) {
+            if (!iso) return '';
+            const [y, m, d] = iso.split('-');
+            const mName = NUM_TO_MONTH_NAME[m] || 'Oct';
+            return `${parseInt(d, 10)}-${mName}-${y}`;
+        }
+
+        function onTanggalPickerChange() {
+            const iso = document.getElementById('outTanggalPicker').value;
+            const sheetDate = isoToSheetDate(iso);
+            document.getElementById('outTanggalFormatted').textContent = sheetDate;
+            onFieldUpdate();
+        }
+
+        function onReschedTanggalPickerChange() {
+            const iso = document.getElementById('reschedTanggalPicker').value;
+            const sheetDate = isoToSheetDate(iso);
+            document.getElementById('reschedTanggalFormatted').textContent = sheetDate;
         }
 
         function switchMode(mode) {
@@ -483,18 +552,19 @@
 
         function onSearchClient(query) {
             const box = document.getElementById('searchResultsBox');
-            const q = query.trim().toLowerCase();
+            const q = (query || '').trim().toLowerCase();
             
-            if (!q || cachedClients.length === 0) {
+            if (cachedClients.length === 0) {
                 box.classList.add('hidden');
-                box.innerHTML = '';
                 return;
             }
 
-            const filtered = cachedClients.filter(c => 
-                c.nama.toLowerCase().includes(q) || 
-                c.kampus.toLowerCase().includes(q)
-            );
+            const filtered = q === '' 
+                ? cachedClients 
+                : cachedClients.filter(c => 
+                    c.nama.toLowerCase().includes(q) || 
+                    (c.kampus && c.kampus.toLowerCase().includes(q))
+                );
 
             if (filtered.length === 0) {
                 box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center italic">Klien tidak ditemukan</div>';
@@ -511,7 +581,7 @@
                     <div class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
                         <span>🎓 ${c.kampus || '-'}</span>
                         <span>📦 ${c.paket || '-'}</span>
-                        <span>📅 ${c.tanggal} (${c.jam})</span>
+                        <span>📅 ${isoToSheetDate(cleanToISODate(c.tanggal))} (${c.jam})</span>
                         <span>📸 FG: ${c.fg}</span>
                     </div>
                 </div>
@@ -535,13 +605,22 @@
             const card = document.getElementById('clientDetailsCard');
             card.classList.remove('hidden');
             document.getElementById('cardSheetTab').textContent = 'Tab ' + client.sheetName;
-            document.getElementById('cardNamaKampus').textContent = `${client.nama} (${client.kampus})`;
-            document.getElementById('cardPaket').textContent = client.paket;
-            document.getElementById('cardJadwalLama').textContent = `${client.tanggal} • ${client.jam}`;
+            document.getElementById('cardNamaKampus').textContent = `${client.nama} (${client.kampus || '-'})`;
+            document.getElementById('cardLokasiPaket').textContent = `${client.lokasi || '-'} • ${client.paket}`;
+            
+            const cleanTgl = isoToSheetDate(cleanToISODate(client.tanggal));
+            document.getElementById('cardJadwalLama').textContent = `${cleanTgl} • ${client.jam}`;
             document.getElementById('cardFGLama').textContent = client.fg;
 
-            document.getElementById('reschedTanggal').value = client.tanggal;
+            // Isi picker tanggal reschedule
+            const iso = cleanToISODate(client.tanggal);
+            if (iso) {
+                document.getElementById('reschedTanggalPicker').value = iso;
+                document.getElementById('reschedTanggalFormatted').textContent = isoToSheetDate(iso);
+            }
+
             document.getElementById('reschedJam').value = client.jam;
+            document.getElementById('reschedLokasi').value = client.lokasi || '';
 
             const matchedKey = matchPackageKey(client.paket);
             document.getElementById('reschedPaket').value = matchedKey;
@@ -550,7 +629,7 @@
             const fgSelect = document.getElementById('reschedFG');
             let matched = false;
             for (let opt of fgSelect.options) {
-                if (opt.value.toLowerCase() === client.fg.toLowerCase()) {
+                if (opt.value.toLowerCase() === (client.fg || '').toLowerCase()) {
                     fgSelect.value = opt.value;
                     matched = true;
                     break;
@@ -696,24 +775,6 @@
             return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
         }
 
-        function formatDateToSheet(rawDate) {
-            if (!rawDate) return '';
-            const parts = rawDate.trim().split(/\s+|-|\//);
-            if (parts.length >= 3) {
-                let d, m, y;
-                if (parts[0].length === 4) {
-                    y = parts[0]; m = parts[1]; d = parts[2];
-                } else {
-                    d = parts[0];
-                    let monthKey = parts[1].toLowerCase();
-                    m = MONTHS_ID[monthKey] || parts[1];
-                    y = parts[2];
-                }
-                return `${parseInt(d)}-${m}-${y}`;
-            }
-            return rawDate;
-        }
-
         function calculateTimeRange(startStr, durationMinutes) {
             if (!startStr) return "15:00 - 16:00";
             let cleanStart = startStr.split('-')[0].trim().replace('.', ':');
@@ -777,12 +838,17 @@
             let dp = 100000;
             if (dpMatch) dp = parseInt(dpMatch[1].replace(/\./g, '')) || 100000;
 
-            const formattedDate = formatDateToSheet(tglRaw);
+            const iso = cleanToISODate(tglRaw);
 
             document.getElementById('outNama').value = nama;
             document.getElementById('outKampus').value = kampus;
             document.getElementById('outLokasi').value = lokasi;
-            document.getElementById('outTanggal').value = formattedDate;
+            
+            if (iso) {
+                document.getElementById('outTanggalPicker').value = iso;
+                document.getElementById('outTanggalFormatted').textContent = isoToSheetDate(iso);
+            }
+
             document.getElementById('outNoWa').value = noWa;
             document.getElementById('selectPaket').value = detectedPaketKey;
             document.getElementById('inputDP').value = dp;
@@ -831,14 +897,14 @@
         function generateFGChat() {
             const nama = document.getElementById('outNama').value.trim();
             const fgName = getActiveFG();
-            const tanggal = document.getElementById('outTanggal').value.trim();
+            const tanggal = document.getElementById('outTanggalFormatted').textContent || '-';
             const jam = document.getElementById('outJam').value.trim();
             const lokasi = document.getElementById('outLokasi').value.trim();
             const kampus = document.getElementById('outKampus').value.trim();
             const noWa = document.getElementById('outNoWa').value.trim() || '-';
             const paket = currentFinancials ? currentFinancials.paketLabel : 'Silver';
 
-            const chat = `Hallo Kak ${nama} 🙌🏼✨
+            const chat = `Hallo Kak ${nama || '...'} 🙌🏼✨
 
 Perkenalkan, saya ${fgName} dari tim VividLens Graduation 📸🎓
 
@@ -869,17 +935,11 @@ Terima kasih 🙏🏼📸🎓`;
         async function syncDirectToSheetAndCalendar() {
             const scriptUrl = getActiveScriptUrl();
             const nama = document.getElementById('outNama').value.trim();
-            if (!nama || nama === '-') return showToast('Ekstrak data booking dulu!', false);
+            if (!nama || nama === '-') return showToast('Ekstrak atau isi data booking dulu!', false);
 
-            const rawDate = document.getElementById('outTanggal').value.trim();
-            const parts = rawDate.split('-');
-            let isoDate = new Date().toISOString().split('T')[0];
-            if (parts.length === 3) {
-                const day = String(parts[0]).padStart(2, '0');
-                const monthNum = MONTH_TO_NUM[parts[1]] || '09';
-                const year = parts[2];
-                isoDate = `${year}-${monthNum}-${day}`;
-            }
+            const isoDate = document.getElementById('outTanggalPicker').value;
+            if (!isoDate) return alert('Pilih tanggal sesi terlebih dahulu!');
+            const sheetDate = isoToSheetDate(isoDate);
 
             const btn = document.getElementById('btnSync');
             btn.disabled = true;
@@ -894,7 +954,7 @@ Terima kasih 🙏🏼📸🎓`;
                 nama: nama,
                 kampus: document.getElementById('outKampus').value.trim(),
                 lokasi: document.getElementById('outLokasi').value.trim(),
-                tanggal: rawDate,
+                tanggal: sheetDate,
                 isoDate: isoDate,
                 jam: document.getElementById('outJam').value.trim(),
                 paket: currentFinancials.paketLabel,
@@ -932,27 +992,20 @@ Terima kasih 🙏🏼📸🎓`;
         async function submitReschedule() {
             const scriptUrl = getActiveScriptUrl();
             const nama = document.getElementById('reschedNama').value.trim();
-            const rawTglBaru = document.getElementById('reschedTanggal').value.trim();
+            const isoDateBaru = document.getElementById('reschedTanggalPicker').value;
             const jamBaru = document.getElementById('reschedJam').value.trim();
             const fgBaru = getActiveReschedFG();
+            const lokasiBaru = document.getElementById('reschedLokasi').value.trim();
 
-            if (!nama || !rawTglBaru || !jamBaru) {
+            if (!nama || !isoDateBaru || !jamBaru) {
                 return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
             }
 
-            const tglBaruFormatted = formatDateToSheet(rawTglBaru);
-            const partsBaru = tglBaruFormatted.split('-');
-            let isoDateBaru = new Date().toISOString().split('T')[0];
-            if (partsBaru.length === 3) {
-                isoDateBaru = `${partsBaru[2]}-${MONTH_TO_NUM[partsBaru[1]] || '09'}-${String(partsBaru[0]).padStart(2, '0')}`;
-            }
+            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
 
             let isoDateLama = null;
             if (window._selectedClientOriginalDate) {
-                const partsLama = formatDateToSheet(window._selectedClientOriginalDate).split('-');
-                if (partsLama.length === 3) {
-                    isoDateLama = `${partsLama[2]}-${MONTH_TO_NUM[partsLama[1]] || '09'}-${String(partsLama[0]).padStart(2, '0')}`;
-                }
+                isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
             }
 
             const clientObj = window._selectedClientObject || {};
@@ -971,6 +1024,7 @@ Terima kasih 🙏🏼📸🎓`;
                 isoDateLama: isoDateLama,
                 jamBaru: jamBaru,
                 fgBaru: fgBaru,
+                lokasiBaru: lokasiBaru || clientObj.lokasi,
                 noWa: noWaVal,
                 paketBaru: fin.paket || clientObj.paket || 'Silver',
                 hargaBaru: fin.harga !== undefined ? fin.harga : clientObj.harga,
@@ -986,7 +1040,7 @@ Terima kasih 🙏🏼📸🎓`;
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                showSuccessAlert('Reschedule & Paket Berhasil Diupdate! 🔄', `Jadwal, paket, dan FG untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
+                showSuccessAlert('Reschedule Berhasil Diupdate! 🔄', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
                 refreshClientDatabase(false);
             } catch (err) {
                 showToast('Gagal update reschedule', false);
@@ -1002,7 +1056,7 @@ Terima kasih 🙏🏼📸🎓`;
 
             const kampus = document.getElementById('outKampus').value.trim();
             const lokasi = document.getElementById('outLokasi').value.trim();
-            const tanggal = document.getElementById('outTanggal').value.trim();
+            const tanggal = document.getElementById('outTanggalFormatted').textContent || '';
             const jamRange = document.getElementById('outJam').value.trim();
             const fgName = getActiveFG();
             const statusPayment = document.getElementById('statusPayment').value;
@@ -1040,9 +1094,8 @@ Terima kasih 🙏🏼📸🎓`;
             if (activeUrl) {
                 refreshClientDatabase(false);
             }
-
-            document.getElementById('rawInput').value = `FORM BOOKING\nVIVIDLENS GRADUATION 🎓📸\n\nMohon lengkapi data berikut:\n\nNama : Intan Nursanti \nNo. WA : 081234567890\nTanggal Foto : 24 Oktober 2026\nJam Foto : 15:00\nLokasi Foto : sekar kedhaton \nKampus : AMIKOM\nPaket : Silver\nInstagram / TikTok : @intannrsnti\nMUA :\nDress :\n\n💳 DP Rp100.000\nScan QRIS Berikut`;
-            parseAndProcess();
+            // Form dibiarkan bersih saat pertama dibuka
+            recalculateFinancials();
         });
     </script>
 </body>
