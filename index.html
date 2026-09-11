@@ -225,7 +225,6 @@
                     </div>
 
                     <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto touch-scroll hidden">
-                        <!-- Populated by JS -->
                     </div>
                 </div>
 
@@ -401,6 +400,12 @@
     </div>
 
     <script>
+        // =========================================================================
+        // TEMPELKAN URL APPS SCRIPT VIVIDLENS KAMU DI BAWAH INI SUPAYA TERKUNCI MATI
+        // =========================================================================
+        const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1-CONTOH_GANTI_DENGAN_URL_VIVIDLENS_KAMU/exec";
+        // =========================================================================
+
         const PACKAGE_DATA = {
             'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, label: 'Bronze 30 Min' },
             'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, label: 'Bronze' },
@@ -431,6 +436,10 @@
         let cachedClients = [];
         let isFetchingClients = false;
 
+        function getActiveScriptUrl() {
+            return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
+        }
+
         function switchMode(mode) {
             const isNew = mode === 'new';
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
@@ -450,8 +459,8 @@
         }
 
         async function refreshClientDatabase(showToastNotice = true) {
-            const scriptUrl = localStorage.getItem('vividlens_apps_script_url') || document.getElementById('scriptUrlInput').value.trim();
-            if (!scriptUrl) return;
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) return;
 
             const btn = document.getElementById('btnReloadClients');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i>';
@@ -534,12 +543,10 @@
             document.getElementById('reschedTanggal').value = client.tanggal;
             document.getElementById('reschedJam').value = client.jam;
 
-            // Set paket saat ini & update preview keuangan
             const matchedKey = matchPackageKey(client.paket);
             document.getElementById('reschedPaket').value = matchedKey;
             onReschedPaketChange(false);
 
-            // Set FG
             const fgSelect = document.getElementById('reschedFG');
             let matched = false;
             for (let opt of fgSelect.options) {
@@ -860,8 +867,8 @@ Terima kasih 🙏🏼📸🎓`;
         }
 
         async function syncDirectToSheetAndCalendar() {
-            const scriptUrl = localStorage.getItem('vividlens_apps_script_url') || document.getElementById('scriptUrlInput').value.trim();
-            if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) {
                 openModalSettings();
                 return alert('Masukkan Web App URL Apps Script (/exec) terlebih dahulu di Pengaturan!');
             }
@@ -928,8 +935,8 @@ Terima kasih 🙏🏼📸🎓`;
         }
 
         async function submitReschedule() {
-            const scriptUrl = localStorage.getItem('vividlens_apps_script_url') || document.getElementById('scriptUrlInput').value.trim();
-            if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl || scriptUrl.includes('CONTOH_GANTI')) {
                 openModalSettings();
                 return alert('Masukkan Web App URL Apps Script (/exec) terlebih dahulu di Pengaturan!');
             }
@@ -1038,9 +1045,9 @@ Terima kasih 🙏🏼📸🎓`;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('vividlens_apps_script_url');
-            if (savedUrl) {
-                document.getElementById('scriptUrlInput').value = savedUrl;
+            const activeUrl = getActiveScriptUrl();
+            document.getElementById('scriptUrlInput').value = activeUrl;
+            if (activeUrl && !activeUrl.includes('CONTOH_GANTI')) {
                 refreshClientDatabase(false);
             }
 
