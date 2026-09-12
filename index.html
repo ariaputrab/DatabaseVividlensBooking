@@ -45,6 +45,10 @@
                 <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
                 </button>
+                <button id="tabTrackerBtn" onclick="switchMode('tracker')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-list-check text-[11px]"></i> Status Seleksi
+                    <span id="badgeOverdueCount" class="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                </button>
                 <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-calendar-day text-[11px]"></i> Hari Ini & H-1
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
@@ -61,9 +65,7 @@
             </div>
         </header>
 
-        <!-- ============================================== -->
         <!-- TAB 0: REKAP KEUANGAN & KPI -->
-        <!-- ============================================== -->
         <div id="sectionFinance" class="space-y-4">
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
@@ -138,9 +140,37 @@
             </div>
         </div>
 
-        <!-- ============================================== -->
+        <!-- TAB TRACKER STATUS SELEKSI FOTO KLIEN -->
+        <div id="sectionTracker" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-600"></i> Monitoring Seleksi Foto Galeri
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau klien yang sudah memilih foto atau yang perlu di-follow up (lewat H+7).</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="filterTrackerStatus" onchange="renderGalleryTracker()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
+                        <option value="all">Semua Klien</option>
+                        <option value="overdue">Perlu Follow-Up (H+7)</option>
+                        <option value="submitted">Sudah Memilih (Siap Edit)</option>
+                        <option value="pending">Menunggu Seleksi</option>
+                    </select>
+                    <button onclick="fetchSupabaseClients(true)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition" title="Refresh Supabase">
+                        <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="trackerListContainer" class="space-y-3">
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
+                    Memuat status seleksi dari Supabase...
+                </div>
+            </div>
+        </div>
+
         <!-- TAB 1: JADWAL HARI INI & REMINDER H-1 -->
-        <!-- ============================================== -->
         <div id="sectionTodaySchedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-4 hidden">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
                 <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
@@ -173,9 +203,7 @@
             </div>
         </div>
 
-        <!-- ============================================== -->
         <!-- TAB 2: BOOKING BARU -->
-        <!-- ============================================== -->
         <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start hidden">
             
             <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -310,9 +338,7 @@
             </div>
         </div>
 
-        <!-- ============================================== -->
         <!-- TAB 3: RESCHEDULE JADWAL, LOKASI & GANTI PAKET -->
-        <!-- ============================================== -->
         <div id="sectionReschedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 hidden">
             <div class="border-b border-slate-100 pb-3 flex justify-between items-start">
                 <div>
@@ -528,7 +554,7 @@
             supabaseGalleryClient = supabase.createClient(SUPABASE_GALLERY_URL, SUPABASE_GALLERY_KEY);
         }
 
-        // DETAIL PAKET + KUOTA FOTO EDIT DISESUAIKAN PERSIS DENGAN PERMINTAAN
+        // DETAIL PAKET + KUOTA FOTO EDIT DISESUAIKAN
         const PACKAGE_DATA = {
             'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, quota: 10, label: 'Bronze 30 Min' },
             'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, quota: 20, label: 'Bronze' },
@@ -563,6 +589,7 @@
         let currentFinancials = null;
         let baseStartTime = "15:00";
         let cachedClients = [];
+        let cachedSupabaseClients = [];
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
 
@@ -626,16 +653,22 @@
 
         function switchMode(mode) {
             const isFinance = mode === 'finance';
+            const isTracker = mode === 'tracker';
             const isToday = mode === 'today';
             const isNew = mode === 'new';
             const isResched = mode === 'reschedule';
 
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
+            document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
             document.getElementById('tabFinanceBtn').className = isFinance
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+
+            document.getElementById('tabTrackerBtn').className = isTracker
                 ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
                 : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
 
@@ -650,6 +683,10 @@
             document.getElementById('tabRescheduleBtn').className = isResched 
                 ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
                 : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+
+            if (isTracker) {
+                fetchSupabaseClients(false);
+            }
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
@@ -697,6 +734,152 @@
                 if (btn) btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh';
                 isFetchingClients = false;
             }
+        }
+
+        async function fetchSupabaseClients(showToastNotice = true) {
+            if (!supabaseGalleryClient) return;
+
+            const container = document.getElementById('trackerListContainer');
+            container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i> Mengambil data dari Supabase...</div>';
+
+            try {
+                const { data, error } = await supabaseGalleryClient
+                    .from('clients')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    cachedSupabaseClients = data;
+                    renderGalleryTracker();
+                    if (showToastNotice) showToast(`Tersinkron dengan ${data.length} galeri`);
+                } else {
+                    throw new Error(error ? error.message : "Gagal mengambil data");
+                }
+            } catch (err) {
+                container.innerHTML = `<div class="p-6 text-center text-rose-500 text-xs italic">Gagal memuat dari Supabase: ${err.message}</div>`;
+            }
+        }
+
+        function renderGalleryTracker() {
+            const container = document.getElementById('trackerListContainer');
+            const filter = document.getElementById('filterTrackerStatus').value;
+            const now = new Date();
+
+            let overdueCount = 0;
+
+            const processedClients = cachedSupabaseClients.map(c => {
+                const createdAt = c.created_at ? new Date(c.created_at) : (c.tanggal ? new Date(c.tanggal) : new Date());
+                const diffTime = Math.abs(now - createdAt);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                const isSubmitted = (c.status_selection || '').toLowerCase() === 'submitted';
+                const isOverdue = !isSubmitted && diffDays >= 7;
+
+                if (isOverdue) overdueCount++;
+
+                return {
+                    ...c,
+                    diffDays,
+                    isSubmitted,
+                    isOverdue
+                };
+            });
+
+            const badgeOverdue = document.getElementById('badgeOverdueCount');
+            if (overdueCount > 0) {
+                badgeOverdue.textContent = overdueCount;
+                badgeOverdue.classList.remove('hidden');
+            } else {
+                badgeOverdue.classList.add('hidden');
+            }
+
+            let filtered = processedClients;
+            if (filter === 'overdue') {
+                filtered = processedClients.filter(c => c.isOverdue);
+            } else if (filter === 'submitted') {
+                filtered = processedClients.filter(c => c.isSubmitted);
+            } else if (filter === 'pending') {
+                filtered = processedClients.filter(c => !c.isSubmitted);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada galeri pada kategori ini</p>
+                        <p class="text-[11px] text-slate-400">Semua progres seleksi foto klien berjalan lancar!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(c => {
+                const galeriLink = `${GALLERY_BASE_DOMAIN}/${c.slug}`;
+                
+                let targetWA = '';
+                const matchSheetClient = cachedClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
+                if (matchSheetClient && matchSheetClient.noWa) {
+                    targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
+                }
+
+                const followUpMsg = `Halo Kak ${c.nama} 🙌🏼✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak 😊\n\nTerima kasih Kak! ✨📸🎓`;
+                const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
+
+                return `
+                    <div class="p-4 bg-slate-50 hover:bg-slate-100/70 border ${c.isOverdue ? 'border-rose-300 bg-rose-50/20' : (c.isSubmitted ? 'border-emerald-200' : 'border-slate-200')} rounded-2xl transition space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-sm sm:text-base text-slate-900">${c.nama}</h4>
+                                    ${c.isSubmitted 
+                                        ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1"><i class="fa-solid fa-check"></i> Siap Edit</span>'
+                                        : (c.isOverdue 
+                                            ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 flex items-center gap-1 animate-pulse"><i class="fa-solid fa-clock"></i> Lewat ${c.diffDays} Hari</span>`
+                                            : `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Menunggu (H+${c.diffDays})</span>`
+                                          )
+                                    }
+                                </div>
+                                <p class="text-xs text-slate-500 font-medium mt-0.5">${c.univ || 'Umum'} • Tanggal Sesi: ${c.tanggal || '-'} • Kuota: ${c.limit_foto || 0} Foto</p>
+                            </div>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <a href="${galeriLink}" target="_blank" class="flex-1 sm:flex-none text-xs bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Galeri
+                                </a>
+                                <a href="${c.drive_link}" target="_blank" class="flex-1 sm:flex-none text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold px-3 py-1.5 rounded-xl transition flex items-center justify-center gap-1">
+                                    <i class="fa-brands fa-google-drive"></i> Drive
+                                </a>
+                            </div>
+                        </div>
+
+                        ${c.isSubmitted ? `
+                            <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-emerald-900 space-y-1">
+                                <div class="flex justify-between items-center font-bold text-[11px]">
+                                    <span>📸 Daftar Foto Pilihan Klien:</span>
+                                    <button onclick="navigator.clipboard.writeText(\`${c.selected_photos || ''}\`); showToast('List foto tersalin!');" class="text-emerald-700 hover:text-emerald-900 underline font-semibold">Salin List</button>
+                                </div>
+                                <p class="font-mono text-[11px] break-words text-slate-700 bg-white p-2 rounded border border-emerald-100 max-h-24 overflow-y-auto touch-scroll">${c.selected_photos || 'Belum ada data teks foto tersimpan'}</p>
+                            </div>
+                        ` : ''}
+
+                        ${c.isOverdue ? `
+                            <div class="flex items-center justify-between p-2.5 bg-rose-50 rounded-xl border border-rose-200 gap-2">
+                                <span class="text-xs text-rose-800 font-semibold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Klien belum memilih foto lebih dari 7 hari!
+                                </span>
+                                ${waFollowUpLink ? `
+                                    <a href="${waFollowUpLink}" target="_blank" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1 shadow-sm active:scale-95 whitespace-nowrap">
+                                        <i class="fa-brands fa-whatsapp"></i> Chat Follow-Up
+                                    </a>
+                                ` : `
+                                    <button onclick="showCustomModalChat('Reminder Follow-Up H+7', \`${followUpMsg.replace(/`/g, "\\`")}\`)" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1 shadow-sm active:scale-95 whitespace-nowrap">
+                                        Salin Reminder
+                                    </button>
+                                `}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
         function calculateFinancialStats() {
@@ -843,7 +1026,6 @@
                                 <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-comment-dots"></i> Chat FG
                                 </button>
-                                <!-- TOMBOL OTOMATIS: BUAT FOLDER DRIVE + INSERT SUPABASE GALLERY -->
                                 <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> Buat Galeri & Drive
                                 </button>
@@ -929,9 +1111,6 @@
             }
         }
 
-        // ========================================================
-        // 1-KLIK INTEGRASI: GOOGLE DRIVE + SUPABASE GALLERY
-        // ========================================================
         async function handleCreateDriveAndGallery(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
@@ -941,7 +1120,6 @@
             btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
 
             try {
-                // 1. Buat Folder di Google Drive lewat Google Apps Script
                 const driveResponse = await fetch(scriptUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -964,17 +1142,14 @@
                 const driveUrl = driveData.folderUrl;
                 const isoTanggal = cleanToISODate(tanggal);
 
-                // 2. Tentukan kuota edit otomatis berdasarkan paket
                 const matchedKey = matchPackageKey(paket);
                 const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
                 const kuotaFoto = pkg.quota || 40;
 
-                // 3. Generate slug sesuai aturan admin.html: nama-kampus
                 const cleanSlugNama = nama.toLowerCase().replace(/[^a-z0-9]/g, '');
                 const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
                 let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
 
-                // 4. Masukkan langsung ke Database Supabase
                 if (supabaseGalleryClient) {
                     const { data: existingClient } = await supabaseGalleryClient
                         .from('clients')
@@ -994,7 +1169,8 @@
                             univ: kampus || 'Umum',
                             tanggal: isoTanggal,
                             limit_foto: kuotaFoto,
-                            drive_link: driveUrl
+                            drive_link: driveUrl,
+                            status_selection: 'pending'
                         }]);
 
                     if (supabaseError) {
@@ -1002,7 +1178,6 @@
                     }
                 }
 
-                // 5. Rangkai URL Web Gallery & Format Pesan WhatsApp
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
                 const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
@@ -1019,9 +1194,6 @@
             }
         }
 
-        // ========================================================
-        // FITUR CARI KLIEN RESCHEDULE (DROPDOWN OVERFLOW & AUTO-FETCH)
-        // ========================================================
         function onSearchClient(query) {
             const box = document.getElementById('searchResultsBox');
             if (!box) return;
@@ -1160,9 +1332,6 @@
             }
         });
 
-        // ========================================================
-        // SUBMIT RESCHEDULE (MENGIRIM SHEET ASAL & TANGGAL LAMA)
-        // ========================================================
         async function submitReschedule() {
             const scriptUrl = getActiveScriptUrl();
             const nama = document.getElementById('reschedNama').value.trim();
