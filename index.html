@@ -372,6 +372,7 @@
                     <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-[999] max-h-64 overflow-y-auto touch-scroll hidden"></div>
                 </div>
 
+                <!-- KARTU DETAIL KLIEN + TOMBOL INVOICE / KWITANSI MANUAL -->
                 <div id="clientDetailsCard" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl hidden space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] font-bold uppercase text-blue-800 tracking-wider">Jadwal Terdaftar:</span>
@@ -394,6 +395,12 @@
                             <span class="text-[10px] text-slate-400 block">FG Terdaftar</span>
                             <span id="cardFGLama" class="font-bold text-emerald-700 block">-</span>
                         </div>
+                    </div>
+                    <!-- TOMBOL CETAK INVOICE KLIEN TERPILIH DI RESCHEDULE -->
+                    <div class="pt-2 border-t border-blue-200/80 flex justify-end">
+                        <button onclick="openInvoiceFromSelectedClient()" type="button" class="py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-solid fa-file-invoice"></i> Cetak Invoice / Kwitansi Klien Ini
+                        </button>
                     </div>
                 </div>
 
@@ -1138,6 +1145,10 @@
                 }
 
                 container.innerHTML = todayClients.map(c => {
+                    const h = parseInt(c.harga) || 0;
+                    const dp = parseInt(c.dp) || 0;
+                    const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                    const sisa = isLunas ? 0 : Math.max(0, h - dp);
                     const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     const waLink = waClean ? `https://wa.me/${waClean}` : '';
 
@@ -1167,10 +1178,14 @@
                                         <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA
                                     </a>
                                 ` : ''}
+                                <!-- TOMBOL INVOICE / KWITANSI HARI H -->
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                                </button>
                                 <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-comment-dots"></i> Chat FG
                                 </button>
-                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> Buat Galeri & Drive
                                 </button>
                             </div>
@@ -1235,7 +1250,7 @@
                                 <span class="font-semibold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
                             </div>
 
-                            <div class="flex flex-wrap gap-2 pt-1">
+                            <div class="flex gap-2 pt-1">
                                 ${waLink ? `
                                     <a href="${waLink}" target="_blank" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
                                         <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA
@@ -1276,6 +1291,16 @@
 
             setInvoiceMode(currentInvoiceData.isLunas);
             document.getElementById('modalInvoice').classList.remove('hidden');
+        }
+
+        function openInvoiceFromSelectedClient() {
+            const c = window._selectedClientObject;
+            if (!c) return alert('Pilih klien terlebih dahulu!');
+            const h = parseInt(c.harga) || 350000;
+            const dp = parseInt(c.dp) || 100000;
+            const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+            const sisa = isLunas ? 0 : Math.max(0, h - dp);
+            openInvoiceModal(c.nama, c.kampus, c.paket, h, dp, sisa, c.tanggal, c.jam, c.lokasi, c.fg, isLunas);
         }
 
         function setInvoiceMode(isLunas) {
