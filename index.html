@@ -45,18 +45,18 @@
             </div>
 
             <!-- Tab Switcher -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
-                <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
+            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto overflow-x-auto touch-scroll">
+                <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
                 </button>
-                <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
-                    <i class="fa-solid fa-calendar-check text-[11px]"></i> Hari Ini
+                <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-day text-[11px]"></i> Hari Ini & H-1
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
-                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking
                 </button>
-                <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule
                 </button>
                 <button onclick="openModalSettings()" class="hidden sm:flex w-8 h-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg transition ml-1" title="Pengaturan URL">
@@ -146,25 +146,39 @@
         </div>
 
         <!-- ============================================== -->
-        <!-- TAB 1: JADWAL HARI INI -->
+        <!-- TAB 1: JADWAL HARI INI & REMINDER H-1 -->
         <!-- ============================================== -->
         <div id="sectionTodaySchedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-4 hidden">
-            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
-                <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-day text-blue-600"></i> Jadwal Photoshoot Hari Ini
-                    </h2>
-                    <p id="todayDateLabel" class="text-[11px] sm:text-xs text-slate-500 mt-0.5">-</p>
+            <!-- Sub-tab Selector: Hari Ini vs Reminder H-1 -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button id="subTabTodayBtn" onclick="switchScheduleSubTab('today')" class="py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1">
+                        <i class="fa-solid fa-sun text-amber-500 text-[11px]"></i> Hari Ini
+                        <span id="badgeSubTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                    </button>
+                    <button id="subTabTomorrowBtn" onclick="switchScheduleSubTab('tomorrow')" class="py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1">
+                        <i class="fa-solid fa-bell text-blue-600 text-[11px]"></i> Reminder H-1
+                        <span id="badgeSubTomorrowCount" class="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                    </button>
                 </div>
                 <button onclick="refreshClientDatabase(true)" class="text-xs bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
                     <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh
                 </button>
             </div>
 
-            <div id="todayScheduleList" class="space-y-3">
+            <!-- Sub Header Date Info -->
+            <div class="flex justify-between items-center px-1">
+                <div>
+                    <h3 id="scheduleSectionTitle" class="text-xs sm:text-sm font-bold text-slate-900">Jadwal Sesi Foto Hari Ini</h3>
+                    <p id="todayDateLabel" class="text-[11px] text-slate-500 mt-0.5">-</p>
+                </div>
+            </div>
+
+            <!-- List Container -->
+            <div id="scheduleCardsContainer" class="space-y-3">
                 <div class="p-8 text-center text-slate-400 text-xs">
                     <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
-                    Memuat data jadwal hari ini...
+                    Memuat data jadwal...
                 </div>
             </div>
         </div>
@@ -459,18 +473,18 @@
             </div>
         </div>
 
-        <!-- MODAL CHAT FG -->
+        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN H-1) -->
         <div id="modalChat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
             <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-3.5">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-                    <h3 class="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-2">
-                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> Format Chat Konfirmasi FG
+                    <h3 id="modalChatTitle" class="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> Format Chat
                     </h3>
                     <button onclick="closeModalChat()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
-                <textarea id="fgChatPreview" rows="11" readonly class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-700 outline-none resize-none leading-relaxed text-xs"></textarea>
+                <textarea id="fgChatPreview" rows="12" readonly class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-700 outline-none resize-none leading-relaxed text-xs"></textarea>
                 <div class="flex gap-2">
                     <button onclick="closeModalChat()" class="w-1/3 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">Tutup</button>
                     <button onclick="copyFGChat()" class="w-2/3 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95">
@@ -549,6 +563,7 @@
         let baseStartTime = "15:00";
         let cachedClients = [];
         let isFetchingClients = false;
+        let activeScheduleSubTab = 'today'; // 'today' | 'tomorrow'
 
         function getActiveScriptUrl() {
             return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
@@ -620,27 +635,42 @@
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
             document.getElementById('tabFinanceBtn').className = isFinance
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
 
             document.getElementById('tabTodayBtn').className = isToday
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
 
             document.getElementById('tabNewBtn').className = isNew 
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
                 
             document.getElementById('tabRescheduleBtn').className = isResched 
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
             } else {
-                if (isToday) renderTodaySchedule();
+                if (isToday) renderCombinedSchedule();
                 if (isFinance) calculateFinancialStats();
             }
+        }
+
+        function switchScheduleSubTab(subTab) {
+            activeScheduleSubTab = subTab;
+            const isToday = subTab === 'today';
+
+            document.getElementById('subTabTodayBtn').className = isToday
+                ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1"
+                : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1";
+
+            document.getElementById('subTabTomorrowBtn').className = !isToday
+                ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1"
+                : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1";
+
+            renderCombinedSchedule();
         }
 
         async function refreshClientDatabase(showToastNotice = true) {
@@ -656,7 +686,7 @@
                 const data = await res.json();
                 if (data && data.status === 'success' && data.clients) {
                     cachedClients = data.clients;
-                    renderTodaySchedule();
+                    renderCombinedSchedule();
                     calculateFinancialStats();
                     if (showToastNotice) showToast(`Berhasil memuat ${cachedClients.length} klien`);
                 }
@@ -668,7 +698,6 @@
             }
         }
 
-        // Perhitungan Finansial & KPI yang Membaca Status LUNAS
         function calculateFinancialStats() {
             const filter = document.getElementById('selectMonthFilter').value;
             
@@ -701,13 +730,12 @@
                 totalFeeFG += fee;
                 totalBersih += bersih;
 
-                // Logika Pembayaran:
                 if (statusPay === 'LUNAS') {
-                    totalMasuk += h; // Uang sudah masuk penuh
+                    totalMasuk += h;
                 } else {
-                    totalMasuk += dp; // Baru bayar DP
+                    totalMasuk += dp;
                     const sisa = Math.max(0, h - dp);
-                    totalSisa += sisa; // Masuk ke piutang belum lunas
+                    totalSisa += sisa;
                 }
             });
 
@@ -719,86 +747,215 @@
             document.getElementById('kpiTotalSisa').textContent = formatRupiah(totalSisa);
         }
 
-        function renderTodaySchedule() {
-            const container = document.getElementById('todayScheduleList');
+        function renderCombinedSchedule() {
+            const container = document.getElementById('scheduleCardsContainer');
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const todayISO = `${year}-${month}-${day}`;
+            
+            // Tanggal Hari Ini ISO
+            const yToday = now.getFullYear();
+            const mToday = String(now.getMonth() + 1).padStart(2, '0');
+            const dToday = String(now.getDate()).padStart(2, '0');
+            const todayISO = `${yToday}-${mToday}-${dToday}`;
+
+            // Tanggal Besok (H-1) ISO
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const yTom = tomorrow.getFullYear();
+            const mTom = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const dTom = String(tomorrow.getDate()).padStart(2, '0');
+            const tomorrowISO = `${yTom}-${mTom}-${dTom}`;
 
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('todayDateLabel').textContent = now.toLocaleDateString('id-ID', dateOptions);
 
-            const todayClients = cachedClients.filter(c => {
-                const cISO = cleanToISODate(c.tanggal);
-                return cISO === todayISO;
-            });
+            // Filter Klien Hari Ini & Besok
+            const todayClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === todayISO);
+            const tomorrowClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === tomorrowISO);
 
             todayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
+            tomorrowClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
 
-            const badgeCount = document.getElementById('badgeTodayCount');
+            // Update Badge Counts
+            const badgeMain = document.getElementById('badgeTodayCount');
+            const badgeSubToday = document.getElementById('badgeSubTodayCount');
+            const badgeSubTom = document.getElementById('badgeSubTomorrowCount');
+
             if (todayClients.length > 0) {
-                badgeCount.textContent = todayClients.length;
-                badgeCount.classList.remove('hidden');
+                badgeMain.textContent = todayClients.length;
+                badgeMain.classList.remove('hidden');
+                badgeSubToday.textContent = todayClients.length;
+                badgeSubToday.classList.remove('hidden');
             } else {
-                badgeCount.classList.add('hidden');
+                badgeMain.classList.add('hidden');
+                badgeSubToday.classList.add('hidden');
             }
 
-            if (todayClients.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
-                        <div class="w-12 h-12 bg-slate-200/70 text-slate-400 rounded-full flex items-center justify-center mx-auto text-xl">
-                            <i class="fa-regular fa-calendar"></i>
-                        </div>
-                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal photoshoot hari ini</p>
-                        <p class="text-[11px] text-slate-400">Selamat beristirahat atau persiapan untuk jadwal berikutnya!</p>
-                    </div>
-                `;
-                return;
+            if (tomorrowClients.length > 0) {
+                badgeSubTom.textContent = tomorrowClients.length;
+                badgeSubTom.classList.remove('hidden');
+            } else {
+                badgeSubTom.classList.add('hidden');
             }
 
-            container.innerHTML = todayClients.map((c) => {
-                const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-                const waLink = waClean ? `https://wa.me/${waClean}` : '';
+            // Tampilkan Konten Sesuai SubTab Aktif
+            if (activeScheduleSubTab === 'today') {
+                document.getElementById('scheduleSectionTitle').textContent = "Jadwal Photoshoot Hari Ini";
+                document.getElementById('todayDateLabel').textContent = now.toLocaleDateString('id-ID', dateOptions);
 
-                return `
-                    <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border border-slate-200 rounded-2xl transition space-y-3">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-                                    ⏰ ${c.jam || '-'} WIB
-                                </span>
-                                <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
-                                <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                if (todayClients.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                            <div class="w-12 h-12 bg-slate-200/70 text-slate-400 rounded-full flex items-center justify-center mx-auto text-xl">
+                                <i class="fa-regular fa-calendar"></i>
                             </div>
-                            <span class="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-xl flex items-center gap-1">
-                                <i class="fa-solid fa-camera text-[10px]"></i> ${c.fg || 'Raihan'}
-                            </span>
+                            <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal photoshoot hari ini</p>
+                            <p class="text-[11px] text-slate-400">Selamat beristirahat atau persiapan untuk jadwal berikutnya!</p>
                         </div>
+                    `;
+                    return;
+                }
 
-                        <div class="text-xs text-slate-600 flex items-center gap-2 pt-1 border-t border-slate-200/70">
-                            <i class="fa-solid fa-location-dot text-rose-500 text-sm"></i>
-                            <span class="font-medium">${c.lokasi || '-'}</span>
-                        </div>
+                container.innerHTML = todayClients.map(c => {
+                    const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                    const waLink = waClean ? `https://wa.me/${waClean}` : '';
 
-                        <div class="flex gap-2 pt-1">
-                            ${waLink ? `
-                                <a href="${waLink}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                                    <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Klien
-                                </a>
-                            ` : `
-                                <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
-                                    No WA Tidak Ada
+                    return `
+                        <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border border-slate-200 rounded-2xl transition space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
+                                        ⏰ ${c.jam || '-'} WIB
+                                    </span>
+                                    <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
+                                    <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                                </div>
+                                <span class="text-xs font-bold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-xl flex items-center gap-1">
+                                    <i class="fa-solid fa-camera text-[10px]"></i> ${c.fg || 'Raihan'}
+                                </span>
+                            </div>
+
+                            <div class="text-xs text-slate-600 flex items-center gap-2 pt-1 border-t border-slate-200/70">
+                                <i class="fa-solid fa-location-dot text-rose-500 text-sm"></i>
+                                <span class="font-medium">${c.lokasi || '-'}</span>
+                            </div>
+
+                            <div class="flex gap-2 pt-1">
+                                ${waLink ? `
+                                    <a href="${waLink}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                        <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Klien
+                                    </a>
+                                ` : `
+                                    <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
+                                        No WA Tidak Ada
+                                    </button>
+                                `}
+                                <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                    <i class="fa-solid fa-comment-dots"></i> Chat FG
                                 </button>
-                            `}
-                            <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
-                                <i class="fa-solid fa-comment-dots"></i> Format Chat
-                            </button>
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+
+            } else {
+                // Tampilan Tab Reminder H-1 (Besok)
+                document.getElementById('scheduleSectionTitle').textContent = "Reminder Tagihan Pelunasan (H-1 Sesi Besok)";
+                document.getElementById('todayDateLabel').textContent = `Target Sesi: ${tomorrow.toLocaleDateString('id-ID', dateOptions)}`;
+
+                if (tomorrowClients.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                                <i class="fa-solid fa-bell-slash"></i>
+                            </div>
+                            <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal sesi foto untuk besok</p>
+                            <p class="text-[11px] text-slate-400">Tidak ada pengingat pelunasan yang perlu dikirimkan hari ini.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = tomorrowClients.map(c => {
+                    const h = parseInt(c.harga) || 0;
+                    const dp = parseInt(c.dp) || 0;
+                    const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                    const sisa = isLunas ? 0 : Math.max(0, h - dp);
+
+                    const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                    
+                    // Generate template chat pengingat pelunasan H-1
+                    const reminderMsg = `Halo Kak ${c.nama} 😊
+
+Mengingatkan untuk jadwal photoshoot wisuda besok ya 📸✨
+
+🗓 Tanggal : ${c.tanggal}
+⏰ Jam : ${c.jam || '-'} WIB
+📍 Lokasi : ${c.lokasi || '-'}
+🏫 Kampus : ${c.kampus || '-'}
+
+📌 Paket : ${c.paket || 'Silver'}
+
+Untuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak 🙏
+
+📌 Harga Paket : Rp${Number(h).toLocaleString('id-ID')}
+📌 DP Masuk : Rp${Number(dp).toLocaleString('id-ID')}
+📌 Sisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')}
+💳 Pembayaran via QRIS (scan seperti saat DP ya Kak)
+
+Setelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya 😊
+
+📩 Untuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.
+
+Terima kasih banyak, sampai jumpa besok! ✨📸🎓`;
+
+                    const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
+
+                    return `
+                        <div class="p-4 bg-slate-50 hover:bg-amber-50/40 border ${isLunas ? 'border-emerald-200' : 'border-amber-200'} rounded-2xl transition space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200 px-2 py-0.5 rounded-md">
+                                            ⏰ ${c.jam || '-'} WIB
+                                        </span>
+                                        ${isLunas 
+                                            ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">LUNAS</span>'
+                                            : '<span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">BELUM LUNAS</span>'
+                                        }
+                                    </div>
+                                    <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
+                                    <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 block font-bold uppercase">Sisa Pelunasan</span>
+                                    <span class="font-bold ${isLunas ? 'text-emerald-700' : 'text-rose-600'} text-sm sm:text-base">${formatRupiah(sisa)}</span>
+                                </div>
+                            </div>
+
+                            <div class="text-xs text-slate-600 flex items-center justify-between pt-1 border-t border-slate-200/70">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-rose-500 text-xs"></i> ${c.lokasi || '-'}
+                                </span>
+                                <span class="font-semibold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
+                            </div>
+
+                            <div class="flex gap-2 pt-1">
+                                ${waLink ? `
+                                    <a href="${waLink}" target="_blank" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+                                        <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA (1-Klik)
+                                    </a>
+                                ` : `
+                                    <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
+                                        Nomor WA Tidak Valid
+                                    </button>
+                                `}
+                                <button onclick="showCustomModalChat('Format Reminder Pelunasan H-1', \`${reminderMsg.replace(/`/g, "\\`")}\`)" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95" title="Lihat/Salin Format">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
@@ -819,7 +976,12 @@ Apakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika 
 
 Terima kasih 🙏🏼📸🎓`;
 
-            document.getElementById('fgChatPreview').value = chat;
+            showCustomModalChat("Format Chat Konfirmasi FG", chat);
+        }
+
+        function showCustomModalChat(title, text) {
+            document.getElementById('modalChatTitle').innerHTML = `<i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> ${title}`;
+            document.getElementById('fgChatPreview').value = text;
             document.getElementById('modalChat').classList.remove('hidden');
         }
 
@@ -974,7 +1136,7 @@ Terima kasih 🙏🏼📸🎓`;
 
         function onReschedFGChange(val) {
             const customInput = document.getElementById('customReschedFGInput');
-            if (val === '__custom__') {
+            if (val === '__custom_resched__') {
                 customInput.classList.remove('hidden');
                 customInput.focus();
             } else {
@@ -996,7 +1158,7 @@ Terima kasih 🙏🏼📸🎓`;
 
         function openModalChat() {
             generateFGChat();
-            document.getElementById('modalChat').classList.remove('hidden');
+            showCustomModalChat("Format Chat Konfirmasi FG", document.getElementById('fgChatPreview').value);
         }
 
         function closeModalChat() {
@@ -1199,7 +1361,7 @@ Terima kasih 🙏🏼📸🎓`;
         function copyFGChat() {
             const text = document.getElementById('fgChatPreview').value;
             navigator.clipboard.writeText(text).then(() => {
-                showToast('Chat FG berhasil disalin!');
+                showToast('Chat berhasil disalin!');
                 closeModalChat();
             });
         }
@@ -1364,8 +1526,10 @@ Terima kasih 🙏🏼📸🎓`;
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
             
-            // Set default dropdown ke bulan Agustus sesuai kebutuhan analisa kamu saat ini
-            document.getElementById('selectMonthFilter').value = "Agustus";
+            // Set default dropdown ke bulan berjalan
+            const monthNamesID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const currentMonthName = monthNamesID[new Date().getMonth()];
+            document.getElementById('selectMonthFilter').value = currentMonthName;
 
             if (activeUrl) {
                 refreshClientDatabase(false);
