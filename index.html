@@ -8,6 +8,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Library HTML to PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { 
@@ -18,6 +20,14 @@
         @media (min-width: 640px) { input, select, textarea { font-size: 13px !important; } }
         .touch-scroll::-webkit-scrollbar { width: 4px; }
         .touch-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Invoice Print Styling */
+        #invoicePaper {
+            width: 100%;
+            max-width: 580px;
+            background: #ffffff;
+            color: #1e293b;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen pb-12 pt-3 px-3 sm:py-8 sm:px-6">
@@ -32,7 +42,7 @@
                     </div>
                     <div>
                         <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">VIVIDLENS</h1>
-                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Gallery Automation</p>
+                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Invoice Automation</p>
                     </div>
                 </div>
                 <button onclick="openModalSettings()" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL">
@@ -205,7 +215,6 @@
 
         <!-- TAB 2: BOOKING BARU -->
         <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start hidden">
-            
             <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Format Chat Booking WA</label>
@@ -469,6 +478,128 @@
             </div>
         </div>
 
+        <!-- ============================================== -->
+        <!-- MODAL INVOICE RESMI & DOWNLOAD PDF (BISA TOGGLE LUNAS) -->
+        <!-- ============================================== -->
+        <div id="modalInvoice" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto touch-scroll">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-blue-600 text-base"></i>
+                        <h3 class="font-bold text-sm text-slate-800">Invoice & Bukti Pembayaran</h3>
+                    </div>
+                    <!-- SWITCHER MODE: TAGIHAN H-1 ATAU KWITANSI LUNAS -->
+                    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-end">
+                        <button id="btnInvModeUnpaid" onclick="setInvoiceMode(false)" class="text-[11px] font-bold py-1 px-2.5 rounded-lg transition bg-white text-slate-900 shadow-sm">
+                            Tagihan H-1
+                        </button>
+                        <button id="btnInvModePaid" onclick="setInvoiceMode(true)" class="text-[11px] font-bold py-1 px-2.5 rounded-lg transition text-slate-500 hover:text-slate-900">
+                            Kwitansi LUNAS
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DOKUMEN FISIK INVOICE (YANG DI-RENDER KE PDF) -->
+                <div id="invoicePaper" class="border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4 bg-white shadow-sm relative overflow-hidden">
+                    <!-- Top Ribbon -->
+                    <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 bg-slate-900 text-white rounded-lg flex items-center justify-center text-xs font-bold">VL</div>
+                                <span class="text-base font-black tracking-tight text-slate-900">VIVIDLENS</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">Graduation & Portrait Photography Yogyakarta</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider" id="invDocTypeLabel">INVOICE NO</span>
+                            <span id="invNumber" class="text-xs font-mono font-bold text-slate-800">INV/2026/000</span>
+                            <span id="invStatusBadge" class="inline-block mt-1 text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">MENUNGGU PELUNASAN</span>
+                        </div>
+                    </div>
+
+                    <!-- Client & Session Info -->
+                    <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block" id="invBilledLabel">Ditagihkan Kepada:</span>
+                            <span id="invClientName" class="font-bold text-slate-800 block">-</span>
+                            <span id="invClientUniv" class="text-[11px] text-slate-500 block">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Jadwal Photoshoot:</span>
+                            <span id="invSessionDate" class="font-semibold text-slate-800 block">-</span>
+                            <span id="invSessionTime" class="text-[11px] text-blue-700 font-bold block">-</span>
+                        </div>
+                        <div class="col-span-2 pt-1 border-t border-slate-200/60">
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi & Fotografer:</span>
+                            <span id="invLocation" class="text-[11px] text-slate-700 block">-</span>
+                            <span id="invFGName" class="text-[11px] text-emerald-700 font-semibold block">FG: -</span>
+                        </div>
+                    </div>
+
+                    <!-- Rincian Biaya -->
+                    <div class="space-y-2">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Rincian Pembayaran:</span>
+                        <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold">
+                                    <tr>
+                                        <th class="p-2.5">Deskripsi Layanan</th>
+                                        <th class="p-2.5 text-right">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="p-2.5">
+                                            <span id="invPackageTitle" class="font-bold text-slate-800 block">Paket Wisuda</span>
+                                            <span class="text-[10px] text-slate-400">Dokumentasi wisuda eksklusif VividLens</span>
+                                        </td>
+                                        <td id="invPackagePrice" class="p-2.5 text-right font-semibold text-slate-800">Rp0</td>
+                                    </tr>
+                                    <tr class="bg-slate-50/50" id="invDPRow">
+                                        <td class="p-2 text-slate-600">DP Terbayar (Booking Fee)</td>
+                                        <td id="invDPPaid" class="p-2 text-right font-medium text-emerald-600">- Rp0</td>
+                                    </tr>
+                                    <tr class="bg-slate-50/50 hidden" id="invFullPaidRow">
+                                        <td class="p-2 text-slate-600">Total Pelunasan Masuk</td>
+                                        <td id="invFullPaidVal" class="p-2 text-right font-medium text-emerald-600">Rp0</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-slate-900 text-white font-bold">
+                                    <tr>
+                                        <td class="p-3 text-xs" id="invFooterTotalLabel">Sisa Pelunasan H-1</td>
+                                        <td id="invTotalDue" class="p-3 text-right text-sm text-amber-300">Rp0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Payment Instruction / Guarantee Footer -->
+                    <div id="invNoteBox" class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-slate-600 space-y-1">
+                        <span class="font-bold text-blue-900 block" id="invNoteTitle">📌 Ketentuan Pelunasan:</span>
+                        <p class="leading-relaxed text-[10px]" id="invNoteText">
+                            Pelunasan dilakukan H-1 atau sebelum sesi dimulai via QRIS VividLens Graduation. Mohon konfirmasi bukti transfer via WhatsApp agar tim dapat segera memvalidasi sesi Anda.
+                        </p>
+                    </div>
+
+                    <div class="text-center text-[9px] text-slate-400 pt-1">
+                        Terima kasih telah mempercayakan dokumentasi momen kelulusan Anda bersama VividLens ✨
+                    </div>
+                </div>
+
+                <!-- Tombol Action -->
+                <div class="flex gap-2 pt-1">
+                    <button onclick="closeInvoiceModal()" class="w-1/3 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">
+                        Tutup
+                    </button>
+                    <button id="btnDownloadPDF" onclick="downloadInvoicePDF()" class="w-2/3 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-arrow-down"></i> Unduh File PDF Resmi
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL POP-UP SUKSES SIMPAN -->
         <div id="modalSuccessAlert" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
@@ -592,6 +723,9 @@
         let cachedSupabaseClients = [];
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
+        
+        // Data State Invoice Aktif
+        let currentInvoiceData = null;
 
         function getActiveScriptUrl() {
             return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
@@ -1101,16 +1235,16 @@
                                 <span class="font-semibold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
                             </div>
 
-                            <div class="flex gap-2 pt-1">
+                            <div class="flex flex-wrap gap-2 pt-1">
                                 ${waLink ? `
                                     <a href="${waLink}" target="_blank" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-                                        <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA (1-Klik)
+                                        <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA
                                     </a>
-                                ` : `
-                                    <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
-                                        Nomor WA Tidak Valid
-                                    </button>
-                                `}
+                                ` : ''}
+                                <!-- TOMBOL BUKA INVOICE (BISA TAGIHAN / LUNAS) -->
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                                </button>
                                 <button onclick="showCustomModalChat('Format Reminder Pelunasan H-1', \`${reminderMsg.replace(/`/g, "\\`")}\`, '${waClean}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>
@@ -1119,6 +1253,148 @@
                     `;
                 }).join('');
             }
+        }
+
+        // ========================================================
+        // FITUR INVOICE & GENERATOR PDF (MENDUKUNG MODE TAGIHAN / LUNAS)
+        // ========================================================
+        function openInvoiceModal(nama, kampus, paket, harga, dp, sisa, tanggal, jam, lokasi, fg, isLunasInitial = false) {
+            const now = new Date();
+            const dateCode = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+            const randSuffix = Math.floor(100 + Math.random() * 900);
+
+            currentInvoiceData = {
+                nama, kampus, paket,
+                harga: parseInt(harga) || 0,
+                dp: parseInt(dp) || 0,
+                sisa: parseInt(sisa) || 0,
+                tanggal, jam, lokasi, fg,
+                invNo: `INV/${dateCode}/${randSuffix}`,
+                kwitansiNo: `KWT/${dateCode}/${randSuffix}`,
+                isLunas: isLunasInitial || parseInt(sisa) <= 0
+            };
+
+            setInvoiceMode(currentInvoiceData.isLunas);
+            document.getElementById('modalInvoice').classList.remove('hidden');
+        }
+
+        function setInvoiceMode(isLunas) {
+            if (!currentInvoiceData) return;
+            currentInvoiceData.isLunas = isLunas;
+
+            const btnUnpaid = document.getElementById('btnInvModeUnpaid');
+            const btnPaid = document.getElementById('btnInvModePaid');
+            const docTypeLabel = document.getElementById('invDocTypeLabel');
+            const invNumber = document.getElementById('invNumber');
+            const statusBadge = document.getElementById('invStatusBadge');
+            const billedLabel = document.getElementById('invBilledLabel');
+            
+            const dpRow = document.getElementById('invDPRow');
+            const fullPaidRow = document.getElementById('invFullPaidRow');
+            const fullPaidVal = document.getElementById('invFullPaidVal');
+            
+            const footerTotalLabel = document.getElementById('invFooterTotalLabel');
+            const totalDue = document.getElementById('invTotalDue');
+            
+            const noteBox = document.getElementById('invNoteBox');
+            const noteTitle = document.getElementById('invNoteTitle');
+            const noteText = document.getElementById('invNoteText');
+
+            // Set Client & Sesi Info
+            document.getElementById('invClientName').textContent = currentInvoiceData.nama;
+            document.getElementById('invClientUniv').textContent = currentInvoiceData.kampus || 'Umum';
+            document.getElementById('invSessionDate').textContent = currentInvoiceData.tanggal || '-';
+            document.getElementById('invSessionTime').textContent = `${currentInvoiceData.jam || '-'} WIB`;
+            document.getElementById('invLocation').textContent = currentInvoiceData.lokasi || '-';
+            document.getElementById('invFGName').textContent = `Fotografer: Kak ${currentInvoiceData.fg || 'Raihan'}`;
+
+            document.getElementById('invPackageTitle').textContent = `Paket Wisuda ${currentInvoiceData.paket}`;
+            document.getElementById('invPackagePrice').textContent = formatRupiah(currentInvoiceData.harga);
+            document.getElementById('invDPPaid').textContent = `- ${formatRupiah(currentInvoiceData.dp)}`;
+
+            if (isLunas) {
+                // Tampilan Kwitansi Lunas
+                btnUnpaid.className = "text-[11px] font-bold py-1 px-2.5 rounded-lg transition text-slate-500 hover:text-slate-900";
+                btnPaid.className = "text-[11px] font-bold py-1 px-2.5 rounded-lg transition bg-emerald-600 text-white shadow-sm";
+
+                docTypeLabel.textContent = "KWITANSI NO";
+                invNumber.textContent = currentInvoiceData.kwitansiNo;
+
+                statusBadge.textContent = "LUNAS / FULLY PAID";
+                statusBadge.className = "inline-block mt-1 text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+
+                billedLabel.textContent = "Diterima Dari:";
+
+                dpRow.classList.add('hidden');
+                fullPaidRow.classList.remove('hidden');
+                fullPaidVal.textContent = formatRupiah(currentInvoiceData.harga);
+
+                footerTotalLabel.textContent = "Sisa Tagihan (LUNAS)";
+                totalDue.textContent = "Rp0 (LUNAS)";
+                totalDue.className = "p-3 text-right text-sm text-emerald-400 font-bold";
+
+                noteBox.className = "p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 space-y-1";
+                noteTitle.textContent = "✅ Bukti Pembayaran Sah:";
+                noteText.textContent = "Seluruh pembayaran sesi foto wisuda telah diterima secara lunas via transfer resmi. Dokumen ini sah sebagai tanda terima resmi VividLens Graduation.";
+            } else {
+                // Tampilan Tagihan H-1 (Belum Lunas)
+                btnUnpaid.className = "text-[11px] font-bold py-1 px-2.5 rounded-lg transition bg-white text-slate-900 shadow-sm";
+                btnPaid.className = "text-[11px] font-bold py-1 px-2.5 rounded-lg transition text-slate-500 hover:text-slate-900";
+
+                docTypeLabel.textContent = "INVOICE NO";
+                invNumber.textContent = currentInvoiceData.invNo;
+
+                statusBadge.textContent = "MENUNGGU PELUNASAN H-1";
+                statusBadge.className = "inline-block mt-1 text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800";
+
+                billedLabel.textContent = "Ditagihkan Kepada:";
+
+                dpRow.classList.remove('hidden');
+                fullPaidRow.classList.add('hidden');
+
+                footerTotalLabel.textContent = "Sisa Pelunasan H-1";
+                totalDue.textContent = formatRupiah(currentInvoiceData.sisa);
+                totalDue.className = "p-3 text-right text-sm text-amber-300 font-bold";
+
+                noteBox.className = "p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-slate-600 space-y-1";
+                noteTitle.textContent = "📌 Ketentuan Pelunasan:";
+                noteText.textContent = "Pelunasan dilakukan H-1 atau sebelum sesi dimulai via QRIS VividLens Graduation. Mohon konfirmasi bukti transfer via WhatsApp agar tim dapat segera memvalidasi sesi Anda.";
+            }
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('modalInvoice').classList.add('hidden');
+        }
+
+        function downloadInvoicePDF() {
+            if (!currentInvoiceData) return;
+            const element = document.getElementById('invoicePaper');
+            const btn = document.getElementById('btnDownloadPDF');
+            const originalText = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyusun PDF...';
+
+            const prefix = currentInvoiceData.isLunas ? 'Kwitansi_Lunas' : 'Invoice_Pelunasan';
+            const cleanFileName = `${prefix}_VividLens_${currentInvoiceData.nama.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+
+            const opt = {
+                margin:       10,
+                filename:     cleanFileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showToast("File PDF berhasil diunduh!");
+            }).catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert("Gagal mengunduh PDF: " + err.message);
+            });
         }
 
         async function handleCreateDriveAndGallery(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
