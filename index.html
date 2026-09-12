@@ -150,18 +150,34 @@
             </div>
         </div>
 
-        <!-- TAB TRACKER STATUS SELEKSI FOTO KLIEN -->
+        <!-- TAB TRACKER STATUS SELEKSI FOTO KLIEN (PER BULAN) -->
         <div id="sectionTracker" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-list-check text-blue-600"></i> Monitoring Seleksi Foto Galeri
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau klien yang sudah memilih foto atau yang perlu di-follow up (mulai hari ini ke depan).</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5" id="trackerMonthSubtitle">Pantau status pemilihan foto per bulan.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <!-- DROPDOWN FILTER BULAN TRACKER -->
+                    <select id="selectTrackerMonth" onchange="fetchSupabaseClients(true)" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <!-- DROPDOWN STATUS SELEKSI -->
                     <select id="filterTrackerStatus" onchange="renderGalleryTracker()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
-                        <option value="all">Semua Klien</option>
+                        <option value="all">Semua Status</option>
                         <option value="overdue">Perlu Follow-Up (H+7)</option>
                         <option value="submitted">Sudah Memilih (Siap Edit)</option>
                         <option value="pending">Menunggu Seleksi</option>
@@ -724,6 +740,12 @@
             '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
         };
 
+        const NUM_TO_MONTH_FULL = {
+            '01': 'Januari', '02': 'Februari', '03': 'Maret', '04': 'April',
+            '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Agustus',
+            '09': 'September', '10': 'Oktober', '11': 'November', '12': 'Desember'
+        };
+
         let currentFinancials = null;
         let baseStartTime = "15:00";
         let cachedClients = [];
@@ -731,7 +753,6 @@
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
         
-        // Data State Invoice Aktif
         let currentInvoiceData = null;
 
         function getActiveScriptUrl() {
@@ -878,7 +899,7 @@
         }
 
         // ========================================================
-        // FETCH SUPABASE HANYA MULAI HARI INI KE DEPAN
+        // FETCH SUPABASE: FILTER BERDASARKAN BULAN PILIHAN (BULAN BERJALAN DEFAULT)
         // ========================================================
         async function fetchSupabaseClients(showToastNotice = true) {
             if (!supabaseGalleryClient) return;
@@ -886,23 +907,31 @@
             const container = document.getElementById('trackerListContainer');
             container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i> Mengambil data dari Supabase...</div>';
 
+            const selectedMonthNum = document.getElementById('selectTrackerMonth').value;
             const now = new Date();
-            const yToday = now.getFullYear();
-            const mToday = String(now.getMonth() + 1).padStart(2, '0');
-            const dToday = String(now.getDate()).padStart(2, '0');
-            const todayISO = `${yToday}-${mToday}-${dToday}`;
+            const currentYear = now.getFullYear();
+
+            // Hitung tanggal awal dan akhir bulan (YYYY-MM-01 s/d YYYY-MM-Akhir)
+            const startDate = `${currentYear}-${selectedMonthNum}-01`;
+            const lastDayOfMonth = new Date(currentYear, parseInt(selectedMonthNum, 10), 0).getDate();
+            const endDate = `${currentYear}-${selectedMonthNum}-${String(lastDayOfMonth).padStart(2, '0')}`;
+
+            const monthName = NUM_TO_MONTH_FULL[selectedMonthNum] || 'Bulan Terpilih';
+            document.getElementById('trackerMonthSubtitle').textContent = `Menampilkan sesi wisuda bulan ${monthName} ${currentYear}.`;
 
             try {
+                // Filter tanggal antara awal dan akhir bulan yang dipilih
                 const { data, error } = await supabaseGalleryClient
                     .from('clients')
                     .select('*')
-                    .gte('tanggal', todayISO)
+                    .gte('tanggal', startDate)
+                    .lte('tanggal', endDate)
                     .order('created_at', { ascending: false });
 
                 if (!error && data) {
                     cachedSupabaseClients = data;
                     renderGalleryTracker();
-                    if (showToastNotice) showToast(`Tersinkron ${data.length} galeri aktif`);
+                    if (showToastNotice) showToast(`Tersinkron ${data.length} galeri ${monthName}`);
                 } else {
                     throw new Error(error ? error.message : "Gagal mengambil data");
                 }
@@ -957,8 +986,8 @@
                 container.innerHTML = `
                     <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
                         <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
-                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada galeri pada kategori ini</p>
-                        <p class="text-[11px] text-slate-400">Semua progres seleksi foto klien berjalan lancar!</p>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada galeri pada bulan ini</p>
+                        <p class="text-[11px] text-slate-400">Pilih bulan lain atau buat galeri baru lewat tombol 'Buat Galeri & Drive'.</p>
                     </div>
                 `;
                 return;
@@ -2023,7 +2052,15 @@
         window.addEventListener('DOMContentLoaded', () => {
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
-            document.getElementById('selectMonthFilter').value = "September";
+            
+            // Set otomatis bulan berjalan di Rekap Kas dan Tracker Seleksi
+            const now = new Date();
+            const currentMonthStr = String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonthFull = NUM_TO_MONTH_FULL[currentMonthStr] || 'September';
+
+            document.getElementById('selectMonthFilter').value = currentMonthFull;
+            document.getElementById('selectTrackerMonth').value = currentMonthStr;
+
             if (activeUrl) refreshClientDatabase(false);
             recalculateFinancials();
         });
