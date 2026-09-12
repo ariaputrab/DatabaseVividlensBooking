@@ -6,6 +6,8 @@
     <title>Booking Portal - VIVIDLENS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { 
@@ -30,7 +32,7 @@
                     </div>
                     <div>
                         <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">VIVIDLENS</h1>
-                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Financial Sync</p>
+                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Gallery Automation</p>
                     </div>
                 </div>
                 <button onclick="openModalSettings()" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL">
@@ -325,7 +327,6 @@
             </div>
 
             <div class="space-y-3.5">
-                <!-- Wrapper Relative dengan z-index tinggi agar dropdown selalu muncul di atas form -->
                 <div class="relative z-50">
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
                     <div class="relative">
@@ -333,7 +334,6 @@
                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 transition">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
                     </div>
-                    <!-- Dropdown box hasil pencarian -->
                     <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-[999] max-h-64 overflow-y-auto touch-scroll hidden"></div>
                 </div>
 
@@ -451,7 +451,7 @@
                 </div>
                 <div class="space-y-1.5">
                     <h3 class="font-bold text-base text-slate-900" id="successAlertTitle">Berhasil Disimpan!</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed" id="successAlertMsg">Data telah berhasil disinkronkan ke Google Sheets & Google Calendar.</p>
+                    <p class="text-xs text-slate-500 leading-relaxed" id="successAlertMsg">Data telah berhasil disinkronkan.</p>
                 </div>
                 <button onclick="closeSuccessAlert()" class="w-full py-3 bg-slate-900 hover:bg-black active:scale-95 text-white font-bold text-xs rounded-xl shadow transition">
                     Oke, Mantap
@@ -459,7 +459,7 @@
             </div>
         </div>
 
-        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN / GOOGLE DRIVE) -->
+        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN / GOOGLE DRIVE / GALLERY) -->
         <div id="modalChat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
             <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-3.5">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
@@ -517,19 +517,30 @@
 
     <script>
         const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
+        
+        // KONFIGURASI SUPABASE GALLERY VIVIDLENS
+        const SUPABASE_GALLERY_URL = "https://aizhweokxpxfrczqsuik.supabase.co";
+        const SUPABASE_GALLERY_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
+        const GALLERY_BASE_DOMAIN = "https://vividlens-gallery2026.vercel.app";
 
+        let supabaseGalleryClient = null;
+        if (typeof supabase !== 'undefined') {
+            supabaseGalleryClient = supabase.createClient(SUPABASE_GALLERY_URL, SUPABASE_GALLERY_KEY);
+        }
+
+        // DETAIL PAKET + KUOTA FOTO EDIT DISESUAIKAN PERSIS DENGAN PERMINTAAN
         const PACKAGE_DATA = {
-            'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, label: 'Bronze 30 Min' },
-            'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, label: 'Bronze' },
-            'Silver': { harga: 350000, feeFG: 225000, bersih: 125000, duration: 60, label: 'Silver' },
-            'Gold': { harga: 450000, feeFG: 325000, bersih: 125000, duration: 90, label: 'Gold' },
-            'Premium': { harga: 1000000, feeFG: 700000, bersih: 300000, duration: 90, label: 'Premium' },
-            'Plaosan A': { harga: 370000, feeFG: 270000, bersih: 100000, duration: 60, label: 'Plaosan A' },
-            'Plaosan B': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 90, label: 'Plaosan B' },
-            'Group 1': { harga: 450000, feeFG: 350000, bersih: 100000, duration: 60, label: 'Group 1' },
-            'Group 2': { harga: 550000, feeFG: 450000, bersih: 100000, duration: 90, label: 'Group 2' },
-            'Package 3': { harga: 850000, feeFG: 600000, bersih: 250000, duration: 90, label: 'Package 3' },
-            'Couple Package': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 60, label: 'Couple Package' }
+            'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, quota: 10, label: 'Bronze 30 Min' },
+            'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, quota: 20, label: 'Bronze' },
+            'Silver': { harga: 350000, feeFG: 225000, bersih: 125000, duration: 60, quota: 40, label: 'Silver' },
+            'Gold': { harga: 450000, feeFG: 325000, bersih: 125000, duration: 90, quota: 50, label: 'Gold' },
+            'Premium': { harga: 1000000, feeFG: 700000, bersih: 300000, duration: 90, quota: 50, label: 'Premium' },
+            'Plaosan A': { harga: 370000, feeFG: 270000, bersih: 100000, duration: 60, quota: 40, label: 'Plaosan A' },
+            'Plaosan B': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 90, quota: 50, label: 'Plaosan B' },
+            'Group 1': { harga: 450000, feeFG: 350000, bersih: 100000, duration: 60, quota: 30, label: 'Group 1' },
+            'Group 2': { harga: 550000, feeFG: 450000, bersih: 100000, duration: 90, quota: 40, label: 'Group 2' },
+            'Package 3': { harga: 850000, feeFG: 600000, bersih: 250000, duration: 90, quota: 50, label: 'Package 3' },
+            'Couple Package': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 60, quota: 50, label: 'Couple Package' }
         };
 
         const MONTHS_MAP = {
@@ -832,8 +843,9 @@
                                 <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-comment-dots"></i> Chat FG
                                 </button>
-                                <button onclick="handleCreateDriveFolder('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
-                                    <i class="fa-brands fa-google-drive"></i> Link Drive
+                                <!-- TOMBOL OTOMATIS: BUAT FOLDER DRIVE + INSERT SUPABASE GALLERY -->
+                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> Buat Galeri & Drive
                                 </button>
                             </div>
                         </div>
@@ -918,18 +930,19 @@
         }
 
         // ========================================================
-        // FITUR OTOMATIS: GENERATOR GOOGLE DRIVE & CHAT DELIVERY
+        // 1-KLIK INTEGRASI: GOOGLE DRIVE + SUPABASE GALLERY
         // ========================================================
-        async function handleCreateDriveFolder(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
+        async function handleCreateDriveAndGallery(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
 
             const originalHTML = btnEl.innerHTML;
             btnEl.disabled = true;
-            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat...';
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
 
             try {
-                const response = await fetch(scriptUrl, {
+                // 1. Buat Folder di Google Drive lewat Google Apps Script
+                const driveResponse = await fetch(scriptUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
@@ -942,20 +955,64 @@
                     })
                 });
 
-                const resData = await response.json();
+                const driveData = await driveResponse.json();
 
-                if (resData.status === "success" && resData.folderUrl) {
-                    const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-
-                    const deliveryMessage = `Halo Kak ${nama} 🎓✨\n\nTerima kasih banyak ya sudah mempercayakan dokumentasi momen kelulusannya bersama VividLens Graduation! 🙏📸\n\nBerikut link Google Drive untuk hasil sesi fotonya ya Kak:\n🔗 ${resData.folderUrl}\n\n📌 Catatan:\n• Silakan cek & unduh semua file originalnya ya Kak.\n• Jika paket Kakak menyertakan editing, silakan pilih foto terbaiknya lalu kirimkan nomor/nama file fotonya ke chat ini ya 😊\n• Folder link ini kami simpan selama 30 hari ke depan, mohon untuk segera di-backup ke perangkat pribadi ya Kak 🙏\n\nSekali lagi selamat atas gelarnya dan sukses selalu ke depannya! ✨🎓🎉`;
-
-                    showCustomModalChat("Kirim Hasil Foto Google Drive", deliveryMessage, waClean);
-                    showToast("Folder Drive berhasil dibuat!");
-                } else {
-                    alert("Gagal membuat folder: " + (resData.message || "Unknown error"));
+                if (driveData.status !== "success" || !driveData.folderUrl) {
+                    throw new Error(driveData.message || "Gagal membuat folder Google Drive");
                 }
+
+                const driveUrl = driveData.folderUrl;
+                const isoTanggal = cleanToISODate(tanggal);
+
+                // 2. Tentukan kuota edit otomatis berdasarkan paket
+                const matchedKey = matchPackageKey(paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                const kuotaFoto = pkg.quota || 40;
+
+                // 3. Generate slug sesuai aturan admin.html: nama-kampus
+                const cleanSlugNama = nama.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
+                let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
+
+                // 4. Masukkan langsung ke Database Supabase
+                if (supabaseGalleryClient) {
+                    const { data: existingClient } = await supabaseGalleryClient
+                        .from('clients')
+                        .select('id')
+                        .eq('slug', slug)
+                        .maybeSingle();
+
+                    if (existingClient) {
+                        slug = `${slug}-${Math.floor(100 + Math.random() * 900)}`;
+                    }
+
+                    const { error: supabaseError } = await supabaseGalleryClient
+                        .from('clients')
+                        .insert([{
+                            slug: slug,
+                            nama: nama,
+                            univ: kampus || 'Umum',
+                            tanggal: isoTanggal,
+                            limit_foto: kuotaFoto,
+                            drive_link: driveUrl
+                        }]);
+
+                    if (supabaseError) {
+                        console.warn("Supabase insert notice:", supabaseError.message);
+                    }
+                }
+
+                // 5. Rangkai URL Web Gallery & Format Pesan WhatsApp
+                const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
+                const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+
+                const deliveryMessage = `Halo Kak! 🙌🏼✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens:\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto melalui tombol "Download Semua Foto" yang ada di dalam galeri.\n\nTerima kasih Kak! ✨📸🎓`;
+
+                showCustomModalChat("Kirim Link Galeri Seleksi Klien", deliveryMessage, waClean);
+                showToast("Folder Drive & Galeri Supabase Berhasil Dibuat!");
+
             } catch (err) {
-                alert("Terjadi kesalahan koneksi saat membuat folder Drive.");
+                alert("Terjadi kesalahan: " + err.message);
             } finally {
                 btnEl.disabled = false;
                 btnEl.innerHTML = originalHTML;
@@ -1166,7 +1223,7 @@
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            const chat = `Hallo Kak ${nama} 🙌🏼✨\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak hari ini ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi || '-'}\n🎓 Kampus: ${kampus || '-'}\n📦 Paket: ${paket || 'Silver'}\n📱 WA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
+            const chat = `Hallo Kak ${nama} 🙌🏼✨\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi || '-'}\n🎓 Kampus: ${kampus || '-'}\n📦 Paket: ${paket || 'Silver'}\n📱 WA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
 
             showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
         }
@@ -1254,9 +1311,9 @@
             if (lower.includes('30 min') || lower.includes('30m')) return 'Bronze 30 Min';
             if (lower.includes('plaosan b')) return 'Plaosan B';
             if (lower.includes('plaosan')) return 'Plaosan A';
-            if (lower.includes('package 3') || lower.includes('group 3')) return 'Package 3';
-            if (lower.includes('package 2') || lower.includes('group 2')) return 'Group 2';
-            if (lower.includes('package 1') || lower.includes('group 1')) return 'Group 1';
+            if (lower.includes('package 3') || lower.includes('group 3') || lower.includes('grup 3')) return 'Package 3';
+            if (lower.includes('package 2') || lower.includes('group 2') || lower.includes('grup 2')) return 'Group 2';
+            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Group 1';
             if (lower.includes('couple')) return 'Couple Package';
             if (lower.includes('premium')) return 'Premium';
             if (lower.includes('gold')) return 'Gold';
