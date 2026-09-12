@@ -46,14 +46,14 @@
 
             <!-- Tab Switcher -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
-                <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
                 </button>
                 <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-calendar-check text-[11px]"></i> Hari Ini
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
-                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
+                <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking
                 </button>
                 <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
@@ -68,14 +68,14 @@
         <!-- ============================================== -->
         <!-- TAB 0: REKAP KEUANGAN & KPI -->
         <!-- ============================================== -->
-        <div id="sectionFinance" class="space-y-4 hidden">
+        <div id="sectionFinance" class="space-y-4">
             <!-- Selector Bulan -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-wallet text-blue-600"></i> Rekapitulasi Kas & Finansial
                     </h2>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ringkasan performa omzet dan bagi hasil tim FG per bulan.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ringkasan performa omzet dan kas masuk per bulan.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <select id="selectMonthFilter" onchange="calculateFinancialStats()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
@@ -93,7 +93,7 @@
                         <option value="November">November</option>
                         <option value="Desember">Desember</option>
                     </select>
-                    <button onclick="refreshClientDatabase(true)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                    <button onclick="refreshClientDatabase(true)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition" title="Refresh Data">
                         <i class="fa-solid fa-arrows-rotate text-sm"></i>
                     </button>
                 </div>
@@ -129,7 +129,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                         <div>
-                            <span class="text-slate-400 block text-[10px] uppercase font-bold">DP Masuk</span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Total Uang Masuk</span>
                             <span id="kpiTotalDP" class="font-bold text-slate-800 text-sm">Rp0</span>
                         </div>
                         <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
@@ -172,7 +172,7 @@
         <!-- ============================================== -->
         <!-- TAB 2: BOOKING BARU -->
         <!-- ============================================== -->
-        <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+        <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start hidden">
             
             <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
@@ -668,7 +668,7 @@
             }
         }
 
-        // Perhitungan Finansial & KPI
+        // Perhitungan Finansial & KPI yang Membaca Status LUNAS
         function calculateFinancialStats() {
             const filter = document.getElementById('selectMonthFilter').value;
             
@@ -681,7 +681,7 @@
             }
 
             let totalOmzet = 0;
-            let totalDP = 0;
+            let totalMasuk = 0;
             let totalSisa = 0;
             let totalFeeFG = 0;
             let totalBersih = 0;
@@ -689,9 +689,8 @@
             filtered.forEach(c => {
                 const h = parseInt(c.harga) || 0;
                 const dp = parseInt(c.dp) || 0;
-                const pel = parseInt(c.pelunasan) || (h - dp);
+                const statusPay = (c.payment || '').toUpperCase().trim();
                 
-                // Cari profil paket untuk akurasi fee FG
                 const matchedKey = matchPackageKey(c.paket);
                 const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
                 
@@ -699,17 +698,24 @@
                 const bersih = parseInt(c.bersih) || (h - fee);
 
                 totalOmzet += h;
-                totalDP += dp;
-                totalSisa += Math.max(0, pel);
                 totalFeeFG += fee;
                 totalBersih += bersih;
+
+                // Logika Pembayaran:
+                if (statusPay === 'LUNAS') {
+                    totalMasuk += h; // Uang sudah masuk penuh
+                } else {
+                    totalMasuk += dp; // Baru bayar DP
+                    const sisa = Math.max(0, h - dp);
+                    totalSisa += sisa; // Masuk ke piutang belum lunas
+                }
             });
 
             document.getElementById('kpiTotalKlien').textContent = filtered.length;
             document.getElementById('kpiTotalOmzet').textContent = formatRupiah(totalOmzet);
             document.getElementById('kpiTotalBersih').textContent = formatRupiah(totalBersih);
             document.getElementById('kpiTotalFeeFG').textContent = formatRupiah(totalFeeFG);
-            document.getElementById('kpiTotalDP').textContent = formatRupiah(totalDP);
+            document.getElementById('kpiTotalDP').textContent = formatRupiah(totalMasuk);
             document.getElementById('kpiTotalSisa').textContent = formatRupiah(totalSisa);
         }
 
@@ -968,7 +974,7 @@ Terima kasih 🙏🏼📸🎓`;
 
         function onReschedFGChange(val) {
             const customInput = document.getElementById('customReschedFGInput');
-            if (val === '__custom_resched__') {
+            if (val === '__custom__') {
                 customInput.classList.remove('hidden');
                 customInput.focus();
             } else {
@@ -1358,10 +1364,8 @@ Terima kasih 🙏🏼📸🎓`;
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
             
-            // Set bulan filter otomatis ke bulan sekarang
-            const monthNamesID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const currentMonthName = monthNamesID[new Date().getMonth()];
-            document.getElementById('selectMonthFilter').value = currentMonthName;
+            // Set default dropdown ke bulan Agustus sesuai kebutuhan analisa kamu saat ini
+            document.getElementById('selectMonthFilter').value = "Agustus";
 
             if (activeUrl) {
                 refreshClientDatabase(false);
