@@ -325,7 +325,7 @@
             </div>
 
             <div class="space-y-3.5">
-                <!-- Wrapper Relative dengan z-index tinggi agar dropdown tidak tertutup elemen bawahnya -->
+                <!-- Wrapper Relative dengan z-index tinggi agar dropdown selalu muncul di atas form -->
                 <div class="relative z-50">
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
                     <div class="relative">
@@ -963,13 +963,12 @@
         }
 
         // ========================================================
-        // FITUR CARI KLIEN RESCHEDULE (PERBAIKAN SEARCH & DROPDOWN)
+        // FITUR CARI KLIEN RESCHEDULE (DROPDOWN OVERFLOW & AUTO-FETCH)
         // ========================================================
         function onSearchClient(query) {
             const box = document.getElementById('searchResultsBox');
             if (!box) return;
 
-            // Jika database klien masih kosong, fetch otomatis
             if (!cachedClients || cachedClients.length === 0) {
                 box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Sedang mengambil data klien...</div>';
                 box.classList.remove('hidden');
@@ -1103,6 +1102,67 @@
                 box.classList.add('hidden');
             }
         });
+
+        // ========================================================
+        // SUBMIT RESCHEDULE (MENGIRIM SHEET ASAL & TANGGAL LAMA)
+        // ========================================================
+        async function submitReschedule() {
+            const scriptUrl = getActiveScriptUrl();
+            const nama = document.getElementById('reschedNama').value.trim();
+            const isoDateBaru = document.getElementById('reschedTanggalPicker').value;
+            const jamBaru = document.getElementById('reschedJam').value.trim();
+            const fgBaru = getActiveReschedFG();
+            const lokasiBaru = document.getElementById('reschedLokasi').value.trim();
+
+            if (!nama || !isoDateBaru || !jamBaru) return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
+
+            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
+            let isoDateLama = null;
+            if (window._selectedClientOriginalDate) isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
+
+            const clientObj = window._selectedClientObject || {};
+            const noWaVal = clientObj.noWa || '';
+            const fin = window._currentReschedFinancials || {};
+
+            const btn = document.getElementById('btnSubmitReschedule');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupdate...';
+
+            const payload = {
+                action: "reschedule",
+                nama: nama,
+                sheetAsal: clientObj.sheetName || '',
+                tanggalLama: clientObj.tanggal || '',
+                tanggalBaru: tglBaruFormatted,
+                isoDateBaru: isoDateBaru,
+                isoDateLama: isoDateLama,
+                jamBaru: jamBaru,
+                fgBaru: fgBaru,
+                lokasiBaru: lokasiBaru || clientObj.lokasi,
+                noWa: noWaVal,
+                paketBaru: fin.paket || clientObj.paket || 'Silver',
+                hargaBaru: fin.harga !== undefined ? fin.harga : clientObj.harga,
+                pelunasanBaru: fin.pelunasan !== undefined ? fin.pelunasan : clientObj.pelunasan,
+                feeFGBaru: fin.feeFG !== undefined ? fin.feeFG : undefined,
+                bersihBaru: fin.bersih !== undefined ? fin.bersih : undefined
+            };
+
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showSuccessAlert('Reschedule Berhasil Diupdate! 🔄', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
+                refreshClientDatabase(false);
+            } catch (err) {
+                showToast('Gagal update reschedule', false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Update Jadwal & Paket di Sheet & GCal';
+            }
+        }
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
@@ -1364,62 +1424,6 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 1-Klik Simpan ke Sheet & GCal';
-            }
-        }
-
-        async function submitReschedule() {
-            const scriptUrl = getActiveScriptUrl();
-            const nama = document.getElementById('reschedNama').value.trim();
-            const isoDateBaru = document.getElementById('reschedTanggalPicker').value;
-            const jamBaru = document.getElementById('reschedJam').value.trim();
-            const fgBaru = getActiveReschedFG();
-            const lokasiBaru = document.getElementById('reschedLokasi').value.trim();
-
-            if (!nama || !isoDateBaru || !jamBaru) return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
-
-            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
-            let isoDateLama = null;
-            if (window._selectedClientOriginalDate) isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
-
-            const clientObj = window._selectedClientObject || {};
-            const noWaVal = clientObj.noWa || '';
-            const fin = window._currentReschedFinancials || {};
-
-            const btn = document.getElementById('btnSubmitReschedule');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupdate...';
-
-            const payload = {
-                action: "reschedule",
-                nama: nama,
-                tanggalBaru: tglBaruFormatted,
-                isoDateBaru: isoDateBaru,
-                isoDateLama: isoDateLama,
-                jamBaru: jamBaru,
-                fgBaru: fgBaru,
-                lokasiBaru: lokasiBaru || clientObj.lokasi,
-                noWa: noWaVal,
-                paketBaru: fin.paket || clientObj.paket || 'Silver',
-                hargaBaru: fin.harga !== undefined ? fin.harga : clientObj.harga,
-                pelunasanBaru: fin.pelunasan !== undefined ? fin.pelunasan : clientObj.pelunasan,
-                feeFGBaru: fin.feeFG !== undefined ? fin.feeFG : undefined,
-                bersihBaru: fin.bersih !== undefined ? fin.bersih : undefined
-            };
-
-            try {
-                await fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                showSuccessAlert('Reschedule Berhasil Diupdate! 🔄', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
-                refreshClientDatabase(false);
-            } catch (err) {
-                showToast('Gagal update reschedule', false);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Update Jadwal & Paket di Sheet & GCal';
             }
         }
 
