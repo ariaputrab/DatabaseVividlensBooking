@@ -36,7 +36,7 @@
                     </div>
                     <div>
                         <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">VIVIDLENS</h1>
-                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Calendar Sync</p>
+                        <p class="text-[11px] sm:text-xs text-slate-500">Booking & Financial Sync</p>
                     </div>
                 </div>
                 <button onclick="openModalSettings()" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL">
@@ -46,12 +46,15 @@
 
             <!-- Tab Switcher -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
+                <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
+                </button>
                 <button id="tabTodayBtn" onclick="switchMode('today')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-calendar-check text-[11px]"></i> Hari Ini
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
                 <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
-                    <i class="fa-solid fa-plus text-[11px]"></i> Booking Baru
+                    <i class="fa-solid fa-plus text-[11px]"></i> Booking
                 </button>
                 <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95">
                     <i class="fa-solid fa-calendar-days text-[11px]"></i> Reschedule
@@ -61,6 +64,86 @@
                 </button>
             </div>
         </header>
+
+        <!-- ============================================== -->
+        <!-- TAB 0: REKAP KEUANGAN & KPI -->
+        <!-- ============================================== -->
+        <div id="sectionFinance" class="space-y-4 hidden">
+            <!-- Selector Bulan -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-wallet text-blue-600"></i> Rekapitulasi Kas & Finansial
+                    </h2>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ringkasan performa omzet dan bagi hasil tim FG per bulan.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="selectMonthFilter" onchange="calculateFinancialStats()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
+                        <option value="all">Semua Bulan</option>
+                        <option value="Januari">Januari</option>
+                        <option value="Februari">Februari</option>
+                        <option value="Maret">Maret</option>
+                        <option value="April">April</option>
+                        <option value="Mei">Mei</option>
+                        <option value="Juni">Juni</option>
+                        <option value="Juli">Juli</option>
+                        <option value="Agustus">Agustus</option>
+                        <option value="September">September</option>
+                        <option value="Oktober">Oktober</option>
+                        <option value="November">November</option>
+                        <option value="Desember">Desember</option>
+                    </select>
+                    <button onclick="refreshClientDatabase(true)" class="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                        <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Klien</span>
+                    <span id="kpiTotalKlien" class="text-xl sm:text-2xl font-bold text-slate-900">0</span>
+                    <span class="text-[10px] text-slate-500 block">Sesi terdaftar</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Total Omzet</span>
+                    <span id="kpiTotalOmzet" class="text-lg sm:text-xl font-bold text-blue-700">Rp0</span>
+                    <span class="text-[10px] text-slate-500 block">Nilai seluruh paket</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-sm space-y-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">Bersih Studio</span>
+                    <span id="kpiTotalBersih" class="text-lg sm:text-xl font-bold text-emerald-800">Rp0</span>
+                    <span class="text-[10px] text-emerald-600 block">Porsi kas masuk</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/30 shadow-sm space-y-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">Total Fee FG</span>
+                    <span id="kpiTotalFeeFG" class="text-lg sm:text-xl font-bold text-amber-800">Rp0</span>
+                    <span class="text-[10px] text-amber-600 block">Kewajiban fotografer</span>
+                </div>
+            </div>
+
+            <!-- Status Arus Kas -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Status Pembayaran Klien</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">DP Masuk</span>
+                            <span id="kpiTotalDP" class="font-bold text-slate-800 text-sm">Rp0</span>
+                        </div>
+                        <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                        <div>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Sisa Belum Lunas (Piutang)</span>
+                            <span id="kpiTotalSisa" class="font-bold text-rose-600 text-sm">Rp0</span>
+                        </div>
+                        <i class="fa-solid fa-clock text-amber-500 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- ============================================== -->
         <!-- TAB 1: JADWAL HARI INI -->
@@ -78,7 +161,6 @@
                 </button>
             </div>
 
-            <!-- List Jadwal Hari Ini -->
             <div id="todayScheduleList" class="space-y-3">
                 <div class="p-8 text-center text-slate-400 text-xs">
                     <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
@@ -92,7 +174,6 @@
         <!-- ============================================== -->
         <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
             
-            <!-- Paste Form WA -->
             <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Format Chat Booking WA</label>
@@ -107,7 +188,6 @@
                 </button>
             </div>
 
-            <!-- Panel Edit & Konfirmasi -->
             <div class="lg:col-span-7 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
                     <h2 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
@@ -245,7 +325,6 @@
             </div>
 
             <div class="space-y-3.5">
-                <!-- Autocomplete Input -->
                 <div class="relative">
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
                     <div class="relative">
@@ -258,7 +337,6 @@
                     </div>
                 </div>
 
-                <!-- Info Box Jadwal Klien -->
                 <div id="clientDetailsCard" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl hidden space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] font-bold uppercase text-blue-800 tracking-wider">Jadwal Terdaftar:</span>
@@ -284,7 +362,6 @@
                     </div>
                 </div>
 
-                <!-- Pilihan Paket Baru / Tetap -->
                 <div>
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Paket Wisuda (Bisa Diganti)</label>
                     <select id="reschedPaket" onchange="onReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
@@ -310,7 +387,6 @@
                     </select>
                 </div>
 
-                <!-- Preview Pelunasan Baru jika Ganti Paket -->
                 <div id="reschedFinancialPreview" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl grid grid-cols-3 gap-2 text-xs">
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Harga Baru</span>
@@ -326,7 +402,6 @@
                     </div>
                 </div>
 
-                <!-- Form Ganti Tanggal (Date Picker) & Jam -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Pilih Tanggal Baru / Tetap</label>
@@ -339,7 +414,6 @@
                     </div>
                 </div>
 
-                <!-- Lokasi Baru & FG Baru -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi Baru / Tetap</label>
@@ -535,14 +609,20 @@
         }
 
         function switchMode(mode) {
+            const isFinance = mode === 'finance';
             const isToday = mode === 'today';
             const isNew = mode === 'new';
             const isResched = mode === 'reschedule';
 
+            document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
+            document.getElementById('tabFinanceBtn').className = isFinance
+                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
+                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
+
             document.getElementById('tabTodayBtn').className = isToday
                 ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5"
                 : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5";
@@ -557,8 +637,9 @@
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
-            } else if (isToday) {
-                renderTodaySchedule();
+            } else {
+                if (isToday) renderTodaySchedule();
+                if (isFinance) calculateFinancialStats();
             }
         }
 
@@ -576,17 +657,62 @@
                 if (data && data.status === 'success' && data.clients) {
                     cachedClients = data.clients;
                     renderTodaySchedule();
+                    calculateFinancialStats();
                     if (showToastNotice) showToast(`Berhasil memuat ${cachedClients.length} klien`);
                 }
             } catch (err) {
-                if (showToastNotice) showToast('Gagal memuat daftar klien', false);
+                if (showToastNotice) showToast('Gagal memuat data klien', false);
             } finally {
                 if (btn) btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh';
                 isFetchingClients = false;
             }
         }
 
-        // Render List Jadwal Hari Ini
+        // Perhitungan Finansial & KPI
+        function calculateFinancialStats() {
+            const filter = document.getElementById('selectMonthFilter').value;
+            
+            let filtered = cachedClients;
+            if (filter !== 'all') {
+                filtered = cachedClients.filter(c => {
+                    return (c.sheetName && c.sheetName.toLowerCase().includes(filter.toLowerCase())) ||
+                           (c.tanggal && c.tanggal.toLowerCase().includes(filter.toLowerCase()));
+                });
+            }
+
+            let totalOmzet = 0;
+            let totalDP = 0;
+            let totalSisa = 0;
+            let totalFeeFG = 0;
+            let totalBersih = 0;
+
+            filtered.forEach(c => {
+                const h = parseInt(c.harga) || 0;
+                const dp = parseInt(c.dp) || 0;
+                const pel = parseInt(c.pelunasan) || (h - dp);
+                
+                // Cari profil paket untuk akurasi fee FG
+                const matchedKey = matchPackageKey(c.paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                
+                const fee = parseInt(c.feeFG) || pkg.feeFG;
+                const bersih = parseInt(c.bersih) || (h - fee);
+
+                totalOmzet += h;
+                totalDP += dp;
+                totalSisa += Math.max(0, pel);
+                totalFeeFG += fee;
+                totalBersih += bersih;
+            });
+
+            document.getElementById('kpiTotalKlien').textContent = filtered.length;
+            document.getElementById('kpiTotalOmzet').textContent = formatRupiah(totalOmzet);
+            document.getElementById('kpiTotalBersih').textContent = formatRupiah(totalBersih);
+            document.getElementById('kpiTotalFeeFG').textContent = formatRupiah(totalFeeFG);
+            document.getElementById('kpiTotalDP').textContent = formatRupiah(totalDP);
+            document.getElementById('kpiTotalSisa').textContent = formatRupiah(totalSisa);
+        }
+
         function renderTodaySchedule() {
             const container = document.getElementById('todayScheduleList');
             const now = new Date();
@@ -595,7 +721,6 @@
             const day = String(now.getDate()).padStart(2, '0');
             const todayISO = `${year}-${month}-${day}`;
 
-            // Tampilkan tanggal hari ini di label
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('todayDateLabel').textContent = now.toLocaleDateString('id-ID', dateOptions);
 
@@ -604,10 +729,8 @@
                 return cISO === todayISO;
             });
 
-            // Urutkan berdasarkan jam mulai
             todayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
 
-            // Update badge hitungan di Tab
             const badgeCount = document.getElementById('badgeTodayCount');
             if (todayClients.length > 0) {
                 badgeCount.textContent = todayClients.length;
@@ -1234,6 +1357,12 @@ Terima kasih 🙏🏼📸🎓`;
         window.addEventListener('DOMContentLoaded', () => {
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
+            
+            // Set bulan filter otomatis ke bulan sekarang
+            const monthNamesID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const currentMonthName = monthNamesID[new Date().getMonth()];
+            document.getElementById('selectMonthFilter').value = currentMonthName;
+
             if (activeUrl) {
                 refreshClientDatabase(false);
             }
