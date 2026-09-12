@@ -273,7 +273,6 @@
                     </div>
                 </div>
 
-                <!-- Keuangan Ringkas -->
                 <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Harga</span>
@@ -293,7 +292,6 @@
                     </div>
                 </div>
 
-                <!-- Tombol Aksi -->
                 <div class="space-y-2 pt-1">
                     <button id="btnSync" onclick="syncDirectToSheetAndCalendar()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-md">
                         <i class="fa-solid fa-cloud-arrow-up"></i> 1-Klik Simpan ke Sheet & GCal
@@ -327,14 +325,16 @@
             </div>
 
             <div class="space-y-3.5">
-                <div class="relative">
+                <!-- Wrapper Relative dengan z-index tinggi agar dropdown tidak tertutup elemen bawahnya -->
+                <div class="relative z-50">
                     <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
                     <div class="relative">
                         <input type="text" id="reschedNama" onfocus="onSearchClient(this.value)" oninput="onSearchClient(this.value)" autocomplete="off" placeholder="Ketik nama klien..." 
                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 transition">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
                     </div>
-                    <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto touch-scroll hidden"></div>
+                    <!-- Dropdown box hasil pencarian -->
+                    <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-[999] max-h-64 overflow-y-auto touch-scroll hidden"></div>
                 </div>
 
                 <div id="clientDetailsCard" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl hidden space-y-2">
@@ -961,6 +961,148 @@
                 btnEl.innerHTML = originalHTML;
             }
         }
+
+        // ========================================================
+        // FITUR CARI KLIEN RESCHEDULE (PERBAIKAN SEARCH & DROPDOWN)
+        // ========================================================
+        function onSearchClient(query) {
+            const box = document.getElementById('searchResultsBox');
+            if (!box) return;
+
+            // Jika database klien masih kosong, fetch otomatis
+            if (!cachedClients || cachedClients.length === 0) {
+                box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Sedang mengambil data klien...</div>';
+                box.classList.remove('hidden');
+                refreshClientDatabase(false).then(() => {
+                    onSearchClient(query);
+                });
+                return;
+            }
+
+            const q = (query || '').trim().toLowerCase();
+
+            const filtered = q === '' 
+                ? cachedClients 
+                : cachedClients.filter(c => {
+                    const nama = (c.nama || '').toLowerCase();
+                    const kampus = (c.kampus || '').toLowerCase();
+                    const paket = (c.paket || '').toLowerCase();
+                    return nama.includes(q) || kampus.includes(q) || paket.includes(q);
+                });
+
+            if (filtered.length === 0) {
+                box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center italic">Klien "' + query + '" tidak ditemukan</div>';
+                box.classList.remove('hidden');
+                return;
+            }
+
+            box.innerHTML = filtered.slice(0, 15).map((c, idx) => `
+                <div onclick="selectClientItem(${idx})" class="p-3 hover:bg-blue-50 active:bg-blue-100 cursor-pointer border-b border-slate-100 last:border-0 transition text-left">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-800 text-xs">${c.nama}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">${c.sheetName || 'Sheet'}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                        <span>🎓 ${c.kampus || '-'}</span>
+                        <span>📦 ${c.paket || '-'}</span>
+                        <span>📅 ${c.tanggal || '-'} (${c.jam || '-'})</span>
+                        <span class="text-emerald-600 font-semibold">📸 ${c.fg || 'Raihan'}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            window._currentFilteredClients = filtered;
+            box.classList.remove('hidden');
+        }
+
+        function selectClientItem(index) {
+            const client = window._currentFilteredClients ? window._currentFilteredClients[index] : null;
+            if (!client) return;
+
+            window._selectedClientOriginalDate = client.tanggal;
+            window._selectedClientObject = client;
+            window._selectedClientDP = parseInt(client.dp) || 100000;
+
+            document.getElementById('reschedNama').value = client.nama;
+            document.getElementById('searchResultsBox').classList.add('hidden');
+
+            const card = document.getElementById('clientDetailsCard');
+            card.classList.remove('hidden');
+            document.getElementById('cardSheetTab').textContent = 'Tab ' + client.sheetName;
+            document.getElementById('cardNamaKampus').textContent = `${client.nama} (${client.kampus || '-'})`;
+            document.getElementById('cardLokasiPaket').textContent = `${client.lokasi || '-'} • ${client.paket}`;
+            
+            const cleanTgl = isoToSheetDate(cleanToISODate(client.tanggal));
+            document.getElementById('cardJadwalLama').textContent = `${cleanTgl} • ${client.jam}`;
+            document.getElementById('cardFGLama').textContent = client.fg;
+
+            const iso = cleanToISODate(client.tanggal);
+            if (iso) {
+                document.getElementById('reschedTanggalPicker').value = iso;
+                document.getElementById('reschedTanggalFormatted').textContent = isoToSheetDate(iso);
+            }
+
+            document.getElementById('reschedJam').value = client.jam;
+            document.getElementById('reschedLokasi').value = client.lokasi || '';
+
+            const matchedKey = matchPackageKey(client.paket);
+            document.getElementById('reschedPaket').value = matchedKey;
+            onReschedPaketChange(false);
+
+            const fgSelect = document.getElementById('reschedFG');
+            let matched = false;
+            for (let opt of fgSelect.options) {
+                if (opt.value.toLowerCase() === (client.fg || '').toLowerCase()) {
+                    fgSelect.value = opt.value;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                fgSelect.value = '__custom_resched__';
+                document.getElementById('customReschedFGInput').classList.remove('hidden');
+                document.getElementById('customReschedFGInput').value = client.fg;
+            } else {
+                document.getElementById('customReschedFGInput').classList.add('hidden');
+            }
+
+            showToast(`Data ${client.nama} terpilih!`);
+        }
+
+        function onReschedPaketChange(adjustTime = true) {
+            const paketKey = document.getElementById('reschedPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+            const dpAwal = window._selectedClientDP || 100000;
+            const sisaPelunasan = Math.max(0, pkg.harga - dpAwal);
+
+            document.getElementById('reschedOutHarga').textContent = formatRupiah(pkg.harga);
+            document.getElementById('reschedOutDP').textContent = formatRupiah(dpAwal);
+            document.getElementById('reschedOutPelunasan').textContent = formatRupiah(sisaPelunasan);
+
+            if (adjustTime) {
+                const currentJam = document.getElementById('reschedJam').value.trim();
+                const startHour = currentJam.split('-')[0].trim();
+                if (startHour) {
+                    document.getElementById('reschedJam').value = calculateTimeRange(startHour, pkg.duration);
+                }
+            }
+
+            window._currentReschedFinancials = {
+                paket: pkg.label,
+                harga: pkg.harga,
+                dp: dpAwal,
+                pelunasan: sisaPelunasan,
+                feeFG: pkg.feeFG,
+                bersih: pkg.bersih
+            };
+        }
+
+        document.addEventListener('click', (e) => {
+            const box = document.getElementById('searchResultsBox');
+            if (box && !e.target.closest('#reschedNama') && !e.target.closest('#searchResultsBox')) {
+                box.classList.add('hidden');
+            }
+        });
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
