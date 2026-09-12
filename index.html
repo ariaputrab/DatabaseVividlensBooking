@@ -147,7 +147,7 @@
                     <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-list-check text-blue-600"></i> Monitoring Seleksi Foto Galeri
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau klien yang sudah memilih foto atau yang perlu di-follow up (lewat H+7).</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pantau klien yang sudah memilih foto atau yang perlu di-follow up (mulai hari ini ke depan).</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <select id="filterTrackerStatus" onchange="renderGalleryTracker()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
@@ -485,7 +485,7 @@
             </div>
         </div>
 
-        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN / GOOGLE DRIVE / GALLERY) -->
+        <!-- MODAL CHAT UNIVERSAL -->
         <div id="modalChat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
             <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-3.5">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
@@ -554,7 +554,7 @@
             supabaseGalleryClient = supabase.createClient(SUPABASE_GALLERY_URL, SUPABASE_GALLERY_KEY);
         }
 
-        // DETAIL PAKET + KUOTA FOTO EDIT DISESUAIKAN
+        // DETAIL PAKET + KUOTA FOTO EDIT
         const PACKAGE_DATA = {
             'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, quota: 10, label: 'Bronze 30 Min' },
             'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, quota: 20, label: 'Bronze' },
@@ -736,22 +736,32 @@
             }
         }
 
+        // ========================================================
+        // FETCH SUPABASE HANYA MULAI HARI INI KE DEPAN
+        // ========================================================
         async function fetchSupabaseClients(showToastNotice = true) {
             if (!supabaseGalleryClient) return;
 
             const container = document.getElementById('trackerListContainer');
             container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i> Mengambil data dari Supabase...</div>';
 
+            const now = new Date();
+            const yToday = now.getFullYear();
+            const mToday = String(now.getMonth() + 1).padStart(2, '0');
+            const dToday = String(now.getDate()).padStart(2, '0');
+            const todayISO = `${yToday}-${mToday}-${dToday}`;
+
             try {
                 const { data, error } = await supabaseGalleryClient
                     .from('clients')
                     .select('*')
+                    .gte('tanggal', todayISO)
                     .order('created_at', { ascending: false });
 
                 if (!error && data) {
                     cachedSupabaseClients = data;
                     renderGalleryTracker();
-                    if (showToastNotice) showToast(`Tersinkron dengan ${data.length} galeri`);
+                    if (showToastNotice) showToast(`Tersinkron ${data.length} galeri aktif`);
                 } else {
                     throw new Error(error ? error.message : "Gagal mengambil data");
                 }
