@@ -12,14 +12,8 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
             -webkit-tap-highlight-color: transparent;
         }
-        input, select, textarea {
-            font-size: 15px !important;
-        }
-        @media (min-width: 640px) {
-            input, select, textarea {
-                font-size: 13px !important;
-            }
-        }
+        input, select, textarea { font-size: 15px !important; }
+        @media (min-width: 640px) { input, select, textarea { font-size: 13px !important; } }
         .touch-scroll::-webkit-scrollbar { width: 4px; }
         .touch-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
@@ -69,7 +63,6 @@
         <!-- TAB 0: REKAP KEUANGAN & KPI -->
         <!-- ============================================== -->
         <div id="sectionFinance" class="space-y-4">
-            <!-- Selector Bulan -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
@@ -99,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- KPI Cards Grid -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Klien</span>
@@ -123,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- Status Arus Kas -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Status Pembayaran Klien</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -149,7 +140,6 @@
         <!-- TAB 1: JADWAL HARI INI & REMINDER H-1 -->
         <!-- ============================================== -->
         <div id="sectionTodaySchedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-4 hidden">
-            <!-- Sub-tab Selector: Hari Ini vs Reminder H-1 -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
                 <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
                     <button id="subTabTodayBtn" onclick="switchScheduleSubTab('today')" class="py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1">
@@ -166,15 +156,13 @@
                 </button>
             </div>
 
-            <!-- Sub Header Date Info -->
             <div class="flex justify-between items-center px-1">
                 <div>
-                    <h3 id="scheduleSectionTitle" class="text-xs sm:text-sm font-bold text-slate-900">Jadwal Sesi Foto Hari Ini</h3>
+                    <h3 id="scheduleSectionTitle" class="text-xs sm:text-sm font-bold text-slate-900">Jadwal Photoshoot Hari Ini</h3>
                     <p id="todayDateLabel" class="text-[11px] text-slate-500 mt-0.5">-</p>
                 </div>
             </div>
 
-            <!-- List Container -->
             <div id="scheduleCardsContainer" class="space-y-3">
                 <div class="p-8 text-center text-slate-400 text-xs">
                     <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
@@ -346,9 +334,7 @@
                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 transition">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
                     </div>
-
-                    <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto touch-scroll hidden">
-                    </div>
+                    <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-56 overflow-y-auto touch-scroll hidden"></div>
                 </div>
 
                 <div id="clientDetailsCard" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl hidden space-y-2">
@@ -473,7 +459,7 @@
             </div>
         </div>
 
-        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN H-1) -->
+        <!-- MODAL CHAT UNIVERSAL (FG / PELUNASAN / GOOGLE DRIVE) -->
         <div id="modalChat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
             <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-3.5">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
@@ -485,11 +471,15 @@
                     </button>
                 </div>
                 <textarea id="fgChatPreview" rows="12" readonly class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-700 outline-none resize-none leading-relaxed text-xs"></textarea>
+                
                 <div class="flex gap-2">
                     <button onclick="closeModalChat()" class="w-1/3 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">Tutup</button>
-                    <button onclick="copyFGChat()" class="w-2/3 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95">
-                        <i class="fa-solid fa-copy"></i> Salin Chat
+                    <button onclick="copyFGChat()" class="w-1/3 py-2.5 text-xs font-bold bg-slate-900 hover:bg-black text-white rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-copy"></i> Salin
                     </button>
+                    <a id="btnDirectSendWA" href="#" target="_blank" class="w-1/3 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                        <i class="fa-brands fa-whatsapp"></i> Buka WA
+                    </a>
                 </div>
             </div>
         </div>
@@ -563,7 +553,7 @@
         let baseStartTime = "15:00";
         let cachedClients = [];
         let isFetchingClients = false;
-        let activeScheduleSubTab = 'today'; // 'today' | 'tomorrow'
+        let activeScheduleSubTab = 'today';
 
         function getActiveScriptUrl() {
             return localStorage.getItem('vividlens_apps_script_url') || DEFAULT_SCRIPT_URL;
@@ -751,13 +741,11 @@
             const container = document.getElementById('scheduleCardsContainer');
             const now = new Date();
             
-            // Tanggal Hari Ini ISO
             const yToday = now.getFullYear();
             const mToday = String(now.getMonth() + 1).padStart(2, '0');
             const dToday = String(now.getDate()).padStart(2, '0');
             const todayISO = `${yToday}-${mToday}-${dToday}`;
 
-            // Tanggal Besok (H-1) ISO
             const tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const yTom = tomorrow.getFullYear();
@@ -767,14 +755,12 @@
 
             const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-            // Filter Klien Hari Ini & Besok
             const todayClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === todayISO);
             const tomorrowClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === tomorrowISO);
 
             todayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
             tomorrowClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
 
-            // Update Badge Counts
             const badgeMain = document.getElementById('badgeTodayCount');
             const badgeSubToday = document.getElementById('badgeSubTodayCount');
             const badgeSubTom = document.getElementById('badgeSubTomorrowCount');
@@ -796,7 +782,6 @@
                 badgeSubTom.classList.add('hidden');
             }
 
-            // Tampilkan Konten Sesuai SubTab Aktif
             if (activeScheduleSubTab === 'today') {
                 document.getElementById('scheduleSectionTitle').textContent = "Jadwal Photoshoot Hari Ini";
                 document.getElementById('todayDateLabel').textContent = now.toLocaleDateString('id-ID', dateOptions);
@@ -838,18 +823,17 @@
                                 <span class="font-medium">${c.lokasi || '-'}</span>
                             </div>
 
-                            <div class="flex gap-2 pt-1">
+                            <div class="flex flex-wrap gap-2 pt-1">
                                 ${waLink ? `
                                     <a href="${waLink}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                                        <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA Klien
+                                        <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA
                                     </a>
-                                ` : `
-                                    <button disabled class="flex-1 py-2 bg-slate-200 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
-                                        No WA Tidak Ada
-                                    </button>
-                                `}
-                                <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                ` : ''}
+                                <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-comment-dots"></i> Chat FG
+                                </button>
+                                <button onclick="handleCreateDriveFolder('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                    <i class="fa-brands fa-google-drive"></i> Link Drive
                                 </button>
                             </div>
                         </div>
@@ -857,7 +841,6 @@
                 }).join('');
 
             } else {
-                // Tampilan Tab Reminder H-1 (Besok)
                 document.getElementById('scheduleSectionTitle').textContent = "Reminder Tagihan Pelunasan (H-1 Sesi Besok)";
                 document.getElementById('todayDateLabel').textContent = `Target Sesi: ${tomorrow.toLocaleDateString('id-ID', dateOptions)}`;
 
@@ -879,33 +862,9 @@
                     const dp = parseInt(c.dp) || 0;
                     const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
-
                     const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     
-                    // Generate template chat pengingat pelunasan H-1
-                    const reminderMsg = `Halo Kak ${c.nama} 😊
-
-Mengingatkan untuk jadwal photoshoot wisuda besok ya 📸✨
-
-🗓 Tanggal : ${c.tanggal}
-⏰ Jam : ${c.jam || '-'} WIB
-📍 Lokasi : ${c.lokasi || '-'}
-🏫 Kampus : ${c.kampus || '-'}
-
-📌 Paket : ${c.paket || 'Silver'}
-
-Untuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak 🙏
-
-📌 Harga Paket : Rp${Number(h).toLocaleString('id-ID')}
-📌 DP Masuk : Rp${Number(dp).toLocaleString('id-ID')}
-📌 Sisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')}
-💳 Pembayaran via QRIS (scan seperti saat DP ya Kak)
-
-Setelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya 😊
-
-📩 Untuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.
-
-Terima kasih banyak, sampai jumpa besok! ✨📸🎓`;
+                    const reminderMsg = `Halo Kak ${c.nama} 😊\n\nMengingatkan untuk jadwal photoshoot wisuda besok ya 📸✨\n\n🗓 Tanggal : ${c.tanggal}\n⏰ Jam : ${c.jam || '-'} WIB\n📍 Lokasi : ${c.lokasi || '-'}\n🏫 Kampus : ${c.kampus || '-'}\n\n📌 Paket : ${c.paket || 'Silver'}\n\nUntuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak 🙏\n\n📌 Harga Paket : Rp${Number(h).toLocaleString('id-ID')}\n📌 DP Masuk : Rp${Number(dp).toLocaleString('id-ID')}\n📌 Sisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')} (LUNAS via QRIS)\n💳 Pembayaran via QRIS (scan seperti saat DP ya Kak)\n\nSetelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya 😊\n\n📩 Untuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.\n\nTerima kasih banyak, sampai jumpa besok! ✨📸🎓`;
 
                     const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
@@ -948,7 +907,7 @@ Terima kasih banyak, sampai jumpa besok! ✨📸🎓`;
                                         Nomor WA Tidak Valid
                                     </button>
                                 `}
-                                <button onclick="showCustomModalChat('Format Reminder Pelunasan H-1', \`${reminderMsg.replace(/`/g, "\\`")}\`)" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95" title="Lihat/Salin Format">
+                                <button onclick="showCustomModalChat('Format Reminder Pelunasan H-1', \`${reminderMsg.replace(/`/g, "\\`")}\`, '${waClean}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>
                             </div>
@@ -958,221 +917,86 @@ Terima kasih banyak, sampai jumpa besok! ✨📸🎓`;
             }
         }
 
-        function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
-            const chat = `Hallo Kak ${nama} 🙌🏼✨
+        // ========================================================
+        // FITUR OTOMATIS: GENERATOR GOOGLE DRIVE & CHAT DELIVERY
+        // ========================================================
+        async function handleCreateDriveFolder(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
 
-Perkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓
+            const originalHTML = btnEl.innerHTML;
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Membuat...';
 
-Izin konfirmasi kembali untuk jadwal sesi foto Kakak hari ini ya:
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "create_drive_folder",
+                        nama: nama,
+                        tanggal: tanggal,
+                        jam: jam,
+                        paket: paket,
+                        kampus: kampus
+                    })
+                });
 
-🗓️ Tanggal: ${tanggal}
-⏰ Jam: ${jam} WIB
-📍 Lokasi: ${lokasi || '-'}
-🎓 Kampus: ${kampus || '-'}
-📦 Paket: ${paket || 'Silver'}
-📱 WA: ${noWa || '-'}
+                const resData = await response.json();
 
-Apakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨
+                if (resData.status === "success" && resData.folderUrl) {
+                    const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
-Terima kasih 🙏🏼📸🎓`;
+                    const deliveryMessage = `Halo Kak ${nama} 🎓✨\n\nTerima kasih banyak ya sudah mempercayakan dokumentasi momen kelulusannya bersama VividLens Graduation! 🙏📸\n\nBerikut link Google Drive untuk hasil sesi fotonya ya Kak:\n🔗 ${resData.folderUrl}\n\n📌 Catatan:\n• Silakan cek & unduh semua file originalnya ya Kak.\n• Jika paket Kakak menyertakan editing, silakan pilih foto terbaiknya lalu kirimkan nomor/nama file fotonya ke chat ini ya 😊\n• Folder link ini kami simpan selama 30 hari ke depan, mohon untuk segera di-backup ke perangkat pribadi ya Kak 🙏\n\nSekali lagi selamat atas gelarnya dan sukses selalu ke depannya! ✨🎓🎉`;
 
-            showCustomModalChat("Format Chat Konfirmasi FG", chat);
+                    showCustomModalChat("Kirim Hasil Foto Google Drive", deliveryMessage, waClean);
+                    showToast("Folder Drive berhasil dibuat!");
+                } else {
+                    alert("Gagal membuat folder: " + (resData.message || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Terjadi kesalahan koneksi saat membuat folder Drive.");
+            } finally {
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalHTML;
+            }
         }
 
-        function showCustomModalChat(title, text) {
+        function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
+            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+            const chat = `Hallo Kak ${nama} 🙌🏼✨\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak hari ini ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi || '-'}\n🎓 Kampus: ${kampus || '-'}\n📦 Paket: ${paket || 'Silver'}\n📱 WA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
+
+            showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
+        }
+
+        function showCustomModalChat(title, text, waClean = '') {
             document.getElementById('modalChatTitle').innerHTML = `<i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> ${title}`;
             document.getElementById('fgChatPreview').value = text;
+            
+            const btnWA = document.getElementById('btnDirectSendWA');
+            if (waClean) {
+                btnWA.href = `https://wa.me/${waClean}?text=${encodeURIComponent(text)}`;
+                btnWA.classList.remove('hidden');
+            } else {
+                btnWA.classList.add('hidden');
+            }
+
             document.getElementById('modalChat').classList.remove('hidden');
-        }
-
-        function onSearchClient(query) {
-            const box = document.getElementById('searchResultsBox');
-            const q = (query || '').trim().toLowerCase();
-            
-            if (cachedClients.length === 0) {
-                box.classList.add('hidden');
-                return;
-            }
-
-            const filtered = q === '' 
-                ? cachedClients 
-                : cachedClients.filter(c => 
-                    c.nama.toLowerCase().includes(q) || 
-                    (c.kampus && c.kampus.toLowerCase().includes(q))
-                );
-
-            if (filtered.length === 0) {
-                box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center italic">Klien tidak ditemukan</div>';
-                box.classList.remove('hidden');
-                return;
-            }
-
-            box.innerHTML = filtered.slice(0, 10).map((c, idx) => `
-                <div onclick="selectClientItem(${idx})" class="p-3 hover:bg-slate-50 active:bg-slate-100 cursor-pointer border-b border-slate-100 last:border-0 transition">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-800 text-xs">${c.nama}</span>
-                        <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded font-mono text-slate-600">${c.sheetName}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span>🎓 ${c.kampus || '-'}</span>
-                        <span>📦 ${c.paket || '-'}</span>
-                        <span>📅 ${isoToSheetDate(cleanToISODate(c.tanggal))} (${c.jam})</span>
-                        <span>📸 FG: ${c.fg}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            window._currentFilteredClients = filtered;
-            box.classList.remove('hidden');
-        }
-
-        function selectClientItem(index) {
-            const client = window._currentFilteredClients ? window._currentFilteredClients[index] : null;
-            if (!client) return;
-
-            window._selectedClientOriginalDate = client.tanggal;
-            window._selectedClientObject = client;
-            window._selectedClientDP = parseInt(client.dp) || 100000;
-
-            document.getElementById('reschedNama').value = client.nama;
-            document.getElementById('searchResultsBox').classList.add('hidden');
-
-            const card = document.getElementById('clientDetailsCard');
-            card.classList.remove('hidden');
-            document.getElementById('cardSheetTab').textContent = 'Tab ' + client.sheetName;
-            document.getElementById('cardNamaKampus').textContent = `${client.nama} (${client.kampus || '-'})`;
-            document.getElementById('cardLokasiPaket').textContent = `${client.lokasi || '-'} • ${client.paket}`;
-            
-            const cleanTgl = isoToSheetDate(cleanToISODate(client.tanggal));
-            document.getElementById('cardJadwalLama').textContent = `${cleanTgl} • ${client.jam}`;
-            document.getElementById('cardFGLama').textContent = client.fg;
-
-            const iso = cleanToISODate(client.tanggal);
-            if (iso) {
-                document.getElementById('reschedTanggalPicker').value = iso;
-                document.getElementById('reschedTanggalFormatted').textContent = isoToSheetDate(iso);
-            }
-
-            document.getElementById('reschedJam').value = client.jam;
-            document.getElementById('reschedLokasi').value = client.lokasi || '';
-
-            const matchedKey = matchPackageKey(client.paket);
-            document.getElementById('reschedPaket').value = matchedKey;
-            onReschedPaketChange(false);
-
-            const fgSelect = document.getElementById('reschedFG');
-            let matched = false;
-            for (let opt of fgSelect.options) {
-                if (opt.value.toLowerCase() === (client.fg || '').toLowerCase()) {
-                    fgSelect.value = opt.value;
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                fgSelect.value = '__custom_resched__';
-                document.getElementById('customReschedFGInput').classList.remove('hidden');
-                document.getElementById('customReschedFGInput').value = client.fg;
-            } else {
-                document.getElementById('customReschedFGInput').classList.add('hidden');
-            }
-
-            showToast(`Data ${client.nama} terpilih!`);
-        }
-
-        function onReschedPaketChange(adjustTime = true) {
-            const paketKey = document.getElementById('reschedPaket').value;
-            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
-            const dpAwal = window._selectedClientDP || 100000;
-            const sisaPelunasan = Math.max(0, pkg.harga - dpAwal);
-
-            document.getElementById('reschedOutHarga').textContent = formatRupiah(pkg.harga);
-            document.getElementById('reschedOutDP').textContent = formatRupiah(dpAwal);
-            document.getElementById('reschedOutPelunasan').textContent = formatRupiah(sisaPelunasan);
-
-            if (adjustTime) {
-                const currentJam = document.getElementById('reschedJam').value.trim();
-                const startHour = currentJam.split('-')[0].trim();
-                if (startHour) {
-                    document.getElementById('reschedJam').value = calculateTimeRange(startHour, pkg.duration);
-                }
-            }
-
-            window._currentReschedFinancials = {
-                paket: pkg.label,
-                harga: pkg.harga,
-                dp: dpAwal,
-                pelunasan: sisaPelunasan,
-                feeFG: pkg.feeFG,
-                bersih: pkg.bersih
-            };
-        }
-
-        document.addEventListener('click', (e) => {
-            const box = document.getElementById('searchResultsBox');
-            if (!e.target.closest('#reschedNama') && !e.target.closest('#searchResultsBox')) {
-                box.classList.add('hidden');
-            }
-        });
-
-        function getActiveFG() {
-            const sel = document.getElementById('selectFG').value;
-            if (sel === '__custom__') {
-                return document.getElementById('customFGInput').value.trim() || 'Raihan';
-            }
-            return sel;
-        }
-
-        function onFGChange(val) {
-            const customInput = document.getElementById('customFGInput');
-            if (val === '__custom__') {
-                customInput.classList.remove('hidden');
-                customInput.focus();
-            } else {
-                customInput.classList.add('hidden');
-            }
-            onFieldUpdate();
-        }
-
-        function onReschedFGChange(val) {
-            const customInput = document.getElementById('customReschedFGInput');
-            if (val === '__custom_resched__') {
-                customInput.classList.remove('hidden');
-                customInput.focus();
-            } else {
-                customInput.classList.add('hidden');
-            }
-        }
-
-        function getActiveReschedFG() {
-            const sel = document.getElementById('reschedFG').value;
-            if (sel === '__custom_resched__') {
-                return document.getElementById('customReschedFGInput').value.trim() || 'Raihan';
-            }
-            return sel;
-        }
-
-        function onFieldUpdate() {
-            generateFGChat();
-        }
-
-        function openModalChat() {
-            generateFGChat();
-            showCustomModalChat("Format Chat Konfirmasi FG", document.getElementById('fgChatPreview').value);
         }
 
         function closeModalChat() {
             document.getElementById('modalChat').classList.add('hidden');
         }
 
-        function openModalSettings() {
-            document.getElementById('modalSettings').classList.remove('hidden');
+        function copyFGChat() {
+            const text = document.getElementById('fgChatPreview').value;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Chat berhasil disalin!');
+            });
         }
 
-        function closeModalSettings() {
-            document.getElementById('modalSettings').classList.add('hidden');
-        }
-
+        function openModalSettings() { document.getElementById('modalSettings').classList.remove('hidden'); }
+        function closeModalSettings() { document.getElementById('modalSettings').classList.add('hidden'); }
         function saveAndCloseSettings() {
             const url = document.getElementById('scriptUrlInput').value.trim();
             localStorage.setItem('vividlens_apps_script_url', url);
@@ -1186,10 +1010,7 @@ Terima kasih 🙏🏼📸🎓`;
             document.getElementById('successAlertMsg').textContent = message;
             document.getElementById('modalSuccessAlert').classList.remove('hidden');
         }
-
-        function closeSuccessAlert() {
-            document.getElementById('modalSuccessAlert').classList.add('hidden');
-        }
+        function closeSuccessAlert() { document.getElementById('modalSuccessAlert').classList.add('hidden'); }
 
         async function pasteFromClipboard() {
             try {
@@ -1298,9 +1119,7 @@ Terima kasih 🙏🏼📸🎓`;
             showToast('Data berhasil diekstrak!');
         }
 
-        function onPaketChange() {
-            recalculateFinancials();
-        }
+        function onPaketChange() { recalculateFinancials(); }
 
         function recalculateFinancials() {
             const paketKey = document.getElementById('selectPaket').value;
@@ -1338,32 +1157,16 @@ Terima kasih 🙏🏼📸🎓`;
             const noWa = document.getElementById('outNoWa').value.trim() || '-';
             const paket = currentFinancials ? currentFinancials.paketLabel : 'Silver';
 
-            const chat = `Hallo Kak ${nama || '...'} 🙌🏼✨
-
-Perkenalkan, saya ${fgName} dari tim VividLens Graduation 📸🎓
-
-Izin konfirmasi kembali untuk jadwal sesi foto Kakak ya:
-
-🗓️ Tanggal: ${tanggal}
-⏰ Jam: ${jam} WIB
-📍 Lokasi: ${lokasi}
-🎓 Kampus: ${kampus}
-📦 Paket: ${paket}
-📱 WA: ${noWa}
-
-Apakah sudah sesuai, Kak? Untuk meeting point-nya di mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨
-
-Terima kasih 🙏🏼📸🎓`;
+            const chat = `Hallo Kak ${nama || '...'} 🙌🏼✨\n\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi}\n🎓 Kampus: ${kampus}\n📦 Paket: ${paket}\n📱 WA: ${noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
 
             document.getElementById('fgChatPreview').value = chat;
         }
 
-        function copyFGChat() {
-            const text = document.getElementById('fgChatPreview').value;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Chat berhasil disalin!');
-                closeModalChat();
-            });
+        function openModalChat() {
+            generateFGChat();
+            const noWa = document.getElementById('outNoWa').value.trim();
+            const waClean = noWa.replace(/\D/g, '').replace(/^0/, '62');
+            showCustomModalChat("Format Chat Konfirmasi FG", document.getElementById('fgChatPreview').value, waClean);
         }
 
         async function syncDirectToSheetAndCalendar() {
@@ -1380,7 +1183,6 @@ Terima kasih 🙏🏼📸🎓`;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
 
             generateFGChat();
-
             const noWaVal = document.getElementById('outNoWa').value.trim();
 
             const payload = {
@@ -1431,16 +1233,11 @@ Terima kasih 🙏🏼📸🎓`;
             const fgBaru = getActiveReschedFG();
             const lokasiBaru = document.getElementById('reschedLokasi').value.trim();
 
-            if (!nama || !isoDateBaru || !jamBaru) {
-                return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
-            }
+            if (!nama || !isoDateBaru || !jamBaru) return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
 
             const tglBaruFormatted = isoToSheetDate(isoDateBaru);
-
             let isoDateLama = null;
-            if (window._selectedClientOriginalDate) {
-                isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
-            }
+            if (window._selectedClientOriginalDate) isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
 
             const clientObj = window._selectedClientObject || {};
             const noWaVal = clientObj.noWa || '';
@@ -1504,8 +1301,7 @@ Terima kasih 🙏🏼📸🎓`;
                 currentFinancials.bersih, "UNPAID", `Halo Kak ${nama} 😊`
             ];
 
-            const tsvRow = rowData.join('\t');
-            navigator.clipboard.writeText(tsvRow).then(() => {
+            navigator.clipboard.writeText(rowData.join('\t')).then(() => {
                 showToast(`1 baris (${nama}) tersalin!`);
             });
         }
@@ -1517,23 +1313,35 @@ Terima kasih 🙏🏼📸🎓`;
             text.textContent = msg;
             icon.className = isSuccess ? "fa-solid fa-check text-emerald-400 text-sm" : "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
             toast.classList.remove('-translate-y-16', 'translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('-translate-y-16', 'opacity-0');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('-translate-y-16', 'opacity-0'); }, 3000);
+        }
+
+        function onFieldUpdate() { generateFGChat(); }
+        function getActiveFG() {
+            const sel = document.getElementById('selectFG').value;
+            return sel === '__custom__' ? (document.getElementById('customFGInput').value.trim() || 'Raihan') : sel;
+        }
+        function onFGChange(val) {
+            const customInput = document.getElementById('customFGInput');
+            if (val === '__custom__') { customInput.classList.remove('hidden'); customInput.focus(); }
+            else { customInput.classList.add('hidden'); }
+            onFieldUpdate();
+        }
+        function onReschedFGChange(val) {
+            const customInput = document.getElementById('customReschedFGInput');
+            if (val === '__custom_resched__') { customInput.classList.remove('hidden'); customInput.focus(); }
+            else { customInput.classList.add('hidden'); }
+        }
+        function getActiveReschedFG() {
+            const sel = document.getElementById('reschedFG').value;
+            return sel === '__custom_resched__' ? (document.getElementById('customReschedFGInput').value.trim() || 'Raihan') : sel;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             const activeUrl = getActiveScriptUrl();
             document.getElementById('scriptUrlInput').value = activeUrl;
-            
-            // Set default dropdown ke bulan berjalan
-            const monthNamesID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const currentMonthName = monthNamesID[new Date().getMonth()];
-            document.getElementById('selectMonthFilter').value = currentMonthName;
-
-            if (activeUrl) {
-                refreshClientDatabase(false);
-            }
+            document.getElementById('selectMonthFilter').value = "September";
+            if (activeUrl) refreshClientDatabase(false);
             recalculateFinancials();
         });
     </script>
