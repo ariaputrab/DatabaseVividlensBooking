@@ -596,14 +596,14 @@
                     </div>
 
                     <div id="invNoteBox" class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-slate-600 space-y-1">
-                        <span class="font-bold text-blue-900 block" id="invNoteTitle">📌 Ketentuan Pelunasan:</span>
+                        <span class="font-bold text-blue-900 block" id="invNoteTitle">Ketentuan Pelunasan:</span>
                         <p class="leading-relaxed text-[10px]" id="invNoteText">
                             Pelunasan dilakukan H-1 atau sebelum sesi dimulai via QRIS VividLens Graduation. Mohon konfirmasi bukti transfer via WhatsApp agar tim dapat segera memvalidasi sesi Anda.
                         </p>
                     </div>
 
                     <div class="text-center text-[9px] text-slate-400 pt-1">
-                        Terima kasih telah mempercayakan dokumentasi momen kelulusan Anda bersama VividLens ✨
+                        Terima kasih telah mempercayakan dokumentasi momen kelulusan Anda bersama VividLens
                     </div>
                 </div>
 
@@ -1112,13 +1112,11 @@
             const container = document.getElementById('scheduleCardsContainer');
             const now = new Date();
             
-            // Tanggal Hari Ini
             const yToday = now.getFullYear();
             const mToday = String(now.getMonth() + 1).padStart(2, '0');
             const dToday = String(now.getDate()).padStart(2, '0');
             const todayISO = `${yToday}-${mToday}-${dToday}`;
 
-            // Tanggal Kemarin (Sesi H+1 Delivery)
             const yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
             const yYest = yesterday.getFullYear();
@@ -1126,7 +1124,6 @@
             const dYest = String(yesterday.getDate()).padStart(2, '0');
             const yesterdayISO = `${yYest}-${mYest}-${dYest}`;
 
-            // Tanggal Besok (Sesi H-1 Reminder)
             const tomorrow = new Date(now);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const yTom = tomorrow.getFullYear();
@@ -1144,7 +1141,6 @@
             todayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
             tomorrowClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
 
-            // Badges
             const badgeSubYest = document.getElementById('badgeSubYesterdayCount');
             const badgeSubToday = document.getElementById('badgeSubTodayCount');
             const badgeSubTom = document.getElementById('badgeSubTomorrowCount');
@@ -1174,7 +1170,6 @@
                 badgeSubTom.classList.add('hidden');
             }
 
-            // KONTEN SUB-TAB
             if (activeScheduleSubTab === 'yesterday') {
                 document.getElementById('scheduleSectionTitle').textContent = "Sesi Kemarin (Kirim Galeri & Delivery H+1)";
                 document.getElementById('todayDateLabel').textContent = `Sesi: ${yesterday.toLocaleDateString('id-ID', dateOptions)}`;
@@ -1212,7 +1207,6 @@
                 container.innerHTML = todayClients.map(c => renderScheduleCard(c, false)).join('');
 
             } else {
-                // REMINDER BESOK H-1
                 document.getElementById('scheduleSectionTitle').textContent = "Reminder Tagihan Pelunasan (H-1 Sesi Besok)";
                 document.getElementById('todayDateLabel').textContent = `Target Sesi: ${tomorrow.toLocaleDateString('id-ID', dateOptions)}`;
 
@@ -1236,12 +1230,15 @@
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
                     const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     
-                    const reminderMsg = `Halo Kak ${c.nama} 😊\n\nMengingatkan untuk jadwal photoshoot wisuda besok ya 📸✨\n\n🗓 Tanggal : ${c.tanggal}\n⏰ Jam : ${c.jam || '-'} WIB\n📍 Lokasi : ${c.lokasi || '-'}\n🏫 Kampus : ${c.kampus || '-'}\n\n📌 Paket : ${c.paket || 'Silver'}\n\nUntuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak 🙏\n\n📌 Harga Paket : Rp${Number(h).toLocaleString('id-ID')}\n📌 DP Masuk : Rp${Number(dp).toLocaleString('id-ID')}\n📌 Sisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')} (LUNAS via QRIS)\n💳 Pembayaran via QRIS (scan seperti saat DP ya Kak)\n\nSetelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya 😊\n\n📩 Untuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.\n\nTerima kasih banyak, sampai jumpa besok! ✨📸🎓`;
+                    const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda besok ya\n\nTanggal : ${c.tanggal}\nJam : ${c.jam || '-'} WIB\nLokasi : ${c.lokasi || '-'}\nKampus : ${c.kampus || '-'}\n\nPaket : ${c.paket || 'Silver'}\n\nUntuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak\n\nHarga Paket : Rp${Number(h).toLocaleString('id-ID')}\nDP Masuk : Rp${Number(dp).toLocaleString('id-ID')}\nSisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')} (LUNAS via QRIS)\nPembayaran via QRIS (scan seperti saat DP ya Kak)\n\nSetelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya\n\nUntuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.\n\nTerima kasih banyak, sampai jumpa besok!`;
 
                     const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
+                    const storageKey = `reminder_sent_${c.nama}_${tomorrowISO}`;
+                    const isSent = localStorage.getItem(storageKey) === 'true';
+
                     return `
-                        <div class="p-4 bg-slate-50 hover:bg-amber-50/40 border ${isLunas ? 'border-emerald-200' : 'border-amber-200'} rounded-2xl transition space-y-3">
+                        <div class="p-4 ${isSent ? 'bg-emerald-50/60 border-emerald-300' : 'bg-slate-50 hover:bg-amber-50/40 border ' + (isLunas ? 'border-emerald-200' : 'border-amber-200')} rounded-2xl transition space-y-3">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="flex items-center gap-1.5">
@@ -1252,6 +1249,7 @@
                                             ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">LUNAS</span>'
                                             : '<span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">BELUM LUNAS</span>'
                                         }
+                                        ${isSent ? '<span class="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> Terkirim</span>' : ''}
                                     </div>
                                     <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
                                     <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
@@ -1271,14 +1269,14 @@
 
                             <div class="flex flex-wrap gap-2 pt-1">
                                 ${waLink ? `
-                                    <a href="${waLink}" target="_blank" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+                                    <a href="${waLink}" target="_blank" onclick="markReminderSent('${c.nama}', '${tomorrowISO}')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
                                         <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA
                                     </a>
                                 ` : ''}
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                                 </button>
-                                <button onclick="showCustomModalChat('Format Reminder Pelunasan H-1', \`${reminderMsg.replace(/`/g, "\\`")}\`, '${waClean}')" class="px-3 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                <button onclick="navigator.clipboard.writeText(\`${reminderMsg}\`); markReminderSent('${c.nama}', '${tomorrowISO}');" class="px-3 py-2 ${isSent ? 'bg-emerald-700 text-white' : 'bg-slate-900 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95" title="Salin Pesan Reminder">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>
                             </div>
@@ -1286,6 +1284,13 @@
                     `;
                 }).join('');
             }
+        }
+
+        function markReminderSent(namaKlien, dateISO) {
+            const storageKey = `reminder_sent_${namaKlien}_${dateISO}`;
+            localStorage.setItem(storageKey, 'true');
+            showToast(`Reminder untuk ${namaKlien} ditandai terkirim!`);
+            renderCombinedSchedule();
         }
 
         // HELPER CARD UNTUK HARI INI & KEMARIN
@@ -1425,7 +1430,7 @@
                 totalDue.className = "p-3 text-right text-sm text-emerald-400 font-bold";
 
                 noteBox.className = "p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 text-[11px] text-emerald-900 space-y-1";
-                noteTitle.textContent = "✅ Bukti Pembayaran Sah:";
+                noteTitle.textContent = "Bukti Pembayaran Sah:";
                 noteText.textContent = "Seluruh pembayaran sesi foto wisuda telah diterima secara lunas via transfer resmi. Dokumen ini sah sebagai tanda terima resmi VividLens Graduation.";
             } else {
                 btnUnpaid.className = "text-[11px] font-bold py-1 px-2.5 rounded-lg transition bg-white text-slate-900 shadow-sm";
@@ -1447,7 +1452,7 @@
                 totalDue.className = "p-3 text-right text-sm text-amber-300 font-bold";
 
                 noteBox.className = "p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-slate-600 space-y-1";
-                noteTitle.textContent = "📌 Ketentuan Pelunasan:";
+                noteTitle.textContent = "Ketentuan Pelunasan:";
                 noteText.textContent = "Pelunasan dilakukan H-1 atau sebelum sesi dimulai via QRIS VividLens Graduation. Mohon konfirmasi bukti transfer via WhatsApp agar tim dapat segera memvalidasi sesi Anda.";
             }
         }
@@ -1491,6 +1496,30 @@
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
 
+            const cleanSlugNama = nama.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
+            let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
+
+            if (supabaseGalleryClient) {
+                const { data: existingClient } = await supabaseGalleryClient
+                    .from('clients')
+                    .select('*')
+                    .eq('slug', slug)
+                    .maybeSingle();
+
+                if (existingClient && existingClient.drive_link) {
+                    const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
+                    const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                    const kuotaFoto = existingClient.limit_foto || 40;
+
+                    const readyMessage = `Halo Kak!\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation\n\nBerikut link Galeri Foto Vividlens Kakak:\n\nLink Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri.\n2. Pilih foto maksimal sesuai paket.\n3. Klik Salin Format WhatsApp dan kirim ke chat ini.\n\nTerima kasih Kak!`;
+
+                    showCustomModalChat("Kirim Link Galeri (Sudah Ada)", readyMessage, waClean);
+                    showToast("Galeri klien ini sudah pernah dibuat sebelumnya!");
+                    return;
+                }
+            }
+
             const originalHTML = btnEl.innerHTML;
             btnEl.disabled = true;
             btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
@@ -1522,21 +1551,7 @@
                 const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
                 const kuotaFoto = pkg.quota || 40;
 
-                const cleanSlugNama = nama.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
-                let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
-
                 if (supabaseGalleryClient) {
-                    const { data: existingClient } = await supabaseGalleryClient
-                        .from('clients')
-                        .select('id')
-                        .eq('slug', slug)
-                        .maybeSingle();
-
-                    if (existingClient) {
-                        slug = `${slug}-${Math.floor(100 + Math.random() * 900)}`;
-                    }
-
                     const { error: supabaseError } = await supabaseGalleryClient
                         .from('clients')
                         .insert([{
@@ -1557,7 +1572,7 @@
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
                 const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
-                const deliveryMessage = `Halo Kak! 🙌🏼✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens:\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto melalui tombol "Download Semua Foto" yang ada di dalam galeri.\n\nTerima kasih Kak! ✨📸🎓`;
+                const deliveryMessage = `Halo Kak!\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens:\n\nLink Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\nMohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\nKami juga menyarankan Kakak untuk mengunduh seluruh file foto melalui tombol Download Semua Foto yang ada di dalam galeri.\n\nTerima kasih Kak!`;
 
                 showCustomModalChat("Kirim Link Galeri Seleksi Klien", deliveryMessage, waClean);
                 showToast("Folder Drive & Galeri Supabase Berhasil Dibuat!");
@@ -1607,10 +1622,10 @@
                         <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">${c.sheetName || 'Sheet'}</span>
                     </div>
                     <div class="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span>🎓 ${c.kampus || '-'}</span>
-                        <span>📦 ${c.paket || '-'}</span>
-                        <span>📅 ${c.tanggal || '-'} (${c.jam || '-'})</span>
-                        <span class="text-emerald-600 font-semibold">📸 ${c.fg || 'Raihan'}</span>
+                        <span>Kampus: ${c.kampus || '-'}</span>
+                        <span>Paket: ${c.paket || '-'}</span>
+                        <span>Tanggal: ${c.tanggal || '-'} (${c.jam || '-'})</span>
+                        <span class="text-emerald-600 font-semibold">FG: ${c.fg || 'Raihan'}</span>
                     </div>
                 </div>
             `).join('');
@@ -1756,7 +1771,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                showSuccessAlert('Reschedule Berhasil Diupdate! 🔄', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
+                showSuccessAlert('Reschedule Berhasil Diupdate!', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
                 refreshClientDatabase(false);
             } catch (err) {
                 showToast('Gagal update reschedule', false);
@@ -1768,7 +1783,7 @@
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            const chat = `Hallo Kak ${nama} 🙌🏼✨\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi || '-'}\n🎓 Kampus: ${kampus || '-'}\n📦 Paket: ${paket || 'Silver'}\n📱 WA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
+            const chat = `Hallo Kak ${nama}\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal: ${tanggal}\nJam: ${jam} WIB\nLokasi: ${lokasi || '-'}\nKampus: ${kampus || '-'}\nPaket: ${paket || 'Silver'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya\n\nTerima kasih`;
 
             showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
         }
@@ -1961,7 +1976,7 @@
             const noWa = document.getElementById('outNoWa').value.trim() || '-';
             const paket = currentFinancials ? currentFinancials.paketLabel : 'Silver';
 
-            const chat = `Hallo Kak ${nama || '...'} 🙌🏼✨\n\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 📸🎓\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\n🗓️ Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasi}\n🎓 Kampus: ${kampus}\n📦 Paket: ${paket}\n📱 WA: ${noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya 😊✨\n\nTerima kasih 🙏🏼📸🎓`;
+            const chat = `Hallo Kak ${nama || '...'}\n\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal: ${tanggal}\nJam: ${jam} WIB\nLokasi: ${lokasi}\nKampus: ${kampus}\nPaket: ${paket}\nWA: ${noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya\n\nTerima kasih`;
 
             document.getElementById('fgChatPreview').value = chat;
         }
@@ -2019,7 +2034,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                showSuccessAlert('Booking Berhasil Disimpan! 🎉', `Data klien ${nama} berhasil masuk ke Google Sheets dan terjadwal di Google Calendar.`);
+                showSuccessAlert('Booking Berhasil Disimpan!', `Data klien ${nama} berhasil masuk ke Google Sheets dan terjadwal di Google Calendar.`);
                 refreshClientDatabase(false);
             } catch (err) {
                 showToast('Gagal menyimpan data', false);
@@ -2046,7 +2061,7 @@
                 nama, kampus, lokasi, tanggal, jamRange,
                 currentFinancials.paketLabel, currentFinancials.harga, currentFinancials.dp,
                 statusPayment, currentFinancials.pelunasan, fgName, currentFinancials.feeFG,
-                currentFinancials.bersih, "UNPAID", `Halo Kak ${nama} 😊`
+                currentFinancials.bersih, "UNPAID", `Halo Kak ${nama}`
             ];
 
             navigator.clipboard.writeText(rowData.join('\t')).then(() => {
