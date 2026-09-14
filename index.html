@@ -900,7 +900,9 @@
             if (!supabaseGalleryClient) return;
 
             const container = document.getElementById('trackerListContainer');
-            container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i> Mengambil data dari Supabase...</div>';
+            if (container) {
+                container.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i> Mengambil data dari Supabase...</div>';
+            }
 
             const selectedMonthNum = document.getElementById('selectTrackerMonth').value;
             const now = new Date();
@@ -911,7 +913,8 @@
             const endDate = `${currentYear}-${selectedMonthNum}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
             const monthName = NUM_TO_MONTH_FULL[selectedMonthNum] || 'Bulan Terpilih';
-            document.getElementById('trackerMonthSubtitle').textContent = `Menampilkan sesi wisuda bulan ${monthName} ${currentYear}.`;
+            const subtitle = document.getElementById('trackerMonthSubtitle');
+            if (subtitle) subtitle.textContent = `Menampilkan sesi wisuda bulan ${monthName} ${currentYear}.`;
 
             try {
                 const { data, error } = await supabaseGalleryClient
@@ -924,18 +927,21 @@
                 if (!error && data) {
                     cachedSupabaseClients = data;
                     renderGalleryTracker();
-                    renderCombinedSchedule(); // Sync back to schedule cards for drive buttons
+                    renderCombinedSchedule();
                     if (showToastNotice) showToast(`Tersinkron ${data.length} galeri ${monthName}`);
                 } else {
                     throw new Error(error ? error.message : "Gagal mengambil data");
                 }
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-center text-rose-500 text-xs italic">Gagal memuat dari Supabase: ${err.message}</div>`;
+                if (container) {
+                    container.innerHTML = `<div class="p-6 text-center text-rose-500 text-xs italic">Gagal memuat dari Supabase: ${err.message}</div>`;
+                }
             }
         }
 
         function renderGalleryTracker() {
             const container = document.getElementById('trackerListContainer');
+            if (!container) return;
             const filter = document.getElementById('filterTrackerStatus').value;
             const now = new Date();
 
@@ -960,11 +966,13 @@
             });
 
             const badgeOverdue = document.getElementById('badgeOverdueCount');
-            if (overdueCount > 0) {
-                badgeOverdue.textContent = overdueCount;
-                badgeOverdue.classList.remove('hidden');
-            } else {
-                badgeOverdue.classList.add('hidden');
+            if (badgeOverdue) {
+                if (overdueCount > 0) {
+                    badgeOverdue.textContent = overdueCount;
+                    badgeOverdue.classList.remove('hidden');
+                } else {
+                    badgeOverdue.classList.add('hidden');
+                }
             }
 
             let filtered = processedClients;
@@ -1293,7 +1301,7 @@
             renderCombinedSchedule();
         }
 
-        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN TOMBOL BUKA DRIVE LANGSUNG)
+        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN TOMBOL SET LUNAS & DRIVE)
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1318,6 +1326,7 @@
                                     ⏰ ${c.jam || '-'} WIB
                                 </span>
                                 ${isYesterday ? '<span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md">Sesi Kemarin</span>' : ''}
+                                ${isLunas ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">LUNAS</span>' : '<span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">BELUM LUNAS</span>'}
                                 ${isGalleryCreated ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> Galeri Siap</span>' : ''}
                                 ${isFGSent ? '<span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> FG Dikonfirmasi</span>' : ''}
                             </div>
@@ -1329,9 +1338,12 @@
                         </span>
                     </div>
 
-                    <div class="text-xs text-slate-600 flex items-center gap-2 pt-1 border-t border-slate-200/70">
-                        <i class="fa-solid fa-location-dot text-rose-500 text-sm"></i>
-                        <span class="font-medium">${c.lokasi || '-'}</span>
+                    <div class="text-xs text-slate-600 flex items-center justify-between pt-1 border-t border-slate-200/70">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-rose-500 text-sm"></i>
+                            <span class="font-medium">${c.lokasi || '-'}</span>
+                        </span>
+                        <span class="font-bold ${isLunas ? 'text-emerald-700' : 'text-rose-600'} text-xs">Sisa: ${formatRupiah(sisa)}</span>
                     </div>
 
                     <div class="flex flex-wrap gap-2 pt-1">
@@ -1340,8 +1352,16 @@
                                 <i class="fa-brands fa-whatsapp text-sm"></i> Chat WA
                             </a>
                         ` : ''}
+                        
+                        <!-- TOMBOL SET LUNAS (Hanya muncul jika belum lunas) -->
+                        ${!isLunas ? `
+                            <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Ubah Status Jadi Lunas">
+                                <i class="fa-solid fa-check-circle"></i> Set Lunas
+                            </button>
+                        ` : ''}
+
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                            <i class="fa-solid fa-file-invoice"></i> Invoice
                         </button>
                         
                         <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-900 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
@@ -1360,6 +1380,36 @@
                     </div>
                 </div>
             `;
+        }
+
+        // FUNGSI EKSEKUSI SET LUNAS LANGSUNG KE SHEET
+        async function setClientAsPaid(namaKlien, sheetName, btnEl) {
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
+
+            const originalHTML = btnEl.innerHTML;
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Proses...';
+
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: "set_lunas",
+                        nama: namaKlien,
+                        sheetName: sheetName
+                    })
+                });
+
+                showToast(`Status ${namaKlien} berhasil diubah jadi LUNAS!`);
+                await refreshClientDatabase(false);
+            } catch (err) {
+                alert("Gagal memperbarui status lunas: " + err.message);
+                btnEl.disabled = false;
+                btnEl.innerHTML = originalHTML;
+            }
         }
 
         function markFGSent(namaKlien) {
@@ -1594,7 +1644,6 @@
                 const cleanNameKey = nama.replace(/\s+/g, '_');
                 localStorage.setItem(`gallery_created_${cleanNameKey}`, 'true');
                 
-                // Refresh data supabase cache agar tombol drive langsung muncul
                 await fetchSupabaseClients(false);
                 renderCombinedSchedule();
 
@@ -2142,7 +2191,7 @@
 
             if (activeUrl) {
                 refreshClientDatabase(false);
-                fetchSupabaseClients(false); // Ambil cache supabase agar tombol drive langsung siap
+                fetchSupabaseClients(false);
             }
             recalculateFinancials();
         });
