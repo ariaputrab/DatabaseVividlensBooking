@@ -1238,7 +1238,8 @@
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
                     const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     
-                    const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda besok ya\n\nTanggal : ${c.tanggal}\nJam : ${c.jam || '-'} WIB\nLokasi : ${c.lokasi || '-'}\nKampus : ${c.kampus || '-'}\n\nPaket : ${c.paket || 'Silver'}\n\nUntuk pelunasan bisa dilakukan sebelum sesi dimulai ya Kak\n\nHarga Paket : Rp${Number(h).toLocaleString('id-ID')}\nDP Masuk : Rp${Number(dp).toLocaleString('id-ID')}\nSisa Pelunasan : Rp${Number(sisa).toLocaleString('id-ID')} (LUNAS via QRIS)\nPembayaran via QRIS (scan seperti saat DP ya Kak)\n\nSetelah melakukan pelunasan, mohon kirimkan bukti pembayarannya ya\n\nUntuk teknis di lapangan besok, fotografer (FG) kami, Kak ${c.fg || 'Raihan'}, akan menghubungi Kak ${c.nama} sebelum sesi dimulai.\n\nTerima kasih banyak, sampai jumpa besok!`;
+                    const payLinkSimple = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(c.nama)}`;
+                    const reminderMsg = `Halo Kak ${c.nama} ✨\n\nMengingatkan untuk jadwal photoshoot wisuda kita besok ya:\n📅 Tanggal: ${c.tanggal}\n⏰ Jam: ${c.jam || '-'} WIB\n📍 Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n🔗 ${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Sampai jumpa besok, Kak! 🙏📸`;
 
                     const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
