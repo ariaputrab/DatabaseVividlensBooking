@@ -1293,7 +1293,7 @@
             renderCombinedSchedule();
         }
 
-        // HELPER CARD UNTUK HARI INI & KEMARIN
+        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN INDIKATOR STATUS)
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1302,15 +1302,22 @@
             const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const waLink = waClean ? `https://wa.me/${waClean}` : '';
 
+            // Cek status penyimpanan lokal untuk indikator Galeri & Chat FG
+            const cleanNameKey = c.nama.replace(/\s+/g, '_');
+            const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
+            const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
+
             return `
                 <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border ${isYesterday ? 'border-purple-200' : 'border-slate-200'} rounded-2xl transition space-y-3">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
                                     ⏰ ${c.jam || '-'} WIB
                                 </span>
                                 ${isYesterday ? '<span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md">Sesi Kemarin</span>' : ''}
+                                ${isGalleryCreated ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> Galeri Siap</span>' : ''}
+                                ${isFGSent ? '<span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> FG Dikonfirmasi</span>' : ''}
                             </div>
                             <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
                             <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
@@ -1334,15 +1341,25 @@
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                         </button>
-                        <button onclick="prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
-                            <i class="fa-solid fa-comment-dots"></i> Chat FG
+                        
+                        <!-- TOMBOL CHAT FG DENGAN INDIKATOR STATUS -->
+                        <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-900 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                            <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> ${isFGSent ? 'Chat FG Terkirim' : 'Chat FG'}
                         </button>
-                        <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> Buat Galeri & Drive
+
+                        <!-- TOMBOL BUAT / KIRIM GALERI DENGAN INDIKATOR STATUS -->
+                        <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                            <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
                         </button>
                     </div>
                 </div>
             `;
+        }
+
+        function markFGSent(namaKlien) {
+            const cleanKey = namaKlien.replace(/\s+/g, '_');
+            localStorage.setItem(`fg_chat_sent_${cleanKey}`, 'true');
+            renderCombinedSchedule();
         }
 
         // FITUR INVOICE & GENERATOR PDF
@@ -1568,6 +1585,11 @@
                         console.warn("Supabase insert notice:", supabaseError.message);
                     }
                 }
+
+                // Tandai di localstorage bahwa galeri untuk klien ini sudah dibuat
+                const cleanNameKey = nama.replace(/\s+/g, '_');
+                localStorage.setItem(`gallery_created_${cleanNameKey}`, 'true');
+                renderCombinedSchedule();
 
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
                 const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
