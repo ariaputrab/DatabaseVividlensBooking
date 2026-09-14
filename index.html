@@ -1004,7 +1004,7 @@
                     targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
                 }
 
-                const followUpMsg = `Halo Kak ${c.nama} 🙌🏼✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak 😊\n\nTerima kasih Kak! ✨📸🎓`;
+                const followUpMsg = `Halo Kak ${c.nama}\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak!`;
                 const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
 
                 return `
@@ -1036,7 +1036,7 @@
                         ${c.isSubmitted ? `
                             <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-emerald-900 space-y-1">
                                 <div class="flex justify-between items-center font-bold text-[11px]">
-                                    <span>📸 Daftar Foto Pilihan Klien:</span>
+                                    <span>Daftar Foto Pilihan Klien:</span>
                                     <button onclick="navigator.clipboard.writeText(\`${c.selected_photos || ''}\`); showToast('List foto tersalin!');" class="text-emerald-700 hover:text-emerald-900 underline font-semibold">Salin List</button>
                                 </div>
                                 <p class="font-mono text-[11px] break-words text-slate-700 bg-white p-2 rounded border border-emerald-100 max-h-24 overflow-y-auto touch-scroll">${c.selected_photos || 'Belum ada data teks foto tersimpan'}</p>
@@ -1239,7 +1239,7 @@
                     const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     
                     const payLinkSimple = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(c.nama)}`;
-                    const reminderMsg = `Halo Kak ${c.nama} ✨\n\nMengingatkan untuk jadwal photoshoot wisuda kita besok ya:\n📅 Tanggal: ${c.tanggal}\n⏰ Jam: ${c.jam || '-'} WIB\n📍 Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n🔗 ${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Sampai jumpa besok, Kak! 🙏📸`;
+                    const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita besok ya:\n- Tanggal: ${c.tanggal}\n- Jam: ${c.jam || '-'} WIB\n- Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
 
                     const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
@@ -1311,7 +1311,7 @@
             const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             
             const payLinkSimple = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(c.nama)}`;
-            const reminderMsg = `Halo Kak ${c.nama} ✨\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n📅 Tanggal: ${c.tanggal}\n⏰ Jam: ${c.jam || '-'} WIB\n📍 Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n🔗 ${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih! 🙏📸`;
+            const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${c.tanggal}\n- Jam: ${c.jam || '-'} WIB\n- Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
 
             const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
@@ -1395,7 +1395,7 @@
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
             
-            const chatText = `Halo Kak ${nama} ✨\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${kampus || 'Yogyakarta'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n🔗 ${payLink}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih! 🙏📸`;
+            const chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLink}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
 
             showCustomModalChat("Format Chat Tagihan Pelunasan", chatText, waClean);
         }
