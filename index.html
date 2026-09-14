@@ -552,9 +552,8 @@
                             <span id="invSessionTime" class="text-[11px] text-blue-700 font-bold block">-</span>
                         </div>
                         <div class="col-span-2 pt-1 border-t border-slate-200/60">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi & Fotografer:</span>
-                            <span id="invLocation" class="text-[11px] text-slate-700 block">-</span>
-                            <span id="invFGName" class="text-[11px] text-emerald-700 font-semibold block">FG: -</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi Sesi Foto:</span>
+                            <span id="invLocation" class="text-[11px] text-slate-700 font-semibold block">-</span>
                         </div>
                     </div>
 
@@ -1302,7 +1301,6 @@
             const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const waLink = waClean ? `https://wa.me/${waClean}` : '';
 
-            // Cek status penyimpanan lokal untuk indikator Galeri & Chat FG
             const cleanNameKey = c.nama.replace(/\s+/g, '_');
             const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
             const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
@@ -1342,12 +1340,10 @@
                             <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                         </button>
                         
-                        <!-- TOMBOL CHAT FG DENGAN INDIKATOR STATUS -->
                         <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-900 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                             <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> ${isFGSent ? 'Chat FG Terkirim' : 'Chat FG'}
                         </button>
 
-                        <!-- TOMBOL BUAT / KIRIM GALERI DENGAN INDIKATOR STATUS -->
                         <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
                         </button>
@@ -1420,7 +1416,6 @@
             document.getElementById('invSessionDate').textContent = currentInvoiceData.tanggal || '-';
             document.getElementById('invSessionTime').textContent = `${currentInvoiceData.jam || '-'} WIB`;
             document.getElementById('invLocation').textContent = currentInvoiceData.lokasi || '-';
-            document.getElementById('invFGName').textContent = `Fotografer: Kak ${currentInvoiceData.fg || 'Raihan'}`;
 
             document.getElementById('invPackageTitle').textContent = `Paket Wisuda ${currentInvoiceData.paket}`;
             document.getElementById('invPackagePrice').textContent = formatRupiah(currentInvoiceData.harga);
@@ -1586,7 +1581,6 @@
                     }
                 }
 
-                // Tandai di localstorage bahwa galeri untuk klien ini sudah dibuat
                 const cleanNameKey = nama.replace(/\s+/g, '_');
                 localStorage.setItem(`gallery_created_${cleanNameKey}`, 'true');
                 renderCombinedSchedule();
