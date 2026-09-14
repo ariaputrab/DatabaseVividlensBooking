@@ -1267,7 +1267,7 @@
                             </div>
 
                             <div class="flex gap-2 pt-1">
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-copy"></i> Salin Teks
                                 </button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
@@ -1330,7 +1330,7 @@
                             </button>
                         ` : ''}
 
-                        <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                        <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                             <i class="fa-solid fa-copy"></i> Salin Teks
                         </button>
 
@@ -1356,14 +1356,20 @@
             `;
         }
 
-        // FUNGSI MODAL FORMAT CHAT TAGIHAN
-        function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa) {
+        // FUNGSI MODAL FORMAT CHAT TAGIHAN / REMINDER
+        function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
-            
-            const chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLink}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
+            const isLunas = (statusPayment || '').toUpperCase().trim() === 'LUNAS' || Number(sisa) <= 0;
 
-            showCustomModalChat("Format Chat Tagihan Pelunasan", chatText, waClean);
+            let chatText = "";
+            if (isLunas) {
+                chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nStatus pembayaran Kakak sudah *LUNAS*. Rincian dan kwitansi lengkapnya bisa dicek melalui portal berikut ya:\n${payLink}\n\nSampai jumpa di sesi pemotretan nanti! Terima kasih.`;
+            } else {
+                chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLink}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
+            }
+
+            showCustomModalChat(isLunas ? "Format Chat Reminder Jadwal (Lunas)" : "Format Chat Tagihan Pelunasan", chatText, waClean);
         }
 
         async function setClientAsPaid(namaKlien, sheetName, btnEl) {
