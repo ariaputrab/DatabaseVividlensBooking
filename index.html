@@ -1281,6 +1281,9 @@
                                         <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA
                                     </a>
                                 ` : ''}
+                                <a href="pay.html?nama=${encodeURIComponent(c.nama)}" target="_blank" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Portal Tagihan Klien">
+                                    <i class="fa-solid fa-receipt"></i> Tagihan
+                                </a>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                                 </button>
@@ -1358,6 +1361,10 @@
                                 <i class="fa-solid fa-check-circle"></i> Set Lunas
                             </button>
                         ` : ''}
+
+                        <a href="pay.html?nama=${encodeURIComponent(c.nama)}" target="_blank" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Portal Tagihan Klien">
+                            <i class="fa-solid fa-receipt"></i> Tagihan
+                        </a>
 
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid fa-file-invoice"></i> Invoice
