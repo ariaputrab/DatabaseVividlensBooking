@@ -1353,7 +1353,6 @@
                             </a>
                         ` : ''}
                         
-                        <!-- TOMBOL SET LUNAS (Hanya muncul jika belum lunas) -->
                         ${!isLunas ? `
                             <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Ubah Status Jadi Lunas">
                                 <i class="fa-solid fa-check-circle"></i> Set Lunas
@@ -1382,7 +1381,6 @@
             `;
         }
 
-        // FUNGSI EKSEKUSI SET LUNAS LANGSUNG KE SHEET
         async function setClientAsPaid(namaKlien, sheetName, btnEl) {
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
