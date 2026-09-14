@@ -924,6 +924,7 @@
                 if (!error && data) {
                     cachedSupabaseClients = data;
                     renderGalleryTracker();
+                    renderCombinedSchedule(); // Sync back to schedule cards for drive buttons
                     if (showToastNotice) showToast(`Tersinkron ${data.length} galeri ${monthName}`);
                 } else {
                     throw new Error(error ? error.message : "Gagal mengambil data");
@@ -1292,7 +1293,7 @@
             renderCombinedSchedule();
         }
 
-        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN INDIKATOR STATUS)
+        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN TOMBOL BUKA DRIVE LANGSUNG)
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1304,6 +1305,9 @@
             const cleanNameKey = c.nama.replace(/\s+/g, '_');
             const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
             const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
+
+            const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
+            const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
 
             return `
                 <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border ${isYesterday ? 'border-purple-200' : 'border-slate-200'} rounded-2xl transition space-y-3">
@@ -1343,6 +1347,12 @@
                         <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-900 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                             <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> ${isFGSent ? 'Chat FG Terkirim' : 'Chat FG'}
                         </button>
+
+                        ${isGalleryCreated && driveUrl ? `
+                            <a href="${driveUrl}" target="_blank" class="py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Google Drive Klien">
+                                <i class="fa-brands fa-google-drive"></i> Buka Drive
+                            </a>
+                        ` : ''}
 
                         <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
@@ -1583,6 +1593,9 @@
 
                 const cleanNameKey = nama.replace(/\s+/g, '_');
                 localStorage.setItem(`gallery_created_${cleanNameKey}`, 'true');
+                
+                // Refresh data supabase cache agar tombol drive langsung muncul
+                await fetchSupabaseClients(false);
                 renderCombinedSchedule();
 
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
@@ -2127,7 +2140,10 @@
             document.getElementById('selectMonthFilter').value = currentMonthFull;
             document.getElementById('selectTrackerMonth').value = currentMonthStr;
 
-            if (activeUrl) refreshClientDatabase(false);
+            if (activeUrl) {
+                refreshClientDatabase(false);
+                fetchSupabaseClients(false); // Ambil cache supabase agar tombol drive langsung siap
+            }
             recalculateFinancials();
         });
     </script>
