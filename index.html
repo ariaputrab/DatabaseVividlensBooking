@@ -1236,18 +1236,9 @@
                     const dp = parseInt(c.dp) || 0;
                     const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
-                    const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-                    
-                    const payLinkSimple = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(c.nama)}`;
-                    const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita besok ya:\n- Tanggal: ${c.tanggal}\n- Jam: ${c.jam || '-'} WIB\n- Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
-
-                    const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
-
-                    const storageKey = `reminder_sent_${c.nama}_${tomorrowISO}`;
-                    const isSent = localStorage.getItem(storageKey) === 'true';
 
                     return `
-                        <div class="p-4 ${isSent ? 'bg-emerald-50/60 border-emerald-300' : 'bg-slate-50 hover:bg-amber-50/40 border ' + (isLunas ? 'border-emerald-200' : 'border-amber-200')} rounded-2xl transition space-y-3">
+                        <div class="p-4 bg-slate-50 hover:bg-amber-50/40 border ${isLunas ? 'border-emerald-200' : 'border-amber-200'} rounded-2xl transition space-y-3">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="flex items-center gap-1.5">
@@ -1258,7 +1249,6 @@
                                             ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">LUNAS</span>'
                                             : '<span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">BELUM LUNAS</span>'
                                         }
-                                        ${isSent ? '<span class="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> Terkirim</span>' : ''}
                                     </div>
                                     <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
                                     <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
@@ -1276,16 +1266,11 @@
                                 <span class="font-semibold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
                             </div>
 
-                            <div class="flex flex-wrap gap-2 pt-1">
-                                ${waLink ? `
-                                    <a href="${waLink}" target="_blank" onclick="markReminderSent('${c.nama}', '${tomorrowISO}')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-                                        <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Tagihan via WA
-                                    </a>
-                                ` : ''}
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="py-2.5 px-3.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                            <div class="flex gap-2 pt-1">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-copy"></i> Salin Teks
                                 </button>
-                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2.5 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                                 </button>
                             </div>
@@ -1295,25 +1280,12 @@
             }
         }
 
-        function markReminderSent(namaKlien, dateISO) {
-            const storageKey = `reminder_sent_${namaKlien}_${dateISO}`;
-            localStorage.setItem(storageKey, 'true');
-            showToast(`Reminder untuk ${namaKlien} ditandai terkirim!`);
-            renderCombinedSchedule();
-        }
-
         // HELPER CARD UNTUK HARI INI & KEMARIN
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
-            const waClean = (c.noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            
-            const payLinkSimple = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(c.nama)}`;
-            const reminderMsg = `Halo Kak ${c.nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${c.tanggal}\n- Jam: ${c.jam || '-'} WIB\n- Lokasi: ${c.lokasi || '-'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLinkSimple}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
-
-            const waLink = waClean ? `https://wa.me/${waClean}?text=${encodeURIComponent(reminderMsg)}` : '';
 
             const cleanNameKey = c.nama.replace(/\s+/g, '_');
             const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
@@ -1352,12 +1324,6 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 pt-1">
-                        ${waLink ? `
-                            <a href="${waLink}" target="_blank" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                                <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Tagihan WA
-                            </a>
-                        ` : ''}
-                        
                         ${!isLunas ? `
                             <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Ubah Status Jadi Lunas">
                                 <i class="fa-solid fa-check-circle"></i> Set Lunas
@@ -1369,11 +1335,11 @@
                         </button>
 
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                            <i class="fa-solid fa-file-invoice"></i> Invoice
+                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                         </button>
                         
                         <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
-                            <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> ${isFGSent ? 'Chat FG' : 'Chat FG'}
+                            <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> Chat FG
                         </button>
 
                         ${isGalleryCreated && driveUrl ? `
