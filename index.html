@@ -1281,9 +1281,9 @@
                                         <i class="fa-brands fa-whatsapp text-sm"></i> Kirim Reminder WA
                                     </a>
                                 ` : ''}
-                                <a href="pay.html?nama=${encodeURIComponent(c.nama)}" target="_blank" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Portal Tagihan Klien">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buat Format Chat Tagihan">
                                     <i class="fa-solid fa-receipt"></i> Tagihan
-                                </a>
+                                </button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-file-invoice"></i> Invoice PDF
                                 </button>
@@ -1304,7 +1304,7 @@
             renderCombinedSchedule();
         }
 
-        // HELPER CARD UNTUK HARI INI & KEMARIN (DENGAN TOMBOL SET LUNAS & DRIVE)
+        // HELPER CARD UNTUK HARI INI & KEMARIN
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1362,9 +1362,9 @@
                             </button>
                         ` : ''}
 
-                        <a href="pay.html?nama=${encodeURIComponent(c.nama)}" target="_blank" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Portal Tagihan Klien">
+                        <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}')" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buat Format Chat Tagihan">
                             <i class="fa-solid fa-receipt"></i> Tagihan
-                        </a>
+                        </button>
 
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid fa-file-invoice"></i> Invoice
@@ -1386,6 +1386,16 @@
                     </div>
                 </div>
             `;
+        }
+
+        // FUNGSI MODAL FORMAT CHAT TAGIHAN
+        function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa) {
+            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+            const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
+            
+            const chatText = `Halo Kak ${nama} ✨\n\nBerikut adalah rincian tagihan pelunasan untuk sesi foto wisuda VividLens:\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n🎓 Paket: ${paket} (${kampus || 'Umum'})\n\n💰 Total Harga: ${formatRupiah(harga)}\n💳 DP Terbayar: - ${formatRupiah(dp)}\n📌 Sisa Pelunasan: *${formatRupiah(sisa)}*\n\nSilakan cek rincian tagihan dan lakukan pembayaran melalui QRIS resmi kami pada link portal berikut:\n🔗 ${payLink}\n\nSetelah melakukan transfer, mohon kirimkan bukti pembayarannya di chat ini ya Kak. Terima kasih banyak! 🙏✨`;
+
+            showCustomModalChat("Format Chat Tagihan Pelunasan", chatText, waClean);
         }
 
         async function setClientAsPaid(namaKlien, sheetName, btnEl) {
