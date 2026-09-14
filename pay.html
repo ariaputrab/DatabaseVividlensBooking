@@ -52,7 +52,7 @@
                 <span>DP Terbayar (Booking Fee)</span>
                 <span id="txtDP" class="font-semibold text-emerald-600">- Rp0</span>
             </div>
-            <div class="p-3.5 bg-slate-900 text-white rounded-xl flex justify-between items-center shadow-sm">
+            <div id="boxSisaContainer" class="p-3.5 bg-slate-900 text-white rounded-xl flex justify-between items-center shadow-sm">
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold uppercase block">Sisa Pelunasan</span>
                     <span class="text-xs text-slate-300">Wajib dibayar sebelum sesi</span>
@@ -61,24 +61,36 @@
             </div>
         </div>
 
-        <!-- Bagian QRIS -->
-        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-center">
-            <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">QRIS Pembayaran Resmi</span>
-                <span class="text-xs font-bold text-slate-700">Scan untuk Pelunasan</span>
+        <!-- Bagian QRIS (Hanya tampil jika belum lunas) -->
+        <div id="qrisSection" class="space-y-4">
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-center">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">QRIS Pembayaran Resmi</span>
+                    <span class="text-xs font-bold text-slate-700">Scan untuk Pelunasan</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-slate-200 inline-block shadow-sm">
+                    <img src="qris.png" alt="QRIS VividLens" class="w-44 h-44 object-contain mx-auto rounded-lg">
+                </div>
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Silakan scan QRIS di atas menggunakan m-banking atau e-wallet pilihan Anda. Setelah transfer berhasil, klik tombol di bawah untuk konfirmasi ke WhatsApp admin.
+                </p>
             </div>
-            <div class="bg-white p-3 rounded-xl border border-slate-200 inline-block shadow-sm">
-                <!-- Pastikan file qris.png ada di folder yang sama -->
-                <img src="qris.png" alt="QRIS VividLens" class="w-44 h-44 object-contain mx-auto rounded-lg">
-            </div>
-            <p class="text-[11px] text-slate-500 leading-relaxed">
-                Silakan scan QRIS di atas menggunakan m-banking atau e-wallet pilihan Anda. Setelah transfer berhasil, klik tombol di bawah untuk konfirmasi ke WhatsApp admin.
-            </p>
+
+            <button onclick="confirmPaymentWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-sm"></i> Konfirmasi Bukti Transfer via WA
+            </button>
         </div>
 
-        <button onclick="confirmPaymentWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-2">
-            <i class="fa-brands fa-whatsapp text-sm"></i> Konfirmasi Bukti Transfer via WA
-        </button>
+        <!-- Pesan Sukses Lunas (Hanya tampil jika sudah lunas) -->
+        <div id="lunasSuccessSection" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 hidden">
+            <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-emerald-900 block">Pembayaran Lunas</span>
+                <p class="text-[11px] text-emerald-700 mt-0.5">Terima kasih! Sesi foto wisuda Anda sudah lunas sepenuhnya. Sampai jumpa di sesi pemotretan!</p>
+            </div>
+        </div>
 
         <div class="text-center text-[10px] text-slate-400 pt-1">
             VividLens Graduation Payment Gateway
@@ -138,7 +150,16 @@
             if (isLunas) {
                 document.getElementById('badgeStatus').textContent = "LUNAS";
                 document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+                
+                // Ubah kotak sisa pembayaran jadi hijau lunas
+                const boxSisa = document.getElementById('boxSisaContainer');
+                boxSisa.className = "p-3.5 bg-emerald-600 text-white rounded-xl flex justify-between items-center shadow-sm";
                 document.getElementById('txtSisa').textContent = "Rp0 (LUNAS)";
+                document.getElementById('txtSisa').className = "text-base font-black text-white";
+
+                // Sembunyikan QRIS & Tombol Konfirmasi, tampilkan pesan sukses
+                document.getElementById('qrisSection').classList.add('hidden');
+                document.getElementById('lunasSuccessSection').classList.remove('hidden');
             }
         }
 
@@ -154,9 +175,7 @@
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
 
-            // Nomor admin baru yang diperbarui
             const adminWa = "6285155129954";
-            
             const msg = `Halo Admin VividLens,\n\nSaya ${c.nama} ingin mengkonfirmasi pembayaran pelunasan sesi foto wisuda saya sebesar ${formatRupiah(sisa)}.\n\nBerikut terlampir bukti transfer pembayarannya. Mohon bantu divalidasi ya Kak. Terima kasih!`;
 
             window.location.href = `https://wa.me/${adminWa}?text=${encodeURIComponent(msg)}`;
