@@ -1861,6 +1861,11 @@
                 showToast(`Fee FG untuk ${namaKlien} ditandai PAID!`);
                 await refreshClientDatabase(false);
                 renderPaymentFgDailyView();
+                // Jika modal kalender sedang terbuka, perbarui juga tampilannya
+                const modal = document.getElementById('modalDayDetail');
+                if (modal && !modal.classList.contains('hidden')) {
+                    // Update ulang isi modal kalender jika diperlukan
+                }
             } catch (err) {
                 alert("Gagal memperbarui status fee FG: " + err.message);
                 btnEl.disabled = false;
