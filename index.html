@@ -49,9 +49,13 @@
                 </button>
             </div>
 
-            <!-- Tab Switcher -->
+            <!-- Tab Switcher (Lengkap Tanpa Ada yang Dihapus + Tambahan Inbox Approval) -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto overflow-x-auto touch-scroll">
-                <button id="tabCalendarBtn" onclick="switchMode('calendar')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                <button id="tabApprovalBtn" onclick="switchMode('approval')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap relative">
+                    <i class="fa-solid fa-inbox text-[11px]"></i> Inbox Booking
+                    <span id="badgePendingCount" class="bg-amber-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                </button>
+                <button id="tabCalendarBtn" onclick="switchMode('calendar')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-calendar-days text-[11px]"></i> Kalender
                 </button>
                 <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
@@ -80,8 +84,29 @@
             </div>
         </header>
 
+        <!-- TAB BARU: INBOX BOOKING APPROVAL -->
+        <div id="sectionApproval" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-inbox text-blue-600"></i> Antrean Booking Masuk (Pending)
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Acc booking dari klien, tentukan fotografer (FG), dan masukkan otomatis ke Sheet & GCal.</p>
+                </div>
+                <button onclick="fetchPendingBookings(true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition">
+                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh Inbox
+                </button>
+            </div>
+            <div id="pendingListContainer" class="space-y-3">
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
+                    Memuat antrean booking masuk...
+                </div>
+            </div>
+        </div>
+
         <!-- TAB -1: CALENDAR VIEW (TAMPILAN BULANAN) -->
-        <div id="sectionCalendar" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div id="sectionCalendar" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
                     <button onclick="changeCalendarMonth(-1)" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center transition text-slate-700">
@@ -832,6 +857,7 @@
         let baseStartTime = "15:00";
         let cachedClients = [];
         let cachedSupabaseClients = [];
+        let cachedPendingBookings = [];
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
         let currentInvoiceData = null;
@@ -897,6 +923,7 @@
         }
 
         function switchMode(mode) {
+            const isApproval = mode === 'approval';
             const isCalendar = mode === 'calendar';
             const isFinance = mode === 'finance';
             const isTracker = mode === 'tracker';
@@ -905,6 +932,7 @@
             const isNew = mode === 'new';
             const isResched = mode === 'reschedule';
 
+            document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
             document.getElementById('sectionCalendar').classList.toggle('hidden', !isCalendar);
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
@@ -913,6 +941,7 @@
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
+            document.getElementById('tabApprovalBtn').className = isApproval ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTrackerBtn').className = isTracker ? getActiveTabClass() : getInactiveTabClass();
@@ -921,6 +950,7 @@
             document.getElementById('tabNewBtn').className = isNew ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabRescheduleBtn').className = isResched ? getActiveTabClass() : getInactiveTabClass();
 
+            if (isApproval) fetchPendingBookings(false);
             if (isTracker) fetchSupabaseClients(false);
             if (isPaymentFg) initPaymentFgTab();
 
@@ -940,6 +970,167 @@
 
         function getInactiveTabClass() {
             return "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+        }
+
+        // --- INBOX APPROVAL LOGIC ---
+        async function fetchPendingBookings(showToastNotice = true) {
+            if (!supabaseGalleryClient) return;
+            try {
+                const { data, error } = await supabaseGalleryClient
+                    .from('booking_requests')
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    cachedPendingBookings = data;
+                    renderPendingBookings();
+                    const badge = document.getElementById('badgePendingCount');
+                    if (badge) {
+                        if (data.length > 0) {
+                            badge.textContent = data.length;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                    if (showToastNotice) showToast(`Terdapat ${data.length} antrean booking baru`);
+                }
+            } catch (err) {
+                console.log("Fetch pending error:", err);
+            }
+        }
+
+        function renderPendingBookings() {
+            const container = document.getElementById('pendingListContainer');
+            if (!container) return;
+
+            if (cachedPendingBookings.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <i class="fa-regular fa-circle-check text-3xl text-emerald-500"></i>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada antrean booking pending</p>
+                        <p class="text-[11px] text-slate-400">Semua form masuk dari klien sudah di-acc.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cachedPendingBookings.map(b => {
+                const [y, m, d] = b.tanggal.split('-');
+                const sheetDateFormat = `${parseInt(d, 10)}-${NUM_TO_MONTH_NAME[m] || 'Sep'}-${y}`;
+
+                return `
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">PENDING APPROVAL</span>
+                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${b.jam} WIB</span>
+                                    <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${b.tanggal}</span>
+                                </div>
+                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${b.nama}</h4>
+                                <p class="text-xs text-slate-500">${b.kampus} • Paket ${b.paket} • Lokasi: <span class="font-semibold text-slate-700">${b.lokasi}</span></p>
+                                <p class="text-[11px] text-slate-400 mt-1">WA: ${b.no_wa} | IG: ${b.ig || '-'} | MUA: ${b.mua || '-'} | Dress: ${b.dress || '-'}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase">Total Harga</span>
+                                <span class="font-bold text-slate-900 text-sm">${formatRupiah(b.harga)}</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                            <div class="w-full sm:w-auto flex-1">
+                                <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tugaskan Fotografer (FG):</label>
+                                <select id="assignFg_${b.id}" class="w-full sm:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer">
+                                    <option value="Raihan" selected>Raihan</option>
+                                    <option value="Zidane">Zidane</option>
+                                    <option value="Dava">Dava</option>
+                                    <option value="Riza">Riza</option>
+                                    <option value="Wahyu">Wahyu</option>
+                                    <option value="Dhika">Dhika</option>
+                                    <option value="Surya">Surya</option>
+                                    <option value="Vero">Vero</option>
+                                    <option value="Satria">Satria</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <button onclick="approveAndSyncBooking('${b.id}', '${sheetDateFormat}')" class="w-full sm:w-auto py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-95">
+                                    <i class="fa-solid fa-check"></i> Acc & Masukkan ke Sheet
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function approveAndSyncBooking(id, sheetDateFormat) {
+            const booking = cachedPendingBookings.find(b => b.id == id);
+            if (!booking) return alert('Data booking tidak ditemukan!');
+
+            const fgName = document.getElementById(`assignFg_${id}`).value;
+            const scriptUrl = getActiveScriptUrl();
+            if (!scriptUrl) return alert('URL Apps Script belum diatur!');
+
+            const matchedKey = matchPackageKey(booking.paket);
+            const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+            
+            const addCountMatch = booking.paket.match(/Tambah\s*(\d+)/i);
+            const addCount = addCountMatch ? parseInt(addCountMatch[1], 10) : 0;
+            const finalFeeFG = (pkg.feeFG || 225000) + (addCount * 50000);
+            const finalBersih = (booking.harga - finalFeeFG);
+
+            const payload = {
+                action: "new_booking",
+                nama: booking.nama,
+                kampus: booking.kampus,
+                lokasi: booking.lokasi,
+                tanggal: sheetDateFormat,
+                isoDate: booking.tanggal,
+                jam: booking.jam,
+                paket: booking.paket,
+                harga: booking.harga,
+                dp: booking.dp,
+                payment: "DP",
+                pelunasan: booking.pelunasan,
+                fgName: fgName,
+                feeFG: finalFeeFG,
+                bersih: finalBersih,
+                chatFG: `Form Booking Web - IG: ${booking.ig || '-'} | MUA: ${booking.mua || '-'} | Dress: ${booking.dress || '-'}`,
+                noWa: booking.no_wa,
+                ig: booking.ig,
+                mua: booking.mua,
+                dress: booking.dress
+            };
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (supabaseGalleryClient) {
+                    await supabaseGalleryClient
+                        .from('booking_requests')
+                        .update({ status: 'approved' })
+                        .eq('id', id);
+                }
+
+                showToast(`Booking ${booking.nama} berhasil di-Acc dan masuk ke Sheet!`);
+                await fetchPendingBookings(false);
+                await refreshClientDatabase(false);
+            } catch (err) {
+                alert("Gagal melakukan approval: " + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Acc & Masukkan ke Sheet';
+            }
         }
 
         function initPaymentFgTab() {
@@ -1861,11 +2052,6 @@
                 showToast(`Fee FG untuk ${namaKlien} ditandai PAID!`);
                 await refreshClientDatabase(false);
                 renderPaymentFgDailyView();
-                // Jika modal kalender sedang terbuka, perbarui juga tampilannya
-                const modal = document.getElementById('modalDayDetail');
-                if (modal && !modal.classList.contains('hidden')) {
-                    // Update ulang isi modal kalender jika diperlukan
-                }
             } catch (err) {
                 alert("Gagal memperbarui status fee FG: " + err.message);
                 btnEl.disabled = false;
@@ -2466,7 +2652,7 @@
             if (lower.includes('plaosan')) return 'Plaosan A';
             if (lower.includes('package 3') || lower.includes('group 3') || lower.includes('grup 3')) return 'Package 3';
             if (lower.includes('package 2') || lower.includes('group 2') || lower.includes('grup 2')) return 'Group 2';
-            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Package 1';
+            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Group 1';
             if (lower.includes('couple')) return 'Couple Package';
             if (lower.includes('premium')) return 'Premium';
             if (lower.includes('gold')) return 'Gold';
