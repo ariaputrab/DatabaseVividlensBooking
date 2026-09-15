@@ -1004,7 +1004,8 @@
                     targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
                 }
 
-                const followUpMsg = `Halo Kak ${c.nama}\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak!`;
+                const kuotaFoto = c.limit_foto || 40;
+                const followUpMsg = `Halo Kak ${c.nama} 👋✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak! 🤍📸`;
                 const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
 
                 return `
@@ -1021,7 +1022,7 @@
                                           )
                                     }
                                 </div>
-                                <p class="text-xs text-slate-500 font-medium mt-0.5">${c.univ || 'Umum'} • Tanggal Sesi: ${c.tanggal || '-'} • Kuota: ${c.limit_foto || 0} Foto</p>
+                                <p class="text-xs text-slate-500 font-medium mt-0.5">${c.univ || 'Umum'} • Tanggal Sesi: ${c.tanggal || '-'} • Kuota: ${kuotaFoto} Foto</p>
                             </div>
                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                 <a href="${galeriLink}" target="_blank" class="flex-1 sm:flex-none text-xs bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition flex items-center justify-center gap-1">
@@ -1573,7 +1574,7 @@
                     const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     const kuotaFoto = existingClient.limit_foto || 40;
 
-                    const readyMessage = `Halo Kak!\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation\n\nBerikut link Galeri Foto Vividlens Kakak:\n\nLink Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri.\n2. Pilih foto maksimal sesuai paket.\n3. Klik Salin Format WhatsApp dan kirim ke chat ini.\n\nTerima kasih Kak!`;
+                    const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
                     showCustomModalChat("Kirim Link Galeri (Sudah Ada)", readyMessage, waClean);
                     showToast("Galeri klien ini sudah pernah dibuat sebelumnya!");
@@ -1639,7 +1640,7 @@
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
                 const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
-                const deliveryMessage = `Halo Kak!\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens:\n\nLink Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\nMohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\nKami juga menyarankan Kakak untuk mengunduh seluruh file foto melalui tombol Download Semua Foto yang ada di dalam galeri.\n\nTerima kasih Kak!`;
+                const deliveryMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
                 showCustomModalChat("Kirim Link Galeri Seleksi Klien", deliveryMessage, waClean);
                 showToast("Folder Drive & Galeri Supabase Berhasil Dibuat!");
