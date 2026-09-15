@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Form Booking - VIVIDLENS GRADUATION</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        input, select, textarea { font-size: 15px !important; }
+        @media (min-width: 640px) { input, select, textarea { font-size: 13px !important; } }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen py-6 px-3 sm:px-6 flex items-center justify-center">
+    <div class="max-w-xl w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-6">
+        
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-xl mx-auto shadow-sm">
+                <i class="fa-solid fa-camera"></i>
+            </div>
+            <h1 class="text-lg sm:text-xl font-bold text-slate-900">VIVIDLENS GRADUATION</h1>
+            <p class="text-xs text-slate-500">Mohon lengkapi data pemesanan sesi foto wisuda Anda di bawah ini.</p>
+        </div>
+
+        <!-- Form Input Klien -->
+        <div class="space-y-4">
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-600 uppercase">Nama Lengkap</label>
+                <input type="text" id="clientNama" placeholder="Contoh: Sarah Anjani" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Tanggal Foto</label>
+                    <input type="date" id="clientTanggal" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto</label>
+                    <input type="time" id="clientJamMulai" onchange="calculateDetails()" value="15:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Preview Jam Sesi Otomatis -->
+            <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex justify-between items-center text-xs">
+                <span class="text-blue-800 font-bold uppercase">Estimasi Durasi & Jadwal:</span>
+                <span id="previewJamRange" class="font-bold text-blue-700 font-mono text-sm">15:00 - 16:00 WIB</span>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-600 uppercase">Lokasi Foto</label>
+                <input type="text" id="clientLokasi" placeholder="Contoh: Gedung Rektorat UGM / Candi Plaosan" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Kampus</label>
+                    <input type="text" id="clientKampus" placeholder="Contoh: UGM / UNY / UMY" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">No. WhatsApp (WA)</label>
+                    <input type="tel" id="clientNoWa" placeholder="Contoh: 081234567890" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-600 uppercase">Pilih Paket Wisuda</label>
+                <select id="clientPaket" onchange="onPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                    <optgroup label="Personal Package">
+                        <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
+                        <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
+                        <option value="Silver" selected>Silver (Rp350k • 1 Jam)</option>
+                        <option value="Gold">Gold (Rp450k • 1.5 Jam)</option>
+                        <option value="Premium">Premium (Rp1.000k • 1.5 Jam)</option>
+                    </optgroup>
+                    <optgroup label="Candi Plaosan Package">
+                        <option value="Plaosan A">Plaosan A (Rp370k • 1 Jam)</option>
+                        <option value="Plaosan B">Plaosan B (Rp500k • 1.5 Jam)</option>
+                    </optgroup>
+                    <optgroup label="Group Package">
+                        <option value="Group 1">Group 1 (Rp450k • 1 Jam)</option>
+                        <option value="Group 2">Group 2 (Rp550k • 1.5 Jam)</option>
+                        <option value="Package 3">Package 3 (Rp850k • 1.5 Jam)</option>
+                    </optgroup>
+                    <optgroup label="Couple Package">
+                        <option value="Couple Package">Couple Package (Rp500k • 1 Jam)</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Opsi Tambahan Orang (Hanya Muncul untuk Paket Grup) -->
+            <div id="additionalPersonBox" class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2 hidden">
+                <label class="text-xs font-bold text-amber-800 uppercase block">Tambah Orang (Additional Person)</label>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-600">Tambah orang dari batas maksimal (+Rp100k/org):</span>
+                    <select id="clientAdditionalCount" onchange="calculateDetails()" class="px-3 py-1.5 bg-white border border-amber-300 rounded-lg font-bold text-xs outline-none cursor-pointer">
+                        <option value="0" selected>0 Orang (Tanpa Tambahan)</option>
+                        <option value="1">+1 Orang (Rp100.000)</option>
+                        <option value="2">+2 Orang (Rp200.000)</option>
+                        <option value="3">+3 Orang (Rp300.000)</option>
+                        <option value="4">+4 Orang (Rp400.000)</option>
+                        <option value="5">+5 Orang (Rp500.000)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex justify-between items-center text-xs">
+                <span class="text-emerald-800 font-bold uppercase">Total Harga Paket:</span>
+                <span id="previewTotalHarga" class="font-bold text-emerald-700 font-mono text-sm">Rp350.000</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Instagram / TikTok</label>
+                    <input type="text" id="clientIg" placeholder="Contoh: @sarahanjani" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Nama & IG MUA (Opsional)</label>
+                    <input type="text" id="clientMua" placeholder="Contoh: @studio_mua" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-600 uppercase">Dress / Busana & IG (Opsional)</label>
+                <input type="text" id="clientDress" placeholder="Contoh: Kebaya pink / @sewa_kebaya" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800">
+            </div>
+
+            <!-- Box QRIS Pembayaran DP -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-center">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">DP Rp100.000</span>
+                    <span class="text-xs font-bold text-slate-700">Scan QRIS Berikut untuk Pembayaran DP</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-slate-200 inline-block shadow-sm">
+                    <img src="qris.png" alt="QRIS VividLens" class="w-44 h-44 object-contain mx-auto rounded-lg">
+                </div>
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Silakan scan QRIS di atas untuk transfer DP sebesar <strong class="text-slate-800">Rp100.000</strong>. Setelah itu klik tombol konfirmasi di bawah untuk mengirim data ke WhatsApp admin beserta bukti transfernya.
+                </p>
+            </div>
+
+            <button onclick="submitClientBooking()" id="btnSubmit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-base"></i> Kirim Form & Konfirmasi WA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://aizhweokxpxfrczqsuik.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const MONTH_NAMES = {
+            '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun',
+            '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
+        };
+
+        const PACKAGE_DATA = {
+            'Bronze 30 Min': { harga: 285000, duration: 30, isGroup: false },
+            'Bronze': { harga: 325000, duration: 60, isGroup: false },
+            'Silver': { harga: 350000, duration: 60, isGroup: false },
+            'Gold': { harga: 450000, duration: 90, isGroup: false },
+            'Premium': { harga: 1000000, duration: 90, isGroup: false },
+            'Plaosan A': { harga: 370000, duration: 60, isGroup: false },
+            'Plaosan B': { harga: 500000, duration: 90, isGroup: false },
+            'Group 1': { harga: 450000, duration: 60, isGroup: true },
+            'Group 2': { harga: 550000, duration: 90, isGroup: true },
+            'Package 3': { harga: 850000, duration: 90, isGroup: true },
+            'Couple Package': { harga: 500000, duration: 60, isGroup: false }
+        };
+
+        function onPaketChange() {
+            const paketKey = document.getElementById('clientPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+            const box = document.getElementById('additionalPersonBox');
+            if (pkg.isGroup) {
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+                document.getElementById('clientAdditionalCount').value = "0";
+            }
+            calculateDetails();
+        }
+
+        function calculateDetails() {
+            const timeVal = document.getElementById('clientJamMulai').value || "15:00";
+            const paketKey = document.getElementById('clientPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+            const addCount = pkg.isGroup ? parseInt(document.getElementById('clientAdditionalCount').value) || 0 : 0;
+
+            let [h, m] = timeVal.split(':').map(n => parseInt(n));
+            if (isNaN(h)) h = 15;
+            if (isNaN(m)) m = 0;
+
+            const startFormatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            let totalMinutes = h * 60 + m + pkg.duration;
+            let endH = Math.floor(totalMinutes / 60) % 24;
+            let endM = totalMinutes % 60;
+            const endFormatted = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+            const rangeStr = `${startFormatted} - ${endFormatted} WIB`;
+            document.getElementById('previewJamRange').textContent = rangeStr;
+
+            const finalHarga = pkg.harga + (addCount * 100000);
+            document.getElementById('previewTotalHarga').textContent = 'Rp' + finalHarga.toLocaleString('id-ID');
+
+            return { jam: rangeStr.replace(' WIB', ''), finalHarga, addCount };
+        }
+
+        async function submitClientBooking() {
+            const nama = document.getElementById('clientNama').value.trim();
+            const isoDate = document.getElementById('clientTanggal').value;
+            const details = calculateDetails();
+            const lokasi = document.getElementById('clientLokasi').value.trim();
+            const kampus = document.getElementById('clientKampus').value.trim().toUpperCase();
+            const paket = document.getElementById('clientPaket').value;
+            const noWa = document.getElementById('clientNoWa').value.trim();
+            const ig = document.getElementById('clientIg').value.trim();
+            const mua = document.getElementById('clientMua').value.trim() || '-';
+            const dress = document.getElementById('clientDress').value.trim() || '-';
+
+            if (!nama || !isoDate || !details.jam || !lokasi || !kampus || !noWa) {
+                return alert('Mohon lengkapi kolom Nama, Tanggal, Jam Mulai, Lokasi, Kampus, dan No. WA terlebih dahulu!');
+            }
+
+            const [y, m, d] = isoDate.split('-');
+            const sheetDate = `${parseInt(d, 10)}-${MONTH_NAMES[m] || 'Sep'}-${y}`;
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim Booking...';
+
+            const addTextInfo = details.addCount > 0 ? ` (Tambah ${details.addCount} Orang)` : '';
+            const finalPaketLabel = details.addCount > 0 ? `${paket}${addTextInfo}` : paket;
+
+            try {
+                await supabaseClient.from('booking_requests').insert([{
+                    nama, kampus, lokasi, tanggal: isoDate, jam: details.jam,
+                    paket: finalPaketLabel, harga: details.finalHarga, dp: 100000,
+                    pelunasan: Math.max(0, details.finalHarga - 100000),
+                    no_wa: noWa, ig, mua, dress, status: 'pending'
+                }]);
+            } catch (err) {
+                console.log("Supabase insert error:", err);
+            }
+
+            const adminWa = "6285155129954";
+            const addWaInfo = details.addCount > 0 ? `\nTambahan Orang : +${details.addCount} Orang (Rp${(details.addCount * 100000).toLocaleString('id-ID')})` : '';
+            const formText = `FORM BOOKING\nVIVIDLENS GRADUATION\n\nMohon konfirmasi pesanan saya:\n\nNama : ${nama}\nTanggal Foto : ${sheetDate}\nJam Foto : ${details.jam} WIB\nLokasi Foto : ${lokasi}\nKampus : ${kampus}\nPaket : ${paket}${addWaInfo}\nTotal Harga : Rp${details.finalHarga.toLocaleString('id-ID')}\nWA : ${noWa}\nInstagram / TikTok : ${ig}\nMUA : ${mua}\nDress : ${dress}\n\nDP Rp100.000 (Bukti transfer terlampir)`;
+            
+            window.location.href = `https://wa.me/${adminWa}?text=${encodeURIComponent(formText)}`;
+        }
+    </script>
+</body>
+</html>
