@@ -909,19 +909,6 @@
             return `${parseInt(d, 10)}-${mName}-${y}`;
         }
 
-        function onTanggalPickerChange() {
-            const iso = document.getElementById('outTanggalPicker').value;
-            const sheetDate = isoToSheetDate(iso);
-            document.getElementById('outTanggalFormatted').textContent = sheetDate;
-            onFieldUpdate();
-        }
-
-        function onReschedTanggalPickerChange() {
-            const iso = document.getElementById('reschedTanggalPicker').value;
-            const sheetDate = isoToSheetDate(iso);
-            document.getElementById('reschedTanggalFormatted').textContent = sheetDate;
-        }
-
         function switchMode(mode) {
             const isApproval = mode === 'approval';
             const isCalendar = mode === 'calendar';
@@ -1042,7 +1029,7 @@
                         <div class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                             <div class="w-full sm:w-auto flex-1">
                                 <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tugaskan Fotografer (FG):</label>
-                                <select id="assignFg_${b.id}" class="w-full sm:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer">
+                                <select id="assignFg_${b.id}" onchange="onInboxFGChange('${b.id}', this.value)" class="w-full sm:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer">
                                     <option value="Raihan" selected>Raihan</option>
                                     <option value="Zidane">Zidane</option>
                                     <option value="Dava">Dava</option>
@@ -1052,7 +1039,9 @@
                                     <option value="Surya">Surya</option>
                                     <option value="Vero">Vero</option>
                                     <option value="Satria">Satria</option>
+                                    <option value="__custom__">+ Ketik Manual...</option>
                                 </select>
+                                <input type="text" id="customAssignFg_${b.id}" placeholder="Ketik nama FG..." class="w-full sm:w-48 mt-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none hidden">
                             </div>
                             <div class="flex gap-2 w-full sm:w-auto">
                                 <button onclick="approveAndSyncBooking('${b.id}', '${sheetDateFormat}')" class="w-full sm:w-auto py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 active:scale-95">
@@ -1065,11 +1054,25 @@
             }).join('');
         }
 
+        function onInboxFGChange(id, val) {
+            const customInput = document.getElementById(`customAssignFg_${id}`);
+            if (val === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
         async function approveAndSyncBooking(id, sheetDateFormat) {
             const booking = cachedPendingBookings.find(b => b.id == id);
             if (!booking) return alert('Data booking tidak ditemukan!');
 
-            const fgName = document.getElementById(`assignFg_${id}`).value;
+            let fgName = document.getElementById(`assignFg_${id}`).value;
+            if (fgName === '__custom__') {
+                fgName = document.getElementById(`customAssignFg_${id}`).value.trim() || 'Raihan';
+            }
+
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('URL Apps Script belum diatur!');
 
