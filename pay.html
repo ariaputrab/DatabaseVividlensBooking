@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal Pembayaran - VIVIDLENS</title>
+    <title>Portal Pembayaran & Status - VIVIDLENS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -23,14 +23,50 @@
                 <div class="w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center text-xs font-bold">VL</div>
                 <span class="text-sm font-black tracking-tight text-slate-900">VIVIDLENS</span>
             </div>
-            <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800" id="badgeStatus">TAGIHAN H-1</span>
+            <span class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-amber-100 text-amber-800" id="badgeStatus">PROSES VERIFIKASI</span>
+        </div>
+
+        <!-- VISUAL ALUR STATUS (STEPPER) -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">Status Pesanan Anda</span>
+            
+            <div class="grid grid-cols-4 gap-1 text-center">
+                <!-- Step 1: Booking Diterima -->
+                <div class="space-y-1">
+                    <div id="step1Icon" class="w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 block leading-tight">Booking Diterima</span>
+                </div>
+                <!-- Step 2: DP Diterima -->
+                <div class="space-y-1">
+                    <div id="step2Icon" class="w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 block leading-tight">DP Diterima</span>
+                </div>
+                <!-- Step 3: Terjadwal -->
+                <div class="space-y-1">
+                    <div id="step3Icon" class="w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold">
+                        3
+                    </div>
+                    <span id="step3Text" class="text-[9px] font-medium text-slate-400 block leading-tight">Terjadwal</span>
+                </div>
+                <!-- Step 4: Lunas -->
+                <div class="space-y-1">
+                    <div id="step4Icon" class="w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold">
+                        4
+                    </div>
+                    <span id="step4Text" class="text-[9px] font-medium text-slate-400 block leading-tight">Lunas</span>
+                </div>
+            </div>
         </div>
 
         <!-- Detail Klien -->
         <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2 text-xs">
             <div class="flex justify-between">
                 <span class="text-slate-400 font-bold uppercase text-[10px]">Nama Klien</span>
-                <span id="clientName" class="font-bold text-slate-800">-</span>
+                <span id="clientName" class="font-bold text-slate-800">Memuat...</span>
             </div>
             <div class="flex justify-between">
                 <span class="text-slate-400 font-bold uppercase text-[10px]">Kampus & Paket</span>
@@ -125,12 +161,25 @@
                         globalClientData = found;
                         renderPaymentInfo(found);
                     } else {
-                        alert('Data tagihan untuk nama tersebut tidak ditemukan.');
+                        document.getElementById('clientName').textContent = decodeURIComponent(namaParam);
+                        // Jika belum ada di spreadsheet (baru kirim form dan masuk antrean pending)
+                        renderPendingState(decodeURIComponent(namaParam));
                     }
                 }
             } catch (err) {
                 alert('Gagal memuat data tagihan.');
             }
+        }
+
+        function renderPendingState(nama) {
+            document.getElementById('badgeStatus').textContent = "MENUNGGU ACC ADMIN";
+            document.getElementById('clientPaket').textContent = "Booking Baru (Pending)";
+            document.getElementById('clientJadwal').textContent = "Menunggu konfirmasi admin";
+            
+            // Set stepper ke tahap 1 (Booking Diterima)
+            document.getElementById('step2Icon').className = "w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold";
+            document.getElementById('step2Icon').innerHTML = "2";
+            document.getElementById('step2Icon').nextElementSibling.className = "text-[9px] font-medium text-slate-400 block leading-tight";
         }
 
         function renderPaymentInfo(c) {
@@ -147,10 +196,24 @@
             document.getElementById('txtDP').textContent = `- ${formatRupiah(dp)}`;
             document.getElementById('txtSisa').textContent = formatRupiah(sisa);
 
+            // Update Stepper Menjadi Tahap 3 (Terjadwal)
+            const icon3 = document.getElementById('step3Icon');
+            const text3 = document.getElementById('step3Text');
+            icon3.className = "w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
+            icon3.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+            text3.className = "text-[9px] font-bold text-slate-700 block leading-tight";
+
             if (isLunas) {
                 document.getElementById('badgeStatus').textContent = "LUNAS";
-                document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+                document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800";
                 
+                // Update Stepper Menjadi Tahap 4 (Lunas)
+                const icon4 = document.getElementById('step4Icon');
+                const text4 = document.getElementById('step4Text');
+                icon4.className = "w-7 h-7 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
+                icon4.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+                text4.className = "text-[9px] font-bold text-emerald-700 block leading-tight";
+
                 // Ubah kotak sisa pembayaran jadi hijau lunas
                 const boxSisa = document.getElementById('boxSisaContainer');
                 boxSisa.className = "p-3.5 bg-emerald-600 text-white rounded-xl flex justify-between items-center shadow-sm";
@@ -165,7 +228,7 @@
 
         function confirmPaymentWhatsApp() {
             if (!globalClientData) {
-                alert('Data klien belum dimuat.');
+                alert('Data klien belum dimuat sepenuhnya.');
                 return;
             }
 
