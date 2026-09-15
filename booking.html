@@ -39,8 +39,7 @@
                     <input type="date" id="clientTanggal" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto (Format 24 Jam)</label>
-                    <!-- Ditambahkan step="60" agar memaksa browser memakai format 24 jam tanpa AM/PM -->
+                    <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto</label>
                     <input type="time" id="clientJamMulai" step="60" onchange="calculateDetails()" value="15:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
             </div>
@@ -149,6 +148,46 @@
         </div>
     </div>
 
+    <!-- MODAL POP-UP SUKSES BOOKING & LINK PANTAU -->
+    <div id="modalSuccessBooking" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="font-bold text-base text-slate-900">Booking Berhasil Dikirim! 🎉</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Terima kasih telah melakukan pemesanan di VividLens Graduation. Data Anda telah masuk ke sistem antrean kami.
+                </p>
+            </div>
+
+            <!-- Kotak Link Pantau Klien -->
+            <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 text-left">
+                <span class="text-[10px] font-bold uppercase text-blue-800 block">Pantau Status & Tagihan Anda:</span>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="clientPortalLink" readonly class="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg font-mono text-[11px] text-blue-700 outline-none select-all" value="-">
+                    <button onclick="copyPortalLink()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition active:scale-95 whitespace-nowrap">
+                        <i class="fa-solid fa-copy"></i> Salin
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+                <a id="btnRedirectWA" href="#" target="_blank" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp text-sm"></i> Lanjut Kirim Format & Bukti ke WA Admin
+                </a>
+                <button onclick="closeSuccessModalAndReset()" class="w-full py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-xl">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none z-50 text-xs">
+        <i class="fa-solid fa-check text-emerald-400"></i><span id="toastMsg">Berhasil!</span>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://aizhweokxpxfrczqsuik.supabase.co";
         const SUPABASE_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
@@ -231,7 +270,7 @@
 
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim Booking...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
 
             const addTextInfo = details.addCount > 0 ? ` (Tambah ${details.addCount} Orang)` : '';
             const finalPaketLabel = details.addCount > 0 ? `${paket}${addTextInfo}` : paket;
@@ -247,11 +286,35 @@
                 console.log("Supabase insert error:", err);
             }
 
+            // Siapkan link pay.html milik klien
+            const payUrl = `${window.location.origin}/pay.html?nama=${encodeURIComponent(nama)}`;
+            document.getElementById('clientPortalLink').value = payUrl;
+
+            // Siapkan link WhatsApp Admin
             const adminWa = "6285155129954";
             const addWaInfo = details.addCount > 0 ? `\nTambahan Orang : +${details.addCount} Orang (Rp${(details.addCount * 100000).toLocaleString('id-ID')})` : '';
-            const formText = `FORM BOOKING\nVIVIDLENS GRADUATION\n\nMohon konfirmasi pesanan saya:\n\nNama : ${nama}\nTanggal Foto : ${sheetDate}\nJam Foto : ${details.jam} WIB\nLokasi Foto : ${lokasi}\nKampus : ${kampus}\nPaket : ${paket}${addWaInfo}\nTotal Harga : Rp${details.finalHarga.toLocaleString('id-ID')}\nWA : ${noWa}\nInstagram / TikTok : ${ig}\nMUA : ${mua}\nDress : ${dress}\n\nDP Rp100.000 (Bukti transfer terlampir)`;
+            const formText = `FORM BOOKING\nVIVIDLENS GRADUATION\n\nMohon konfirmasi pesanan saya:\n\nNama : ${nama}\nTanggal Foto : ${sheetDate}\nJam Foto : ${details.jam} WIB\nLokasi Foto : ${lokasi}\nKampus : ${kampus}\nPaket : ${paket}${addWaInfo}\nTotal Harga : Rp${details.finalHarga.toLocaleString('id-ID')}\nWA : ${noWa}\nInstagram / TikTok : ${ig}\nMUA : ${mua}\nDress : ${dress}\n\nLink Pantau Tagihan:\n${payUrl}\n\nDP Rp100.000 (Bukti transfer terlampir)`;
             
-            window.location.href = `https://wa.me/${adminWa}?text=${encodeURIComponent(formText)}`;
+            document.getElementById('btnRedirectWA').href = `https://wa.me/${adminWa}?text=${encodeURIComponent(formText)}`;
+
+            // Tampilkan Modal Sukses
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-brands fa-whatsapp text-base"></i> Kirim Form & Konfirmasi WA';
+            document.getElementById('modalSuccessBooking').classList.remove('hidden');
+        }
+
+        function copyPortalLink() {
+            const input = document.getElementById('clientPortalLink');
+            navigator.clipboard.writeText(input.value).then(() => {
+                const toast = document.getElementById('toast');
+                document.getElementById('toastMsg').textContent = 'Link pantau berhasil disalin!';
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
+            });
+        }
+
+        function closeSuccessModalAndReset() {
+            document.getElementById('modalSuccessBooking').classList.add('hidden');
         }
     </script>
 </body>
