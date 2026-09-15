@@ -39,8 +39,9 @@
                     <input type="date" id="clientTanggal" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto</label>
-                    <input type="time" id="clientJamMulai" onchange="calculateDetails()" value="15:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto (Format 24 Jam)</label>
+                    <!-- Ditambahkan step="60" agar memaksa browser memakai format 24 jam tanpa AM/PM -->
+                    <input type="time" id="clientJamMulai" step="60" onchange="calculateDetails()" value="15:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
             </div>
 
@@ -254,4 +255,4 @@
         }
     </script>
 </body>
-</html>    
+</html>
