@@ -1363,7 +1363,7 @@
             `;
         }
 
-        // FUNGSI MODAL FORMAT CHAT TAGIHAN / REMINDER
+        // FUNGSI MODAL FORMAT CHAT TAGIHAN / REMINDER (FRIENDLY VERSION)
         function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
@@ -1371,12 +1371,12 @@
 
             let chatText = "";
             if (isLunas) {
-                chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nStatus pembayaran Kakak sudah *LUNAS*. Rincian dan kwitansi lengkapnya bisa dicek melalui portal berikut ya:\n${payLink}\n\nSampai jumpa di sesi pemotretan nanti! Terima kasih.`;
+                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${kampus || 'UMY'}\n\nUntuk status payment Kakak sudah LUNAS yaa 🙌🏻\nRincian booking dan pembayaran Kakak bisa dicek melalui portal berikut:\n\n${payLink}\n\nSampai ketemu besok! ✨`;
             } else {
-                chatText = `Halo Kak ${nama}\n\nMengingatkan untuk jadwal photoshoot wisuda kita:\n- Tanggal: ${tanggal}\n- Jam: ${jam} WIB\n- Lokasi: ${kampus || 'Yogyakarta'}\n\nUntuk rincian tagihan pelunasan dan QRIS pembayaran bisa langsung diakses melalui portal berikut ya Kak:\n${payLink}\n\nJika sudah melakukan transfer, silakan kirimkan bukti pembayarannya di chat ini. Terima kasih!`;
+                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${kampus || 'UMY'}\n\nUntuk rincian tagihan pelunasan Kakak bisa langsung cek melalui portal berikut yaa:\n\n${payLink}\n\nUntuk pembayaran, boleh dibantu kirimkan bukti pembayarannya melalui chat ini ya, Kak 🙏🏻\nSampai ketemu besok! ✨`;
             }
 
-            showCustomModalChat(isLunas ? "Format Chat Reminder Jadwal (Lunas)" : "Format Chat Tagihan Pelunasan", chatText, waClean);
+            showCustomModalChat(isLunas ? "Format Chat Reminder (Lunas)" : "Format Chat Tagihan Pelunasan", chatText, waClean);
         }
 
         async function setClientAsPaid(namaKlien, sheetName, btnEl) {
