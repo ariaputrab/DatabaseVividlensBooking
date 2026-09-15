@@ -1875,7 +1875,7 @@
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            const chat = `Hallo Kak ${nama}\n\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal: ${tanggal}\nJam: ${jam} WIB\nLokasi: ${lokasi || '-'}\nKampus: ${kampus || '-'}\nPaket: ${paket || 'Silver'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya\n\nTerima kasih`;
+            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
 
             showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
         }
@@ -2063,12 +2063,12 @@
             const fgName = getActiveFG();
             const tanggal = document.getElementById('outTanggalFormatted').textContent || '-';
             const jam = document.getElementById('outJam').value.trim();
-            const lokasi = document.getElementById('outLokasi').value.trim();
-            const kampus = document.getElementById('outKampus').value.trim();
+            const lokasi = document.getElementById('outLokasi').value.trim() || '-';
+            const kampus = document.getElementById('outKampus').value.trim() || '-';
             const noWa = document.getElementById('outNoWa').value.trim() || '-';
             const paket = currentFinancials ? currentFinancials.paketLabel : 'Silver';
 
-            const chat = `Hallo Kak ${nama || '...'}\n\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation\n\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal: ${tanggal}\nJam: ${jam} WIB\nLokasi: ${lokasi}\nKampus: ${kampus}\nPaket: ${paket}\nWA: ${noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di mana ya, Kak? Jika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga ya\n\nTerima kasih`;
+            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal}\nJam : ${jam} WIB\nLokasi : ${lokasi}\nKampus : ${kampus}\nPaket : ${paket}\nWA: ${noWa}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
 
             document.getElementById('fgChatPreview').value = chat;
         }
