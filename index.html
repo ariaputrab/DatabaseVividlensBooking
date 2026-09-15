@@ -1237,12 +1237,17 @@
                     const dp = parseInt(c.dp) || 0;
                     const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
+                    const isFGSent = localStorage.getItem(`fg_chat_sent_${c.nama.replace(/\s+/g, '_')}`) === 'true';
+                    const cleanNameKey = c.nama.replace(/\s+/g, '_');
+                    const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
+                    const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
+                    const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
 
                     return `
                         <div class="p-4 bg-slate-50 hover:bg-amber-50/40 border ${isLunas ? 'border-emerald-200' : 'border-amber-200'} rounded-2xl transition space-y-3">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="flex items-center gap-1.5">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-200 px-2 py-0.5 rounded-md">
                                             ⏰ ${c.jam || '-'} WIB
                                         </span>
@@ -1250,6 +1255,8 @@
                                             ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">LUNAS</span>'
                                             : '<span class="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">BELUM LUNAS</span>'
                                         }
+                                        ${isGalleryCreated ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> Galeri Siap</span>' : ''}
+                                        ${isFGSent ? '<span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md"><i class="fa-solid fa-check mr-1"></i> FG Dikonfirmasi</span>' : ''}
                                     </div>
                                     <h3 class="font-bold text-sm sm:text-base text-slate-900 mt-1.5">${c.nama}</h3>
                                     <p class="text-xs text-slate-500 font-semibold">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
@@ -1274,11 +1281,22 @@
                                     </button>
                                 ` : ''}
 
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                                     <i class="fa-solid fa-copy"></i> Salin Teks
                                 </button>
-                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                                    <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-solid fa-file-invoice"></i> Invoice
+                                </button>
+                                <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                    <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> Chat FG
+                                </button>
+                                ${isGalleryCreated && driveUrl ? `
+                                    <a href="${driveUrl}" target="_blank" class="py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Google Drive Klien">
+                                        <i class="fa-brands fa-google-drive"></i> Drive
+                                    </a>
+                                ` : ''}
+                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                    <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
                                 </button>
                             </div>
                         </div>
@@ -1342,7 +1360,7 @@
                         </button>
 
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                            <i class="fa-solid fa-file-invoice"></i> Invoice
                         </button>
                         
                         <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
