@@ -65,6 +65,9 @@
                     <i class="fa-solid fa-calendar-day text-[11px]"></i> Jadwal Sesi
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
+                <button id="tabPaymentFgBtn" onclick="switchMode('paymentFg')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-money-bill-transfer text-[11px]"></i> Payment & FG
+                </button>
                 <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking
                 </button>
@@ -220,6 +223,49 @@
                     <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
                     Memuat status seleksi dari Supabase...
                 </div>
+            </div>
+        </div>
+
+        <!-- TAB PAYMENT & FEE FG HARIAN -->
+        <div id="sectionPaymentFg" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-money-bill-transfer text-emerald-600"></i> Rekap Payment & Fee FG Harian
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal untuk melihat daftar job, status pembayaran klien, dan rincian fee FG.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <input type="date" id="selectPaymentFgDate" onchange="renderPaymentFgDailyView()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
+                    <button onclick="setTodayPaymentFgDate()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition">
+                        Hari Ini
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ringkasan Finansial Tanggal Terpilih -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Job</span>
+                    <span id="pfTotalJob" class="text-lg font-bold text-slate-900">0 Sesi</span>
+                </div>
+                <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-200">
+                    <span class="text-[10px] uppercase font-bold text-blue-700 block">Omzet Tanggal Ini</span>
+                    <span id="pfTotalOmzet" class="text-base font-bold text-blue-800">Rp0</span>
+                </div>
+                <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200">
+                    <span class="text-[10px] uppercase font-bold text-amber-700 block">Total Fee FG</span>
+                    <span id="pfTotalFeeFG" class="text-base font-bold text-amber-800">Rp0</span>
+                </div>
+                <div class="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200">
+                    <span class="text-[10px] uppercase font-bold text-emerald-700 block">Bersih Studio</span>
+                    <span id="pfTotalBersih" class="text-base font-bold text-emerald-800">Rp0</span>
+                </div>
+            </div>
+
+            <!-- Daftar List Job Harian -->
+            <div id="paymentFgListContainer" class="space-y-3">
+                <!-- Diisi via JavaScript -->
             </div>
         </div>
 
@@ -532,7 +578,7 @@
             </div>
         </div>
 
-        <!-- MODAL DETAIL JADWAL PADA TANGGAL TERTENTU (DENGAN TAB PEMBAYARAN & FEE FG TERPISAH) -->
+        <!-- MODAL DETAIL JADWAL PADA TANGGAL TERTENTU -->
         <div id="modalDayDetail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -545,7 +591,7 @@
                     </button>
                 </div>
                 <div id="modalDayContent" class="space-y-3">
-                    <!-- List jadwal dengan rincian payment & fee FG terpisah -->
+                    <!-- List jadwal -->
                 </div>
             </div>
         </div>
@@ -855,6 +901,7 @@
             const isFinance = mode === 'finance';
             const isTracker = mode === 'tracker';
             const isToday = mode === 'today';
+            const isPaymentFg = mode === 'paymentFg';
             const isNew = mode === 'new';
             const isResched = mode === 'reschedule';
 
@@ -862,36 +909,20 @@
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
+            document.getElementById('sectionPaymentFg').classList.toggle('hidden', !isPaymentFg);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
-            document.getElementById('tabCalendarBtn').className = isCalendar
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+            document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabTrackerBtn').className = isTracker ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabTodayBtn').className = isToday ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabPaymentFgBtn').className = isPaymentFg ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabNewBtn').className = isNew ? getActiveTabClass() : getInactiveTabClass();
+            document.getElementById('tabRescheduleBtn').className = isResched ? getActiveTabClass() : getInactiveTabClass();
 
-            document.getElementById('tabFinanceBtn').className = isFinance
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
-
-            document.getElementById('tabTrackerBtn').className = isTracker
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
-
-            document.getElementById('tabTodayBtn').className = isToday
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
-
-            document.getElementById('tabNewBtn').className = isNew 
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
-                
-            document.getElementById('tabRescheduleBtn').className = isResched 
-                ? "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-                : "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
-
-            if (isTracker) {
-                fetchSupabaseClients(false);
-            }
+            if (isTracker) fetchSupabaseClients(false);
+            if (isPaymentFg) initPaymentFgTab();
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
@@ -899,11 +930,153 @@
                 if (isCalendar) renderCalendarView();
                 if (isToday) renderCombinedSchedule();
                 if (isFinance) calculateFinancialStats();
+                if (isPaymentFg) renderPaymentFgDailyView();
             }
         }
 
+        function getActiveTabClass() {
+            return "flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+        }
+
+        function getInactiveTabClass() {
+            return "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+        }
+
+        function initPaymentFgTab() {
+            const picker = document.getElementById('selectPaymentFgDate');
+            if (picker && !picker.value) {
+                const now = new Date();
+                const isoToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                picker.value = isoToday;
+            }
+            renderPaymentFgDailyView();
+        }
+
+        function setTodayPaymentFgDate() {
+            const now = new Date();
+            const isoToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            document.getElementById('selectPaymentFgDate').value = isoToday;
+            renderPaymentFgDailyView();
+        }
+
+        function renderPaymentFgDailyView() {
+            const pickerVal = document.getElementById('selectPaymentFgDate').value;
+            const container = document.getElementById('paymentFgListContainer');
+            if (!pickerVal || !container) return;
+
+            const dayClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === pickerVal);
+            dayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
+
+            let totalOmzet = 0;
+            let totalFeeFG = 0;
+            let totalBersih = 0;
+
+            dayClients.forEach(c => {
+                const h = parseInt(c.harga) || 0;
+                const matchedKey = matchPackageKey(c.paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                const fee = parseInt(c.feeFG) || pkg.feeFG;
+                const bersih = parseInt(c.bersih) || (h - fee);
+
+                totalOmzet += h;
+                totalFeeFG += fee;
+                totalBersih += bersih;
+            });
+
+            document.getElementById('pfTotalJob').textContent = `${dayClients.length} Sesi`;
+            document.getElementById('pfTotalOmzet').textContent = formatRupiah(totalOmzet);
+            document.getElementById('pfTotalFeeFG').textContent = formatRupiah(totalFeeFG);
+            document.getElementById('pfTotalBersih').textContent = formatRupiah(totalBersih);
+
+            if (dayClients.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <i class="fa-regular fa-calendar-xmark text-3xl text-slate-300"></i>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal job pada tanggal ini</p>
+                        <p class="text-[11px] text-slate-400">Silakan pilih tanggal lain melalui pemilih tanggal di atas.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = dayClients.map(c => {
+                const h = parseInt(c.harga) || 0;
+                const dp = parseInt(c.dp) || 0;
+                const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                const sisa = isLunas ? 0 : Math.max(0, h - dp);
+
+                const matchedKey = matchPackageKey(c.paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                const feeFG = parseInt(c.feeFG) || pkg.feeFG;
+                const bersihStudio = parseInt(c.bersih) || (h - feeFG);
+
+                return `
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${c.payment || 'DP'}</span>
+                                    <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
+                                </div>
+                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${c.nama}</h4>
+                                <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • Lokasi: <span class="text-slate-700 font-semibold">${c.lokasi || '-'}</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Kotak Rincian Terpisah -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
+                            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                                <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider block">Pembayaran Klien</span>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Harga Paket:</span>
+                                    <span class="font-semibold text-slate-800">${formatRupiah(h)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Terbayar (DP):</span>
+                                    <span class="font-semibold text-emerald-600">${formatRupiah(dp)}</span>
+                                </div>
+                                <div class="flex justify-between pt-1 border-t border-slate-100 font-bold">
+                                    <span class="text-slate-700">Sisa Piutang:</span>
+                                    <span class="${isLunas ? 'text-emerald-600' : 'text-rose-600'}">${formatRupiah(sisa)}</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                                <span class="text-[9px] font-bold uppercase text-amber-700 tracking-wider block">Fee Fotografer & Studio</span>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Fee FG (${c.fg || 'FG'}):</span>
+                                    <span class="font-semibold text-amber-800">${formatRupiah(feeFG)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Bersih Studio:</span>
+                                    <span class="font-semibold text-emerald-700">${formatRupiah(bersihStudio)}</span>
+                                </div>
+                                <div class="flex justify-between pt-1 border-t border-slate-100 font-bold">
+                                    <span class="text-slate-700">Status FG:</span>
+                                    <span class="text-slate-600">Aman</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Cepat -->
+                        <div class="flex gap-2 pt-1">
+                            ${!isLunas ? `
+                                <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                    <i class="fa-solid fa-check"></i> Set Lunas
+                                </button>
+                            ` : ''}
+                            <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-invoice"></i> Invoice
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // ========================================================
-        // RENDER CALENDAR VIEW DENGAN TAB PAYMENT & FEE FG TERPISAH
+        // RENDER CALENDAR VIEW
         // ========================================================
         function changeCalendarMonth(direction) {
             calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + direction);
@@ -987,7 +1160,6 @@
             grid.innerHTML = html;
         }
 
-        // MODAL DETAIL DENGAN TAB PAYMENT & FEE FG TERPISAH
         function openDayDetailModal(dateISO, event) {
             if (event) event.stopPropagation();
             const modal = document.getElementById('modalDayDetail');
@@ -1018,7 +1190,6 @@
 
                     return `
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                            <!-- Header Klien -->
                             <div class="flex justify-between items-start">
                                 <div>
                                     <div class="flex items-center gap-1.5">
@@ -1031,11 +1202,9 @@
                                 <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</span>
                             </div>
 
-                            <!-- TAB RINCIAN PEMBAYARAN & FEE FG TERPISAH -->
                             <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
-                                <!-- Box Kiri: Payment Klien -->
                                 <div class="p-2.5 bg-white rounded-xl border border-slate-200 space-y-1">
-                                    <span class="text-[9px] font-bold uppercase text-slate-400 block tracking-wider">Tab Pembayaran Klien</span>
+                                    <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Tab Pembayaran Klien</span>
                                     <div class="flex justify-between text-[11px]">
                                         <span class="text-slate-500">Total Harga:</span>
                                         <span class="font-semibold text-slate-800">${formatRupiah(h)}</span>
@@ -1050,9 +1219,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Box Kanan: Fee Fotografer & Bersih Studio -->
                                 <div class="p-2.5 bg-white rounded-xl border border-slate-200 space-y-1">
-                                    <span class="text-[9px] font-bold uppercase text-amber-700 block tracking-wider">Tab Fee & Bersih</span>
+                                    <span class="text-[9px] font-bold uppercase text-amber-700 tracking-wider">Tab Fee & Bersih</span>
                                     <div class="flex justify-between text-[11px]">
                                         <span class="text-slate-500">Fee FG (${c.fg || 'FG'}):</span>
                                         <span class="font-semibold text-amber-800">${formatRupiah(feeFG)}</span>
@@ -1068,7 +1236,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tombol Aksi -->
                             <div class="flex gap-2 pt-1">
                                 ${!isLunas ? `
                                     <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1"><i class="fa-solid fa-check"></i> Set Lunas</button>
@@ -1095,17 +1262,9 @@
             const isToday = subTab === 'today';
             const isTomorrow = subTab === 'tomorrow';
 
-            document.getElementById('subTabYesterdayBtn').className = isYesterday
-                ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap"
-                : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
-
-            document.getElementById('subTabTodayBtn').className = isToday
-                ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap"
-                : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
-
-            document.getElementById('subTabTomorrowBtn').className = isTomorrow
-                ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap"
-                : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
+            document.getElementById('subTabYesterdayBtn').className = isYesterday ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap" : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
+            document.getElementById('subTabTodayBtn').className = isToday ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap" : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
+            document.getElementById('subTabTomorrowBtn').className = isTomorrow ? "py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap" : "py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap";
 
             renderCombinedSchedule();
         }
@@ -1542,7 +1701,6 @@
             }
         }
 
-        // HELPER CARD HARI INI & KEMARIN
         function renderScheduleCard(c, isYesterday = false) {
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1618,7 +1776,6 @@
             `;
         }
 
-        // FUNGSI MODAL FORMAT CHAT TAGIHAN / REMINDER
         function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
@@ -1670,7 +1827,6 @@
             renderCombinedSchedule();
         }
 
-        // FITUR INVOICE & GENERATOR PDF
         function openInvoiceModal(nama, kampus, paket, harga, dp, sisa, tanggal, jam, lokasi, fg, isLunasInitial = false) {
             const now = new Date();
             const dateCode = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
@@ -2111,6 +2267,45 @@
             }
         }
 
+        function getActiveReschedFG() {
+            const select = document.getElementById('reschedFG');
+            if (select.value === '__custom_resched__') {
+                return document.getElementById('customReschedFGInput').value.trim() || 'Raihan';
+            }
+            return select.value;
+        }
+
+        function onReschedFGChange(val) {
+            const customInput = document.getElementById('customReschedFGInput');
+            if (val === '__custom_resched__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function getActiveFG() {
+            const select = document.getElementById('selectFG');
+            if (select.value === '__custom__') {
+                return document.getElementById('customFGInput').value.trim() || 'Raihan';
+            }
+            return select.value;
+        }
+
+        function onFGChange(val) {
+            const customInput = document.getElementById('customFGInput');
+            if (val === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+            onFieldUpdate();
+        }
+
+        function onFieldUpdate() {}
+
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
@@ -2142,6 +2337,22 @@
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Chat berhasil disalin!');
             });
+        }
+
+        function generateFGChat() {
+            const nama = document.getElementById('outNama').value.trim() || '...';
+            const fgName = getActiveFG();
+            const tanggal = document.getElementById('outTanggalFormatted').textContent || '-';
+            const jam = document.getElementById('outJam').value.trim() || '-';
+            const lokasi = document.getElementById('outLokasi').value.trim() || '-';
+            const kampus = document.getElementById('outKampus').value.trim() || '-';
+            const paket = currentFinancials ? currentFinancials.paketLabel : 'Silver';
+            const noWa = document.getElementById('outNoWa').value.trim() || '-';
+
+            const chat = `Hallo Kak ${nama}\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal}\nJam : ${jam}\nLokasi : ${lokasi}\nKampus : ${kampus}\nPaket : ${paket}\nWA: ${noWa}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
+
+            const chatArea = document.getElementById('fgChatPreview');
+            if (chatArea) chatArea.value = chat;
         }
 
         function openModalSettings() { document.getElementById('modalSettings').classList.remove('hidden'); }
@@ -2203,7 +2414,7 @@
             if (lower.includes('plaosan')) return 'Plaosan A';
             if (lower.includes('package 3') || lower.includes('group 3') || lower.includes('grup 3')) return 'Package 3';
             if (lower.includes('package 2') || lower.includes('group 2') || lower.includes('grup 2')) return 'Group 2';
-            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Package 1';
+            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Group 1';
             if (lower.includes('couple')) return 'Couple Package';
             if (lower.includes('premium')) return 'Premium';
             if (lower.includes('gold')) return 'Gold';
