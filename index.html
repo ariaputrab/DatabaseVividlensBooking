@@ -1643,8 +1643,9 @@
                     const sisa = isLunas ? 0 : Math.max(0, h - dp);
                     const isFGSent = localStorage.getItem(`fg_chat_sent_${c.nama.replace(/\s+/g, '_')}`) === 'true';
                     const cleanNameKey = c.nama.replace(/\s+/g, '_');
-                    const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
+                    
                     const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
+                    const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
                     const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
 
                     return `
@@ -1716,11 +1717,11 @@
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
 
             const cleanNameKey = c.nama.replace(/\s+/g, '_');
-            const isGalleryCreated = localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
-            const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
-
             const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
+            const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
             const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
+
+            const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
 
             return `
                 <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border ${isYesterday ? 'border-purple-200' : 'border-slate-200'} rounded-2xl transition space-y-3">
