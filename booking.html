@@ -13,7 +13,7 @@
         input, select, textarea { font-size: 15px !important; }
         @media (min-width: 640px) { input, select, textarea { font-size: 13px !important; } }
         
-        /* FIX UTAMA UNTUK ANDROID & IPHONE: Memaksa teks tanggal dan jam agar selalu terlihat jelas */
+        /* FIX TAMPILAN TANGGAL & JAM DI HP ANDROID & IPHONE */
         input[type="date"], input[type="time"] {
             color: #1e293b !important;
             background-color: #f8fafc !important;
@@ -32,10 +32,11 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen py-6 px-3 sm:px-6 flex items-center justify-center">
     <div class="max-w-xl w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-8 space-y-6">
         
-        <!-- Header -->
+        <!-- Header (Logo / Inisial VL) -->
         <div class="text-center space-y-2">
-            <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-xl mx-auto shadow-sm">
-                <i class="fa-solid fa-camera"></i>
+            <!-- Ganti bagian img di bawah ini jika kamu punya file logo sendiri, misal <img src="logo.png" class="w-12 h-12 object-contain mx-auto"> -->
+            <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-base font-black mx-auto shadow-sm">
+                VL
             </div>
             <h1 class="text-lg sm:text-xl font-bold text-slate-900">VIVIDLENS GRADUATION</h1>
             <p class="text-xs text-slate-500">Mohon lengkapi data pemesanan sesi foto wisuda Anda di bawah ini.</p>
@@ -55,14 +56,15 @@
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto</label>
-                    <input type="time" id="clientJamMulai" step="60" onchange="calculateDetails()" value="15:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                    <!-- Tanpa default 15:00, dikosongkan agar klien wajib memilih -->
+                    <input type="time" id="clientJamMulai" step="60" onchange="calculateDetails()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
             </div>
 
             <!-- Preview Jam Sesi Otomatis -->
             <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex justify-between items-center text-xs">
                 <span class="text-blue-800 font-bold uppercase">Estimasi Durasi & Jadwal:</span>
-                <span id="previewJamRange" class="font-bold text-blue-700 font-mono text-sm">15:00 - 16:00 WIB</span>
+                <span id="previewJamRange" class="font-bold text-blue-700 font-mono text-sm">- Pilih Jam Mulai -</span>
             </div>
 
             <div class="space-y-1">
@@ -253,15 +255,19 @@
         }
 
         function calculateDetails() {
-            const timeVal = document.getElementById('clientJamMulai').value || "15:00";
+            const timeVal = document.getElementById('clientJamMulai').value;
             const paketKey = document.getElementById('clientPaket').value;
             const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
             const addCount = pkg.isGroup ? parseInt(document.getElementById('clientAdditionalCount').value) || 0 : 0;
 
-            let [h, m] = timeVal.split(':').map(n => parseInt(n));
-            if (isNaN(h)) h = 15;
-            if (isNaN(m)) m = 0;
+            if (!timeVal) {
+                document.getElementById('previewJamRange').textContent = "- Pilih Jam Mulai -";
+                const finalHarga = pkg.harga + (addCount * 100000);
+                document.getElementById('previewTotalHarga').textContent = 'Rp' + finalHarga.toLocaleString('id-ID');
+                return { jam: '', finalHarga, addCount };
+            }
 
+            let [h, m] = timeVal.split(':').map(n => parseInt(n));
             const startFormatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             let totalMinutes = h * 60 + m + pkg.duration;
             let endH = Math.floor(totalMinutes / 60) % 24;
@@ -279,6 +285,7 @@
         async function submitClientBooking() {
             const nama = document.getElementById('clientNama').value.trim();
             const isoDate = document.getElementById('clientTanggal').value;
+            const jamMulaiInput = document.getElementById('clientJamMulai').value;
             const details = calculateDetails();
             const lokasi = document.getElementById('clientLokasi').value.trim();
             const kampus = document.getElementById('clientKampus').value.trim().toUpperCase();
@@ -288,7 +295,7 @@
             const mua = document.getElementById('clientMua').value.trim() || '-';
             const dress = document.getElementById('clientDress').value.trim() || '-';
 
-            if (!nama || !isoDate || !details.jam || !lokasi || !kampus || !noWa) {
+            if (!nama || !isoDate || !jamMulaiInput || !lokasi || !kampus || !noWa) {
                 return alert('Mohon lengkapi kolom Nama, Tanggal, Jam Mulai, Lokasi, Kampus, dan No. WA terlebih dahulu!');
             }
 
