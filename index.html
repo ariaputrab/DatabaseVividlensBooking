@@ -1988,16 +1988,19 @@
             `;
         }
 
-        function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment) {
+        function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment, lokasi) {
             const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
             const isLunas = (statusPayment || '').toUpperCase().trim() === 'LUNAS' || Number(sisa) <= 0;
 
+            // Menggunakan variabel lokasi jika ada, jika kosong fallback ke kampus
+            const lokasiFinal = lokasi && lokasi !== 'undefined' && lokasi !== 'null' ? lokasi : (kampus || 'UMY');
+
             let chatText = "";
             if (isLunas) {
-                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${kampus || 'UMY'}\n\nUntuk status payment Kakak sudah LUNAS yaa 🙌🏻\nRincian booking dan pembayaran Kakak bisa dicek melalui portal berikut:\n\n${payLink}\n\nSampai ketemu besok! ✨`;
+                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasiFinal}\n\nFor status payment Kakak sudah LUNAS yaa 🙌🏻\nRincian booking dan pembayaran Kakak bisa dicek melalui portal berikut:\n\n${payLink}\n\nSampai ketemu besok! ✨`;
             } else {
-                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${kampus || 'UMY'}\n\nUntuk rincian tagihan pelunasan Kakak bisa langsung cek melalui portal berikut yaa:\n\n${payLink}\n\nUntuk pembayaran, boleh dibantu kirimkan bukti pembayarannya melalui chat ini ya, Kak 🙏🏻\nSampai ketemu besok! ✨`;
+                chatText = `Halo Kak ${nama} 👋🏻\nMengingatkan kembali untuk jadwal photoshoot wisuda besok yaa 😊\n\n📅 Tanggal: ${tanggal}\n⏰ Jam: ${jam} WIB\n📍 Lokasi: ${lokasiFinal}\n\nUntuk rincian tagihan pelunasan Kakak bisa langsung cek melalui portal berikut yaa:\n\n${payLink}\n\nUntuk pembayaran, boleh dibantu kirimkan bukti pembayarannya melalui chat ini ya, Kak 🙏🏻\nSampai ketemu besok! ✨`;
             }
 
             showCustomModalChat(isLunas ? "Format Chat Reminder (Lunas)" : "Format Chat Tagihan Pelunasan", chatText, waClean);
