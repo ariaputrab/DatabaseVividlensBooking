@@ -32,7 +32,7 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen pb-12 pt-3 px-3 sm:py-8 sm:px-6">
     <div class="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         
-        <!-- Header & Navigasi Mode (Reschedule dipindah ke detail modal) -->
+        <!-- Header & Navigasi Mode -->
         <header class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
             <div class="flex items-center justify-between sm:justify-start gap-3">
                 <div class="flex items-center gap-2.5">
@@ -51,7 +51,10 @@
 
             <!-- Tab Switcher -->
             <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto overflow-x-auto touch-scroll">
-                <button id="tabApprovalBtn" onclick="switchMode('approval')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap relative">
+                <button id="tabDashboardBtn" onclick="switchMode('dashboard')" class="flex-1 sm:flex-none py-2 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-house text-[11px]"></i> Dashboard
+                </button>
+                <button id="tabApprovalBtn" onclick="switchMode('approval')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap relative">
                     <i class="fa-solid fa-inbox text-[11px]"></i> Inbox Booking
                     <span id="badgePendingCount" class="bg-amber-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
@@ -85,8 +88,118 @@
             </div>
         </header>
 
+        <!-- TAB 1: DASHBOARD / BERANDA UTAMA -->
+        <div id="sectionDashboard" class="space-y-4 sm:space-y-6">
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div class="space-y-1">
+                    <h2 class="text-base sm:text-lg font-bold">Selamat datang, Raihan Aria! 👋</h2>
+                    <p class="text-xs text-slate-300">Berikut adalah ringkasan operasional dan keuangan studio VividLens hari ini.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-semibold bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
+                        <i class="fa-solid fa-calendar-day mr-1.5 text-blue-400"></i> <span id="currentDateDisplay">-</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Kartu Metrik Utama -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Booking</span>
+                        <div class="w-7 h-7 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                    <span id="dashTotalBooking" class="text-xl sm:text-2xl font-bold text-slate-900">0</span>
+                    <span class="text-[10px] text-slate-500 block">Keseluruhan sesi</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Booking Bulan Ini</span>
+                        <div class="w-7 h-7 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-calendar-days"></i></div>
+                    </div>
+                    <span id="dashMonthBooking" class="text-xl sm:text-2xl font-bold text-slate-900">0</span>
+                    <span class="text-[10px] text-slate-500 block">Bulan aktif saat ini</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-emerald-200 bg-emerald-50/20 shadow-sm space-y-1">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Total Pemasukan</span>
+                        <div class="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-wallet"></i></div>
+                    </div>
+                    <span id="dashTotalIncome" class="text-lg sm:text-xl font-bold text-emerald-800">Rp0</span>
+                    <span class="text-[10px] text-emerald-600 block">Kas masuk / DP terbayar</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-amber-200 bg-amber-50/20 shadow-sm space-y-1">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Menunggu Pembayaran</span>
+                        <div class="w-7 h-7 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-clock"></i></div>
+                    </div>
+                    <span id="dashTotalPendingPay" class="text-lg sm:text-xl font-bold text-amber-800">Rp0</span>
+                    <span class="text-[10px] text-amber-600 block">Sisa piutang / belum lunas</span>
+                </div>
+            </div>
+
+            <!-- Grid Konten Bawah -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+                <!-- Sesi Terdekat -->
+                <div class="lg:col-span-7 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-clock text-blue-600"></i> Sesi Photoshoot Terdekat
+                        </h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">Segera Hadir</span>
+                    </div>
+                    <div id="dashUpcomingContainer" class="space-y-3">
+                        <div class="p-6 text-center text-slate-400 text-xs italic">Memuat jadwal terdekat...</div>
+                    </div>
+                </div>
+
+                <!-- Aksi Cepat -->
+                <div class="lg:col-span-5 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-500"></i> Aksi Cepat (Quick Actions)
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Pintasan menu operasional harian.</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 pt-1">
+                        <button onclick="switchMode('new')" class="p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex flex-col items-center text-center gap-1.5 group">
+                            <div class="w-9 h-9 bg-slate-900 text-white rounded-xl flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
+                            <span class="font-bold text-xs text-slate-800">Booking Baru</span>
+                        </button>
+
+                        <button onclick="switchMode('calendar')" class="p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex flex-col items-center text-center gap-1.5 group">
+                            <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </div>
+                            <span class="font-bold text-xs text-slate-800">Buka Kalender</span>
+                        </button>
+
+                        <button onclick="switchMode('today')" class="p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex flex-col items-center text-center gap-1.5 group">
+                            <div class="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition">
+                                <i class="fa-solid fa-sun"></i>
+                            </div>
+                            <span class="font-bold text-xs text-slate-800">Jadwal Sesi</span>
+                        </button>
+
+                        <button onclick="switchMode('finance')" class="p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition flex flex-col items-center text-center gap-1.5 group">
+                            <div class="w-9 h-9 bg-purple-600 text-white rounded-xl flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition">
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+                            <span class="font-bold text-xs text-slate-800">Rekap Kas</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- TAB INBOX BOOKING APPROVAL -->
-        <div id="sectionApproval" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4">
+        <div id="sectionApproval" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
@@ -106,7 +219,7 @@
             </div>
         </div>
 
-        <!-- TAB -1: CALENDAR VIEW (TAMPILAN BULANAN) -->
+        <!-- TAB CALENDAR VIEW -->
         <div id="sectionCalendar" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-3">
@@ -128,18 +241,13 @@
                 </div>
             </div>
 
-            <!-- Header Hari -->
             <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] sm:text-xs text-slate-400 uppercase py-1">
                 <div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div><div>Min</div>
             </div>
-
-            <!-- Grid Kalender -->
-            <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
-                <!-- Diisi via Javascript -->
-            </div>
+            <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2"></div>
         </div>
 
-        <!-- TAB 0: REKAP KEUANGAN & KPI -->
+        <!-- TAB REKAP KEUANGAN & KPI -->
         <div id="sectionFinance" class="space-y-4 hidden">
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
@@ -211,7 +319,7 @@
             </div>
         </div>
 
-        <!-- TAB SEMUA BOOKING (TAMPILAN TABEL LIST EXCEL YANG ELEGAN) -->
+        <!-- TAB SEMUA BOOKING (TABEL LIST EXCEL ELEGAN) -->
         <div id="sectionAllBooking" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-6xl mx-auto space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
                 <div>
@@ -221,7 +329,6 @@
                     <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5" id="allBookingSubtitle">Daftar riwayat keseluruhan pemesanan sesi foto dalam format tabel rapi.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-                    <!-- Filter Bulan -->
                     <select id="selectAllBookingMonth" onchange="renderAllBookingList()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
                         <option value="all">Semua Bulan</option>
                         <option value="01">Januari</option>
@@ -237,7 +344,6 @@
                         <option value="11">November</option>
                         <option value="12">Desember</option>
                     </select>
-                    <!-- Input Pencarian -->
                     <input type="text" id="searchAllBookingInput" oninput="renderAllBookingList()" placeholder="Cari nama/kampus/lokasi..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs outline-none flex-1 sm:w-48">
                     <button onclick="fetchAllBookingsDatabase(true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition whitespace-nowrap">
                         <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
@@ -245,7 +351,6 @@
                 </div>
             </div>
 
-            <!-- Tabel List Minimalis -->
             <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                 <div class="overflow-x-auto touch-scroll">
                     <table class="w-full text-left border-collapse">
@@ -260,15 +365,13 @@
                                 <th class="py-3 px-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="allBookingTableBody" class="divide-y divide-slate-100 text-xs text-slate-700 bg-white">
-                            <!-- Diisi via JavaScript -->
-                        </tbody>
+                        <tbody id="allBookingTableBody" class="divide-y divide-slate-100 text-xs text-slate-700 bg-white"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB TRACKER STATUS SELEKSI FOTO KLIEN (PER BULAN) -->
+        <!-- TAB TRACKER STATUS SELEKSI FOTO -->
         <div id="sectionTracker" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
                 <div>
@@ -300,7 +403,6 @@
                     </select>
                 </div>
             </div>
-
             <div id="trackerListContainer" class="space-y-3">
                 <div class="p-8 text-center text-slate-400 text-xs">
                     <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600 mb-2 block"></i>
@@ -326,7 +428,6 @@
                 </div>
             </div>
 
-            <!-- Ringkasan Finansial Tanggal Terpilih -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span class="text-[10px] uppercase font-bold text-slate-400 block">Total Job</span>
@@ -346,29 +447,21 @@
                 </div>
             </div>
 
-            <!-- Daftar List Job Harian -->
-            <div id="paymentFgListContainer" class="space-y-3">
-                <!-- Diisi via JavaScript -->
-            </div>
+            <div id="paymentFgListContainer" class="space-y-3"></div>
         </div>
 
-        <!-- ======================================================== -->
-        <!-- TAB 1: JADWAL SESI (KEMARIN / HARI INI / BESOK H-1) -->
-        <!-- ======================================================== -->
+        <!-- TAB JADWAL SESI -->
         <div id="sectionTodaySchedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-4 hidden">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
                 <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto touch-scroll w-full sm:w-auto">
-                    <!-- SUB-TAB 1: KEMARIN (H+1 DELIVERY) -->
                     <button id="subTabYesterdayBtn" onclick="switchScheduleSubTab('yesterday')" class="py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap">
                         <i class="fa-solid fa-clock-rotate-left text-slate-500 text-[11px]"></i> Kemarin (Kirim Galeri)
                         <span id="badgeSubYesterdayCount" class="bg-slate-700 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                     </button>
-                    <!-- SUB-TAB 2: HARI INI -->
                     <button id="subTabTodayBtn" onclick="switchScheduleSubTab('today')" class="py-1.5 px-3 bg-white text-slate-900 font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1 whitespace-nowrap">
                         <i class="fa-solid fa-sun text-amber-500 text-[11px]"></i> Hari Ini
                         <span id="badgeSubTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                     </button>
-                    <!-- SUB-TAB 3: REMINDER BESOK H-1 -->
                     <button id="subTabTomorrowBtn" onclick="switchScheduleSubTab('tomorrow')" class="py-1.5 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center gap-1 whitespace-nowrap">
                         <i class="fa-solid fa-bell text-blue-600 text-[11px]"></i> Reminder H-1
                         <span id="badgeSubTomorrowCount" class="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
@@ -391,7 +484,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: BOOKING BARU -->
+        <!-- TAB BOOKING BARU -->
         <div id="sectionNewBooking" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start hidden">
             <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
@@ -537,13 +630,11 @@
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
-                <div id="modalDayContent" class="space-y-3">
-                    <!-- List jadwal -->
-                </div>
+                <div id="modalDayContent" class="space-y-3"></div>
             </div>
         </div>
 
-        <!-- MODAL KLIK DETAIL KLIEN DARI SEMUA BOOKING (DENGAN FITUR RESCHEDULE) -->
+        <!-- MODAL DETAIL KLIK DARI SEMUA BOOKING (DENGAN FORM RESCHEDULE) -->
         <div id="modalAllBookingDetail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -555,9 +646,7 @@
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
-                <div id="allBookingModalContent">
-                    <!-- Diisi via Javascript -->
-                </div>
+                <div id="allBookingModalContent"></div>
             </div>
         </div>
 
@@ -850,6 +939,7 @@
         }
 
         function switchMode(mode) {
+            const isDashboard = mode === 'dashboard';
             const isApproval = mode === 'approval';
             const isCalendar = mode === 'calendar';
             const isFinance = mode === 'finance';
@@ -859,6 +949,7 @@
             const isPaymentFg = mode === 'paymentFg';
             const isNew = mode === 'new';
 
+            document.getElementById('sectionDashboard').classList.toggle('hidden', !isDashboard);
             document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
             document.getElementById('sectionCalendar').classList.toggle('hidden', !isCalendar);
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
@@ -869,6 +960,7 @@
             document.getElementById('sectionPaymentFg').classList.toggle('hidden', !isPaymentFg);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             
+            document.getElementById('tabDashboardBtn').className = isDashboard ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabApprovalBtn').className = isApproval ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
@@ -883,6 +975,7 @@
             if (isTracker) fetchSupabaseClients(false);
             if (isPaymentFg) initPaymentFgTab();
             if (isAllBooking) fetchAllBookingsDatabase(false);
+            if (isDashboard) updateDashboardMetrics();
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
@@ -892,6 +985,7 @@
                 if (isFinance) calculateFinancialStats();
                 if (isPaymentFg) renderPaymentFgDailyView();
                 if (isAllBooking) renderAllBookingList();
+                if (isDashboard) updateDashboardMetrics();
             }
         }
 
@@ -901,6 +995,79 @@
 
         function getInactiveTabClass() {
             return "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
+        }
+
+        // --- DASHBOARD METRICS ---
+        function updateDashboardMetrics() {
+            const now = new Date();
+            const dateDisplay = document.getElementById('currentDateDisplay');
+            if (dateDisplay) {
+                dateDisplay.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            if (!cachedClients || cachedClients.length === 0) return;
+
+            document.getElementById('dashTotalBooking').textContent = cachedClients.length;
+
+            const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0');
+            const monthFiltered = cachedClients.filter(c => {
+                const tgl = c.tanggal || '';
+                return tgl.includes(`-${currentMonthNum}-`) || (c.sheetName && c.sheetName.toLowerCase().includes(NUM_TO_MONTH_FULL[currentMonthNum].toLowerCase()));
+            });
+            document.getElementById('dashMonthBooking').textContent = monthFiltered.length;
+
+            let totalIncome = 0;
+            let totalPending = 0;
+            cachedClients.forEach(c => {
+                const h = parseInt(c.harga) || 0;
+                const dp = parseInt(c.dp) || 0;
+                const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                
+                if (isLunas) {
+                    totalIncome += h;
+                } else {
+                    totalIncome += dp;
+                    totalPending += Math.max(0, h - dp);
+                }
+            });
+
+            document.getElementById('dashTotalIncome').textContent = formatRupiah(totalIncome);
+            document.getElementById('dashTotalPendingPay').textContent = formatRupiah(totalPending);
+
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            const upcoming = cachedClients.filter(c => cleanToISODate(c.tanggal) >= todayStr);
+            upcoming.sort((a, b) => cleanToISODate(a.tanggal).localeCompare(cleanToISODate(b.tanggal)));
+
+            const upcomingContainer = document.getElementById('dashUpcomingContainer');
+            if (!upcomingContainer) return;
+
+            if (upcoming.length === 0) {
+                upcomingContainer.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs italic">Tidak ada jadwal sesi terdekat ke depan.</div>`;
+                return;
+            }
+
+            const nextClient = upcoming[0];
+            const hNext = parseInt(nextClient.harga) || 0;
+            const dpNext = parseInt(nextClient.dp) || 0;
+            const isLunasNext = (nextClient.payment || '').toUpperCase().trim() === 'LUNAS';
+            const sisaNext = isLunasNext ? 0 : Math.max(0, hNext - dpNext);
+
+            upcomingContainer.innerHTML = `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">SESI BERIKUTNYA</span>
+                        <span class="font-bold text-blue-700 text-xs">${nextClient.tanggal || '-'} • ${nextClient.jam || '-'} WIB</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-base text-slate-900">${nextClient.nama}</h4>
+                        <p class="text-xs text-slate-500">${nextClient.kampus || 'Umum'} • Paket ${nextClient.paket || 'Silver'}</p>
+                    </div>
+                    <div class="text-xs text-slate-600 flex items-center justify-between pt-2 border-t border-slate-200">
+                        <span><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${nextClient.lokasi || '-'}</span>
+                        <span class="font-semibold text-slate-700">FG: ${nextClient.fg || 'Raihan'}</span>
+                    </div>
+                </div>
+            `;
         }
 
         // --- INBOX APPROVAL LOGIC ---
@@ -1080,7 +1247,7 @@
             }
         }
 
-        // --- FETCH TAB SEMUA BOOKING (TABEL LIST EXCEL MINIMALIS) ---
+        // --- FETCH TAB SEMUA BOOKING (TABEL LIST EXCEL ELEGAN) ---
         async function fetchAllBookingsDatabase(showToastNotice = true) {
             if (cachedClients.length === 0) {
                 await refreshClientDatabase(false);
@@ -1191,7 +1358,7 @@
             }).join('');
         }
 
-        // Membuka Modal Detail dari Tabel Semua Booking (Termasuk Form Reschedule di dalamnya)
+        // Membuka Modal Detail dari Tabel (Termasuk Form Reschedule)
         function openClientDetailModal(idx) {
             const c = window._allBookingItems ? window._allBookingItems[idx] : null;
             if (!c) return;
@@ -1468,7 +1635,6 @@
                             </div>
                         </div>
 
-                        <!-- Kotak Rincian Terpisah -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
                             <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
                                 <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider block">Pembayaran Klien</span>
@@ -1509,7 +1675,6 @@
                             </div>
                         </div>
 
-                        <!-- Tombol Aksi Cepat -->
                         <div class="flex gap-2 pt-1">
                             ${!isLunas ? `
                                 <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
@@ -1699,7 +1864,7 @@
                                     <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1"><i class="fa-solid fa-check"></i> Set Lunas</button>
                                 ` : ''}
                                 <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
-                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
                             </div>
                         </div>
                     `;
@@ -1741,6 +1906,7 @@
                     renderCalendarView();
                     renderCombinedSchedule();
                     calculateFinancialStats();
+                    updateDashboardMetrics();
                     if (document.getElementById('sectionAllBooking') && !document.getElementById('sectionAllBooking').classList.contains('hidden')) {
                         renderAllBookingList();
                     }
@@ -2881,6 +3047,7 @@
             if (activeUrl) {
                 refreshClientDatabase(false).then(() => {
                     renderCalendarView();
+                    updateDashboardMetrics();
                 });
                 fetchSupabaseClients(false);
             }
