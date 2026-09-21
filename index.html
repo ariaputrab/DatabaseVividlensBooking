@@ -69,6 +69,10 @@
                     <i class="fa-solid fa-calendar-day text-[11px]"></i> Jadwal Sesi
                     <span id="badgeTodayCount" class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
                 </button>
+                <button id="tabAllBookingBtn" onclick="switchMode('allBooking')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-database text-[11px]"></i> Semua Booking
+                    <span id="badgeAllBookingCount" class="bg-slate-700 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                </button>
                 <button id="tabPaymentFgBtn" onclick="switchMode('paymentFg')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-money-bill-transfer text-[11px]"></i> Payment & FG
                 </button>
@@ -206,6 +210,47 @@
                         </div>
                         <i class="fa-solid fa-clock text-amber-500 text-lg"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB SEMUA BOOKING (DENGAN FILTER BULAN) -->
+        <div id="sectionAllBooking" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-database text-slate-700"></i> Rekap Seluruh Data Booking
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5" id="allBookingSubtitle">Daftar riwayat keseluruhan pemesanan sesi foto dari database.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                    <!-- Filter Bulan ala Google Sheets -->
+                    <select id="selectAllBookingMonth" onchange="renderAllBookingList()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
+                        <option value="all">Semua Bulan</option>
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09" selected>September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <!-- Input Pencarian Nama/Kampus -->
+                    <input type="text" id="searchAllBookingInput" oninput="renderAllBookingList()" placeholder="Cari nama/kampus..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs outline-none flex-1 sm:w-40">
+                    <button onclick="fetchAllBookingsDatabase(true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div id="allBookingListContainer" class="space-y-3">
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-slate-700 mb-2 block"></i>
+                    Memuat seluruh data booking...
                 </div>
             </div>
         </div>
@@ -858,6 +903,7 @@
         let cachedClients = [];
         let cachedSupabaseClients = [];
         let cachedPendingBookings = [];
+        let cachedAllBookings = [];
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
         let currentInvoiceData = null;
@@ -915,6 +961,7 @@
             const isFinance = mode === 'finance';
             const isTracker = mode === 'tracker';
             const isToday = mode === 'today';
+            const isAllBooking = mode === 'allBooking';
             const isPaymentFg = mode === 'paymentFg';
             const isNew = mode === 'new';
             const isResched = mode === 'reschedule';
@@ -924,6 +971,8 @@
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
+            const secAll = document.getElementById('sectionAllBooking');
+            if(secAll) secAll.classList.toggle('hidden', !isAllBooking);
             document.getElementById('sectionPaymentFg').classList.toggle('hidden', !isPaymentFg);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
             document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
@@ -933,6 +982,8 @@
             document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTrackerBtn').className = isTracker ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTodayBtn').className = isToday ? getActiveTabClass() : getInactiveTabClass();
+            const btnAll = document.getElementById('tabAllBookingBtn');
+            if(btnAll) btnAll.className = isAllBooking ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabPaymentFgBtn').className = isPaymentFg ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabNewBtn').className = isNew ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabRescheduleBtn').className = isResched ? getActiveTabClass() : getInactiveTabClass();
@@ -940,6 +991,7 @@
             if (isApproval) fetchPendingBookings(false);
             if (isTracker) fetchSupabaseClients(false);
             if (isPaymentFg) initPaymentFgTab();
+            if (isAllBooking) fetchAllBookingsDatabase(false);
 
             if (cachedClients.length === 0) {
                 refreshClientDatabase(false);
@@ -1134,6 +1186,100 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Acc & Masukkan ke Sheet';
             }
+        }
+
+        // --- FETCH SEMUA BOOKING & FILTER BULAN ---
+        async function fetchAllBookingsDatabase(showToastNotice = true) {
+            if (!supabaseGalleryClient) return;
+            try {
+                const { data, error } = await supabaseGalleryClient
+                    .from('booking_requests')
+                    .select('*')
+                    .order('tanggal', { ascending: false });
+
+                if (!error && data) {
+                    cachedAllBookings = data;
+                    renderAllBookingList();
+                    const badge = document.getElementById('badgeAllBookingCount');
+                    if (badge && data.length > 0) {
+                        badge.textContent = data.length;
+                        badge.classList.remove('hidden');
+                    }
+                    if (showToastNotice) showToast(`Memuat ${data.length} total riwayat booking`);
+                }
+            } catch (err) {
+                console.log("Fetch all bookings error:", err);
+            }
+        }
+
+        function renderAllBookingList() {
+            const container = document.getElementById('allBookingListContainer');
+            const searchVal = (document.getElementById('searchAllBookingInput').value || '').toLowerCase();
+            const selectedMonth = document.getElementById('selectAllBookingMonth').value;
+            const subtitle = document.getElementById('allBookingSubtitle');
+            if (!container) return;
+
+            let filtered = cachedAllBookings.filter(b => {
+                const tgl = b.tanggal || '';
+                if (selectedMonth === 'all') return true;
+
+                if (tgl.includes('-') && tgl.length >= 7) {
+                    const parts = tgl.split('-');
+                    if (parts[1] === selectedMonth) return true;
+                }
+                
+                const lowerTgl = tgl.toLowerCase();
+                const monthNameMapNum = {
+                    '01': 'jan', '02': 'feb', '03': 'mar', '04': 'apr',
+                    '05': 'may', '06': 'jun', '07': 'jul', '08': 'aug',
+                    '09': 'sep', '10': 'oct', '11': 'nov', '12': 'dec'
+                };
+                const targetShortName = monthNameMapNum[selectedMonth];
+                if (targetShortName && lowerTgl.includes(targetShortName)) return true;
+
+                return false;
+            });
+
+            if (searchVal) {
+                filtered = filtered.filter(b => 
+                    (b.nama || '').toLowerCase().includes(searchVal) || 
+                    (b.kampus || '').toLowerCase().includes(searchVal) ||
+                    (b.lokasi || '').toLowerCase().includes(searchVal)
+                );
+            }
+
+            const monthFullName = selectedMonth === 'all' ? 'Semua Bulan' : (NUM_TO_MONTH_FULL[selectedMonth] || selectedMonth);
+            if (subtitle) subtitle.textContent = `Menampilkan ${filtered.length} riwayat booking untuk periode ${monthFullName}.`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <i class="fa-regular fa-folder-open text-3xl text-slate-300"></i>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada data booking pada periode ini</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(b => {
+                const isApproved = (b.status || '').toLowerCase() === 'approved';
+                return `
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${(b.status || 'pending').toUpperCase()}</span>
+                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${b.tanggal} • ${b.jam} WIB</span>
+                                    <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${b.paket}</span>
+                                </div>
+                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${b.nama}</h4>
+                                <p class="text-xs text-slate-500">${b.kampus} • Lokasi: <span class="font-semibold text-slate-700">${b.lokasi}</span></p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">WA: ${b.no_wa} | Harga: ${formatRupiah(b.harga)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Standard Functions (Calendar, Finance, Tracker, Today, Reschedule, etc.)
@@ -1451,7 +1597,7 @@
                                 ${!isLunas ? `
                                     <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1"><i class="fa-solid fa-check"></i> Set Lunas</button>
                                 ` : ''}
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
                             </div>
                         </div>
@@ -1889,7 +2035,7 @@
                                     </button>
                                 ` : ''}
 
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                                     <i class="fa-solid fa-copy"></i> Salin Teks
                                 </button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
@@ -1963,8 +2109,8 @@
                         ` : ''}
 
                         <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
-    <i class="fa-solid fa-copy"></i> Salin Teks
-</button>
+                            <i class="fa-solid fa-copy"></i> Salin Teks
+                        </button>
 
                         <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid fa-file-invoice"></i> Invoice
@@ -1993,7 +2139,6 @@
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
             const isLunas = (statusPayment || '').toUpperCase().trim() === 'LUNAS' || Number(sisa) <= 0;
 
-            // Pastikan menggunakan parameter lokasi jika ada, jika tidak ada baru gunakan kampus
             const targetLokasi = (lokasi && lokasi !== 'undefined' && lokasi !== 'null' && lokasi.trim() !== '') ? lokasi : (kampus || 'UMY');
 
             let chatText = "";
@@ -2853,6 +2998,8 @@
 
             document.getElementById('selectMonthFilter').value = currentMonthFull;
             document.getElementById('selectTrackerMonth').value = currentMonthStr;
+            const selectAllMonth = document.getElementById('selectAllBookingMonth');
+            if (selectAllMonth) selectAllMonth.value = currentMonthStr;
 
             if (activeUrl) {
                 refreshClientDatabase(false).then(() => {
