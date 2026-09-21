@@ -214,17 +214,17 @@
             </div>
         </div>
 
-        <!-- TAB SEMUA BOOKING (DENGAN FILTER BULAN) -->
+        <!-- TAB SEMUA BOOKING DARI GOOGLE SHEETS -->
         <div id="sectionAllBooking" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-database text-slate-700"></i> Rekap Seluruh Data Booking
+                        <i class="fa-solid fa-database text-slate-700"></i> Rekap Seluruh Data Google Sheets
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5" id="allBookingSubtitle">Daftar riwayat keseluruhan pemesanan sesi foto dari database.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5" id="allBookingSubtitle">Daftar riwayat keseluruhan pemesanan sesi foto dari Google Sheets.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-                    <!-- Filter Bulan ala Google Sheets -->
+                    <!-- Filter Bulan -->
                     <select id="selectAllBookingMonth" onchange="renderAllBookingList()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer flex-1 sm:flex-none">
                         <option value="all">Semua Bulan</option>
                         <option value="01">Januari</option>
@@ -240,7 +240,7 @@
                         <option value="11">November</option>
                         <option value="12">Desember</option>
                     </select>
-                    <!-- Input Pencarian Nama/Kampus -->
+                    <!-- Input Pencarian -->
                     <input type="text" id="searchAllBookingInput" oninput="renderAllBookingList()" placeholder="Cari nama/kampus..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs outline-none flex-1 sm:w-40">
                     <button onclick="fetchAllBookingsDatabase(true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition whitespace-nowrap">
                         <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
@@ -250,7 +250,7 @@
             <div id="allBookingListContainer" class="space-y-3">
                 <div class="p-8 text-center text-slate-400 text-xs">
                     <i class="fa-solid fa-spinner fa-spin text-xl text-slate-700 mb-2 block"></i>
-                    Memuat seluruh data booking...
+                    Memuat seluruh data dari Google Sheets...
                 </div>
             </div>
         </div>
@@ -903,7 +903,6 @@
         let cachedClients = [];
         let cachedSupabaseClients = [];
         let cachedPendingBookings = [];
-        let cachedAllBookings = [];
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
         let currentInvoiceData = null;
@@ -1000,6 +999,7 @@
                 if (isToday) renderCombinedSchedule();
                 if (isFinance) calculateFinancialStats();
                 if (isPaymentFg) renderPaymentFgDailyView();
+                if (isAllBooking) renderAllBookingList();
             }
         }
 
@@ -1188,28 +1188,18 @@
             }
         }
 
-        // --- FETCH SEMUA BOOKING & FILTER BULAN ---
+        // --- FETCH SEMUA BOOKING DARI GOOGLE SHEETS (CACHED CLIENTS) ---
         async function fetchAllBookingsDatabase(showToastNotice = true) {
-            if (!supabaseGalleryClient) return;
-            try {
-                const { data, error } = await supabaseGalleryClient
-                    .from('booking_requests')
-                    .select('*')
-                    .order('tanggal', { ascending: false });
-
-                if (!error && data) {
-                    cachedAllBookings = data;
-                    renderAllBookingList();
-                    const badge = document.getElementById('badgeAllBookingCount');
-                    if (badge && data.length > 0) {
-                        badge.textContent = data.length;
-                        badge.classList.remove('hidden');
-                    }
-                    if (showToastNotice) showToast(`Memuat ${data.length} total riwayat booking`);
-                }
-            } catch (err) {
-                console.log("Fetch all bookings error:", err);
+            if (cachedClients.length === 0) {
+                await refreshClientDatabase(false);
             }
+            renderAllBookingList();
+            const badge = document.getElementById('badgeAllBookingCount');
+            if (badge && cachedClients.length > 0) {
+                badge.textContent = cachedClients.length;
+                badge.classList.remove('hidden');
+            }
+            if (showToastNotice) showToast(`Memuat ${cachedClients.length} total data dari Google Sheets`);
         }
 
         function renderAllBookingList() {
@@ -1219,63 +1209,79 @@
             const subtitle = document.getElementById('allBookingSubtitle');
             if (!container) return;
 
-            let filtered = cachedAllBookings.filter(b => {
-                const tgl = b.tanggal || '';
+            let filtered = cachedClients.filter(c => {
+                const sheetName = (c.sheetName || '').toLowerCase();
+                const tgl = c.tanggal || '';
+                
                 if (selectedMonth === 'all') return true;
+
+                const monthFullName = (NUM_TO_MONTH_FULL[selectedMonth] || '').toLowerCase();
+                const monthShortName = (NUM_TO_MONTH_NAME[selectedMonth] || '').toLowerCase();
+
+                const matchSheet = sheetName.includes(monthFullName) || sheetName.includes(monthShortName);
+                const matchDate = tgl.toLowerCase().includes(monthFullName) || tgl.toLowerCase().includes(monthShortName);
 
                 if (tgl.includes('-') && tgl.length >= 7) {
                     const parts = tgl.split('-');
                     if (parts[1] === selectedMonth) return true;
                 }
-                
-                const lowerTgl = tgl.toLowerCase();
-                const monthNameMapNum = {
-                    '01': 'jan', '02': 'feb', '03': 'mar', '04': 'apr',
-                    '05': 'may', '06': 'jun', '07': 'jul', '08': 'aug',
-                    '09': 'sep', '10': 'oct', '11': 'nov', '12': 'dec'
-                };
-                const targetShortName = monthNameMapNum[selectedMonth];
-                if (targetShortName && lowerTgl.includes(targetShortName)) return true;
 
-                return false;
+                return matchSheet || matchDate;
             });
 
             if (searchVal) {
                 filtered = filtered.filter(b => 
                     (b.nama || '').toLowerCase().includes(searchVal) || 
                     (b.kampus || '').toLowerCase().includes(searchVal) ||
-                    (b.lokasi || '').toLowerCase().includes(searchVal)
+                    (b.lokasi || '').toLowerCase().includes(searchVal) ||
+                    (b.fg || '').toLowerCase().includes(searchVal)
                 );
             }
 
             const monthFullName = selectedMonth === 'all' ? 'Semua Bulan' : (NUM_TO_MONTH_FULL[selectedMonth] || selectedMonth);
-            if (subtitle) subtitle.textContent = `Menampilkan ${filtered.length} riwayat booking untuk periode ${monthFullName}.`;
+            if (subtitle) subtitle.textContent = `Menampilkan ${filtered.length} data klien dari Google Sheets untuk periode ${monthFullName}.`;
 
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
                         <i class="fa-regular fa-folder-open text-3xl text-slate-300"></i>
-                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada data booking pada periode ini</p>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada data klien di Google Sheets pada periode ini</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = filtered.map(b => {
-                const isApproved = (b.status || '').toLowerCase() === 'approved';
+            container.innerHTML = filtered.map(c => {
+                const h = parseInt(c.harga) || 0;
+                const dp = parseInt(c.dp) || 0;
+                const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                const sisa = isLunas ? 0 : Math.max(0, h - dp);
+
                 return `
-                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
                                 <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${(b.status || 'pending').toUpperCase()}</span>
-                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${b.tanggal} • ${b.jam} WIB</span>
-                                    <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${b.paket}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">${c.sheetName || 'Sheet'}</span>
+                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${c.payment || 'DP'}</span>
+                                    <span class="text-[10px] font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
                                 </div>
-                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${b.nama}</h4>
-                                <p class="text-xs text-slate-500">${b.kampus} • Lokasi: <span class="font-semibold text-slate-700">${b.lokasi}</span></p>
-                                <p class="text-[11px] text-slate-400 mt-0.5">WA: ${b.no_wa} | Harga: ${formatRupiah(b.harga)}</p>
+                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${c.nama}</h4>
+                                <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • Lokasi: <span class="font-semibold text-slate-700">${c.lokasi || '-'}</span></p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">WA: ${c.noWa || '-'} | Harga: ${formatRupiah(h)} | Sisa Piutang: <span class="${isLunas ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}">${formatRupiah(sisa)}</span></p>
                             </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-1 border-t border-slate-200/70">
+                            ${!isLunas ? `
+                                <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                    <i class="fa-solid fa-check"></i> Set Lunas
+                                </button>
+                            ` : ''}
+                            <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-invoice"></i> Invoice
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1642,6 +1648,9 @@
                     renderCalendarView();
                     renderCombinedSchedule();
                     calculateFinancialStats();
+                    if (document.getElementById('sectionAllBooking') && !document.getElementById('sectionAllBooking').classList.contains('hidden')) {
+                        renderAllBookingList();
+                    }
                     if (showToastNotice) showToast(`Berhasil memuat ${cachedClients.length} klien`);
                 }
             } catch (err) {
