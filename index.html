@@ -32,7 +32,7 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen pb-12 pt-3 px-3 sm:py-8 sm:px-6">
     <div class="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         
-        <!-- Header & Navigasi Mode -->
+        <!-- Header & Navigasi Mode (Reschedule dipindah ke detail modal) -->
         <header class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3 sm:space-y-0 sm:flex sm:justify-between sm:items-center">
             <div class="flex items-center justify-between sm:justify-start gap-3">
                 <div class="flex items-center gap-2.5">
@@ -78,9 +78,6 @@
                 </button>
                 <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking
-                </button>
-                <button id="tabRescheduleBtn" onclick="switchMode('reschedule')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
-                    <i class="fa-solid fa-rotate text-[11px]"></i> Reschedule
                 </button>
                 <button onclick="openModalSettings()" class="hidden sm:flex w-8 h-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg transition ml-1" title="Pengaturan URL">
                     <i class="fa-solid fa-gear text-sm"></i>
@@ -528,142 +525,6 @@
             </div>
         </div>
 
-        <!-- TAB 3: RESCHEDULE JADWAL, LOKASI & GANTI PAKET -->
-        <div id="sectionReschedule" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4 hidden">
-            <div class="border-b border-slate-100 pb-3 flex justify-between items-start">
-                <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-days text-blue-600"></i> Mode Reschedule / Ganti Paket & FG
-                    </h2>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Ketik nama klien, lalu tentukan tanggal, jam, lokasi, paket, atau FG baru.</p>
-                </div>
-                <button onclick="refreshClientDatabase(true)" id="btnReloadClients" class="text-xs bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
-                    <i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh
-                </button>
-            </div>
-
-            <div class="space-y-3.5">
-                <div class="relative z-50">
-                    <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Cari Nama Klien</label>
-                    <div class="relative">
-                        <input type="text" id="reschedNama" onfocus="onSearchClient(this.value)" oninput="onSearchClient(this.value)" autocomplete="off" placeholder="Ketik nama klien..." 
-                               class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none focus:ring-2 focus:ring-slate-800 transition">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-xs"></i>
-                    </div>
-                    <div id="searchResultsBox" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-[999] max-h-64 overflow-y-auto touch-scroll hidden"></div>
-                </div>
-
-                <div id="clientDetailsCard" class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl hidden space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-bold uppercase text-blue-800 tracking-wider">Jadwal Terdaftar:</span>
-                        <span id="cardSheetTab" class="text-[10px] bg-blue-200 text-blue-900 px-2 py-0.5 rounded font-semibold">Tab Sheet</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                            <span class="text-[10px] text-slate-400 block">Klien & Kampus</span>
-                            <span id="cardNamaKampus" class="font-bold text-slate-800 leading-tight block">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 block">Lokasi & Paket</span>
-                            <span id="cardLokasiPaket" class="font-bold text-slate-800 block">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 block">Jadwal Terdaftar</span>
-                            <span id="cardJadwalLama" class="font-bold text-blue-700 leading-tight block">-</span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 block">FG Terdaftar</span>
-                            <span id="cardFGLama" class="font-bold text-emerald-700 block">-</span>
-                        </div>
-                    </div>
-                    <div class="pt-2 border-t border-blue-200/80 flex justify-end gap-2">
-                        <button onclick="openInvoiceFromSelectedClient()" type="button" class="py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5 active:scale-95">
-                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-[11px] text-slate-500 uppercase font-bold block mb-1">Paket Wisuda (Bisa Diganti)</label>
-                    <select id="reschedPaket" onchange="onReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
-                        <optgroup label="Personal Package">
-                            <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
-                            <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
-                            <option value="Silver" selected>Silver (Rp350k • 1 Jam)</option>
-                            <option value="Gold">Gold (Rp450k • 1.5 Jam)</option>
-                            <option value="Premium">Premium (Rp1.000k • 1.5 Jam)</option>
-                        </optgroup>
-                        <optgroup label="Candi Plaosan Package">
-                            <option value="Plaosan A">Plaosan A (Rp370k • 1 Jam)</option>
-                            <option value="Plaosan B">Plaosan B (Rp500k • 1.5 Jam)</option>
-                        </optgroup>
-                        <optgroup label="Group Package">
-                            <option value="Group 1">Package 1 / Group 1 (Rp450k • 1 Jam)</option>
-                            <option value="Group 2">Package 2 / Group 2 (Rp550k • 1.5 Jam)</option>
-                            <option value="Package 3">Package 3 (Rp850k • 1.5 Jam)</option>
-                        </optgroup>
-                        <optgroup label="Couple Package">
-                            <option value="Couple Package">Couple Package (Rp500k • 1 Jam)</option>
-                        </optgroup>
-                    </select>
-                </div>
-
-                <div id="reschedFinancialPreview" class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl grid grid-cols-3 gap-2 text-xs">
-                    <div>
-                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Harga Baru</span>
-                        <span id="reschedOutHarga" class="font-bold text-slate-800">Rp350.000</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block font-bold uppercase">DP Awal</span>
-                        <span id="reschedOutDP" class="font-bold text-slate-800">Rp100.000</span>
-                    </div>
-                    <div>
-                        <span class="text-[10px] text-slate-400 block font-bold uppercase">Sisa Pelunasan</span>
-                        <span id="reschedOutPelunasan" class="font-bold text-blue-700">Rp250.000</span>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Pilih Tanggal Baru / Tetap</label>
-                        <input type="date" id="reschedTanggalPicker" onchange="onReschedTanggalPickerChange()" class="w-full font-semibold bg-transparent outline-none mt-0.5 text-slate-900 cursor-pointer">
-                        <span id="reschedTanggalFormatted" class="text-[11px] font-bold text-blue-700 block mt-0.5"></span>
-                    </div>
-                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Jam Baru / Tetap</label>
-                        <input type="text" id="reschedJam" placeholder="Contoh: 09:00 - 10:00" class="w-full font-bold text-blue-700 bg-transparent outline-none mt-0.5">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Lokasi Baru / Tetap</label>
-                        <input type="text" id="reschedLokasi" placeholder="Lokasi Sesi Foto..." class="w-full font-semibold bg-transparent outline-none text-slate-900 mt-0.5">
-                    </div>
-                    <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                        <label class="text-[10px] text-slate-400 uppercase font-bold block">Fotografer (FG) Baru / Tetap</label>
-                        <select id="reschedFG" onchange="onReschedFGChange(this.value)" class="w-full font-semibold bg-transparent outline-none cursor-pointer text-slate-900 mt-0.5">
-                            <option value="Raihan" selected>Raihan</option>
-                            <option value="Zidane">Zidane</option>
-                            <option value="Dava">Dava</option>
-                            <option value="Riza">Riza</option>
-                            <option value="Wahyu">Wahyu</option>
-                            <option value="Dhika">Dhika</option>
-                            <option value="Surya">Surya</option>
-                            <option value="Vero">Vero</option>
-                            <option value="Satria">Satria</option>
-                            <option value="__custom_resched__">+ Ketik Manual...</option>
-                        </select>
-                        <input type="text" id="customReschedFGInput" placeholder="Ketik nama FG pengganti..." class="w-full mt-1.5 font-semibold border-t border-slate-200 pt-1 bg-transparent outline-none hidden">
-                    </div>
-                </div>
-
-                <button id="btnSubmitReschedule" onclick="submitReschedule()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-md mt-2">
-                    <i class="fa-solid fa-arrows-rotate"></i> Update Jadwal & Paket di Sheet & GCal
-                </button>
-            </div>
-        </div>
-
         <!-- MODAL DETAIL JADWAL PADA TANGGAL TERTENTU -->
         <div id="modalDayDetail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
@@ -682,13 +543,13 @@
             </div>
         </div>
 
-        <!-- MODAL KLIK DETAIL DARI TAB SEMUA BOOKING -->
+        <!-- MODAL KLIK DETAIL KLIEN DARI SEMUA BOOKING (DENGAN FITUR RESCHEDULE) -->
         <div id="modalAllBookingDetail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-id-card text-slate-700 text-base"></i>
-                        <h3 class="font-bold text-sm text-slate-900">Detail Sesi Klien</h3>
+                        <h3 class="font-bold text-sm text-slate-900">Detail Sesi Klien & Reschedule</h3>
                     </div>
                     <button onclick="closeAllBookingModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
                         <i class="fa-solid fa-xmark text-lg"></i>
@@ -997,7 +858,6 @@
             const isAllBooking = mode === 'allBooking';
             const isPaymentFg = mode === 'paymentFg';
             const isNew = mode === 'new';
-            const isResched = mode === 'reschedule';
 
             document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
             document.getElementById('sectionCalendar').classList.toggle('hidden', !isCalendar);
@@ -1008,7 +868,6 @@
             if(secAll) secAll.classList.toggle('hidden', !isAllBooking);
             document.getElementById('sectionPaymentFg').classList.toggle('hidden', !isPaymentFg);
             document.getElementById('sectionNewBooking').classList.toggle('hidden', !isNew);
-            document.getElementById('sectionReschedule').classList.toggle('hidden', !isResched);
             
             document.getElementById('tabApprovalBtn').className = isApproval ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
@@ -1019,7 +878,6 @@
             if(btnAll) btnAll.className = isAllBooking ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabPaymentFgBtn').className = isPaymentFg ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabNewBtn').className = isNew ? getActiveTabClass() : getInactiveTabClass();
-            document.getElementById('tabRescheduleBtn').className = isResched ? getActiveTabClass() : getInactiveTabClass();
 
             if (isApproval) fetchPendingBookings(false);
             if (isTracker) fetchSupabaseClients(false);
@@ -1222,7 +1080,7 @@
             }
         }
 
-        // --- FETCH TAB SEMUA BOOKING (TAMPILAN TABEL LIST EXCEL YANG ELEGAN) ---
+        // --- FETCH TAB SEMUA BOOKING (TABEL LIST EXCEL MINIMALIS) ---
         async function fetchAllBookingsDatabase(showToastNotice = true) {
             if (cachedClients.length === 0) {
                 await refreshClientDatabase(false);
@@ -1333,10 +1191,14 @@
             }).join('');
         }
 
-        // Membuka Modal Detail dari Tabel Semua Booking
+        // Membuka Modal Detail dari Tabel Semua Booking (Termasuk Form Reschedule di dalamnya)
         function openClientDetailModal(idx) {
             const c = window._allBookingItems ? window._allBookingItems[idx] : null;
             if (!c) return;
+
+            window._selectedClientOriginalDate = c.tanggal;
+            window._selectedClientObject = c;
+            window._selectedClientDP = parseInt(c.dp) || 100000;
 
             const h = parseInt(c.harga) || 0;
             const dp = parseInt(c.dp) || 0;
@@ -1346,55 +1208,103 @@
             const bersihStudio = parseInt(c.bersih) || (h - feeFG);
             const isFgPaid = (c.statusFG || '').toUpperCase().trim() === 'PAID';
 
+            const isoDateVal = cleanToISODate(c.tanggal) || '';
+            const matchedPkgKey = matchPackageKey(c.paket);
+
             const modalContent = document.getElementById('allBookingModalContent');
             modalContent.innerHTML = `
                 <div class="space-y-4 text-xs">
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5">
+                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
                         <div class="flex justify-between items-center">
                             <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${c.sheetName || 'Sheet'}</span>
                             <span class="font-bold text-slate-700">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
                         </div>
                         <h3 class="font-bold text-base text-slate-900">${c.nama}</h3>
-                        <p class="text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
-                        <p class="text-slate-600"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> Lokasi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
-                        <p class="text-slate-600"><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WhatsApp: <strong class="text-slate-800">${c.noWa || '-'}</strong></p>
-                        <p class="text-slate-600"><i class="fa-solid fa-camera text-blue-600 mr-1"></i> Fotografer: <strong class="text-slate-800">${c.fg || 'Raihan'}</strong></p>
+                        <p class="text-slate-500">${c.kampus || 'Umum'} • Lokasi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                            <span class="text-[9px] font-bold uppercase text-slate-400">Pembayaran Klien</span>
-                            <div class="flex justify-between"><span class="text-slate-500">Harga:</span><span class="font-semibold">${formatRupiah(h)}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">DP:</span><span class="font-semibold text-emerald-600">${formatRupiah(dp)}</span></div>
-                            <div class="flex justify-between pt-1 border-t border-slate-100 font-bold">
-                                <span class="text-slate-700">Piutang:</span>
-                                <span class="${isLunas ? 'text-emerald-600' : 'text-rose-600'}">${formatRupiah(sisa)}</span>
-                            </div>
-                        </div>
-
-                        <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                            <span class="text-[9px] font-bold uppercase text-amber-700">Fee FG & Studio</span>
-                            <div class="flex justify-between"><span class="text-slate-500">Fee FG:</span><span class="font-semibold text-amber-800">${formatRupiah(feeFG)}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Bersih:</span><span class="font-semibold text-emerald-700">${formatRupiah(bersihStudio)}</span></div>
-                            <div class="flex justify-between items-center pt-1 border-t border-slate-100">
-                                <span class="font-bold text-slate-700">FG Paid:</span>
-                                ${isFgPaid ? '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[9px]">PAID ✔</span>' : `<button onclick="setFgAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this); closeAllBookingModal();" class="px-2 py-0.5 bg-slate-900 text-white font-bold text-[9px] rounded">Tandai Paid</button>`}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 pt-2 border-t border-slate-100">
+                    <div class="flex gap-2">
                         ${!isLunas ? `
-                            <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this); closeAllBookingModal();" class="py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 flex-1">
+                            <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this); closeAllBookingModal();" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 flex-1 shadow-xs">
                                 <i class="fa-solid fa-check"></i> Set Lunas
                             </button>
                         ` : ''}
-                        <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1">
-                            <i class="fa-solid fa-file-invoice"></i> Lihat Invoice
+                        <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-xs">
+                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                        </button>
+                    </div>
+
+                    <!-- FORM RESCHEDULE DI DALAM MODAL -->
+                    <div class="border-t border-slate-200 pt-3 space-y-3">
+                        <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate text-blue-600"></i> Reschedule Jadwal / Paket & FG
+                        </h4>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Ganti Paket Wisuda</label>
+                            <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                                <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
+                                <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
+                                <option value="Silver">Silver (Rp350k • 1 Jam)</option>
+                                <option value="Gold">Gold (Rp450k • 1.5 Jam)</option>
+                                <option value="Premium">Premium (Rp1.000k • 1.5 Jam)</option>
+                                <option value="Plaosan A">Plaosan A (Rp370k • 1 Jam)</option>
+                                <option value="Plaosan B">Plaosan B (Rp500k • 1.5 Jam)</option>
+                                <option value="Group 1">Group 1 (Rp450k • 1 Jam)</option>
+                                <option value="Group 2">Group 2 (Rp550k • 1.5 Jam)</option>
+                                <option value="Package 3">Package 3 (Rp850k • 1.5 Jam)</option>
+                                <option value="Couple Package">Couple Package (Rp500k • 1 Jam)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Tanggal Baru</label>
+                                <input type="date" id="modalReschedTanggal" value="${isoDateVal}" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900 cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Jam Baru</label>
+                                <input type="text" id="modalReschedJam" value="${c.jam || ''}" placeholder="09:00 - 10:00" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-700 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Lokasi Baru</label>
+                                <input type="text" id="modalReschedLokasi" value="${c.lokasi || ''}" placeholder="Lokasi sesi..." class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Fotografer (FG)</label>
+                                <select id="modalReschedFG" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
+                                    <option value="Raihan">Raihan</option>
+                                    <option value="Zidane">Zidane</option>
+                                    <option value="Dava">Dava</option>
+                                    <option value="Riza">Riza</option>
+                                    <option value="Wahyu">Wahyu</option>
+                                    <option value="Dhika">Dhika</option>
+                                    <option value="Surya">Surya</option>
+                                    <option value="Vero">Vero</option>
+                                    <option value="Satria">Satria</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="submitModalReschedule()" id="btnModalReschedSubmit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 mt-2">
+                            <i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule
                         </button>
                     </div>
                 </div>
             `;
+
+            document.getElementById('modalReschedPaket').value = matchedPkgKey;
+            
+            const fgSel = document.getElementById('modalReschedFG');
+            for (let opt of fgSel.options) {
+                if (opt.value.toLowerCase() === (c.fg || '').toLowerCase()) {
+                    fgSel.value = opt.value;
+                    break;
+                }
+            }
 
             document.getElementById('modalAllBookingDetail').classList.remove('hidden');
         }
@@ -1403,7 +1313,77 @@
             document.getElementById('modalAllBookingDetail').classList.add('hidden');
         }
 
-        // Standard Functions (Calendar, Finance, Tracker, Today, Reschedule, etc.)
+        function onModalReschedPaketChange() {
+            const paketKey = document.getElementById('modalReschedPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+            const currentJam = document.getElementById('modalReschedJam').value.trim();
+            const startHour = currentJam.split('-')[0].trim();
+            if (startHour) {
+                document.getElementById('modalReschedJam').value = calculateTimeRange(startHour, pkg.duration);
+            }
+            window._modalReschedPkg = pkg;
+        }
+
+        async function submitModalReschedule() {
+            const scriptUrl = getActiveScriptUrl();
+            const clientObj = window._selectedClientObject || {};
+            const nama = clientObj.nama;
+            
+            const isoDateBaru = document.getElementById('modalReschedTanggal').value;
+            const jamBaru = document.getElementById('modalReschedJam').value.trim();
+            const lokasiBaru = document.getElementById('modalReschedLokasi').value.trim();
+            const fgBaru = document.getElementById('modalReschedFG').value;
+            const paketKey = document.getElementById('modalReschedPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+
+            if (!isoDateBaru || !jamBaru) return alert('Tanggal dan Jam baru wajib diisi!');
+
+            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
+            const isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
+            const dpAwal = parseInt(clientObj.dp) || 100000;
+            const sisaPelunasan = Math.max(0, pkg.harga - dpAwal);
+
+            const btn = document.getElementById('btnModalReschedSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+            const payload = {
+                action: "reschedule",
+                nama: nama,
+                sheetAsal: clientObj.sheetName || '',
+                tanggalLama: clientObj.tanggal || '',
+                tanggalBaru: tglBaruFormatted,
+                isoDateBaru: isoDateBaru,
+                isoDateLama: isoDateLama,
+                jamBaru: jamBaru,
+                fgBaru: fgBaru,
+                lokasiBaru: lokasiBaru || clientObj.lokasi,
+                noWa: clientObj.noWa || '',
+                paketBaru: pkg.label,
+                hargaBaru: pkg.harga,
+                pelunasanBaru: sisaPelunasan,
+                feeFGBaru: pkg.feeFG,
+                bersihBaru: pkg.bersih
+            };
+
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showToast('Reschedule berhasil diperbarui!');
+                closeAllBookingModal();
+                refreshClientDatabase(false);
+            } catch (err) {
+                alert('Gagal memperbarui reschedule: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule';
+            }
+        }
+
+        // Standard Functions (Calendar, Finance, Tracker, Today, etc.)
         function initPaymentFgTab() {
             const picker = document.getElementById('selectPaymentFgDate');
             if (picker && !picker.value) {
@@ -1751,8 +1731,6 @@
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return;
 
-            const btn = document.getElementById('btnReloadClients');
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-[11px]"></i>';
             isFetchingClients = true;
 
             try {
@@ -1771,7 +1749,6 @@
             } catch (err) {
                 if (showToastNotice) showToast('Gagal memuat data klien', false);
             } finally {
-                if (btn) btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-[11px]"></i> Refresh';
                 isFetchingClients = false;
             }
         }
@@ -2361,16 +2338,6 @@
             document.getElementById('modalInvoice').classList.remove('hidden');
         }
 
-        function openInvoiceFromSelectedClient() {
-            const c = window._selectedClientObject;
-            if (!c) return alert('Pilih klien terlebih dahulu!');
-            const h = parseInt(c.harga) || 350000;
-            const dp = parseInt(c.dp) || 100000;
-            const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
-            const sisa = isLunas ? 0 : Math.max(0, h - dp);
-            openInvoiceModal(c.nama, c.kampus, c.paket, h, dp, sisa, c.tanggal, c.jam, c.lokasi, c.fg, isLunas);
-        }
-
         function setInvoiceMode(isLunas) {
             if (!currentInvoiceData) return;
             currentInvoiceData.isLunas = isLunas;
@@ -2585,248 +2552,6 @@
             }
         }
 
-        function onSearchClient(query) {
-            const box = document.getElementById('searchResultsBox');
-            if (!box) return;
-
-            if (!cachedClients || cachedClients.length === 0) {
-                box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Sedang mengambil data klien...</div>';
-                box.classList.remove('hidden');
-                refreshClientDatabase(false).then(() => {
-                    onSearchClient(query);
-                });
-                return;
-            }
-
-            const q = (query || '').trim().toLowerCase();
-
-            const filtered = q === '' 
-                ? cachedClients 
-                : cachedClients.filter(c => {
-                    const nama = (c.nama || '').toLowerCase();
-                    const kampus = (c.kampus || '').toLowerCase();
-                    const paket = (c.paket || '').toLowerCase();
-                    return nama.includes(q) || kampus.includes(q) || paket.includes(q);
-                });
-
-            if (filtered.length === 0) {
-                box.innerHTML = '<div class="p-3 text-slate-400 text-xs text-center italic">Klien "' + query + '" tidak ditemukan</div>';
-                box.classList.remove('hidden');
-                return;
-            }
-
-            box.innerHTML = filtered.slice(0, 15).map((c, idx) => `
-                <div onclick="selectClientItem(${idx})" class="p-3 hover:bg-blue-50 active:bg-blue-100 cursor-pointer border-b border-slate-100 last:border-0 transition text-left">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-800 text-xs">${c.nama}</span>
-                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">${c.sheetName || 'Sheet'}</span>
-                    </div>
-                    <div class="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span>Kampus: ${c.kampus || '-'}</span>
-                        <span>Paket: ${c.paket || '-'}</span>
-                        <span>Tanggal: ${c.tanggal || '-'} (${c.jam || '-'})</span>
-                        <span class="text-emerald-600 font-semibold">FG: ${c.fg || 'Raihan'}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            window._currentFilteredClients = filtered;
-            box.classList.remove('hidden');
-        }
-
-        function selectClientItem(index) {
-            const client = window._currentFilteredClients ? window._currentFilteredClients[index] : null;
-            if (!client) return;
-
-            window._selectedClientOriginalDate = client.tanggal;
-            window._selectedClientObject = client;
-            window._selectedClientDP = parseInt(client.dp) || 100000;
-
-            document.getElementById('reschedNama').value = client.nama;
-            document.getElementById('searchResultsBox').classList.add('hidden');
-
-            const card = document.getElementById('clientDetailsCard');
-            card.classList.remove('hidden');
-            document.getElementById('cardSheetTab').textContent = 'Tab ' + client.sheetName;
-            document.getElementById('cardNamaKampus').textContent = `${client.nama} (${client.kampus || '-'})`;
-            document.getElementById('cardLokasiPaket').textContent = `${client.lokasi || '-'} • ${client.paket}`;
-            
-            const cleanTgl = isoToSheetDate(cleanToISODate(client.tanggal));
-            document.getElementById('cardJadwalLama').textContent = `${cleanTgl} • ${client.jam}`;
-            document.getElementById('cardFGLama').textContent = client.fg;
-
-            const iso = cleanToISODate(client.tanggal);
-            if (iso) {
-                document.getElementById('reschedTanggalPicker').value = iso;
-                document.getElementById('reschedTanggalFormatted').textContent = isoToSheetDate(iso);
-            }
-
-            document.getElementById('reschedJam').value = client.jam;
-            document.getElementById('reschedLokasi').value = client.lokasi || '';
-
-            const matchedKey = matchPackageKey(client.paket);
-            document.getElementById('reschedPaket').value = matchedKey;
-            onReschedPaketChange(false);
-
-            const fgSelect = document.getElementById('reschedFG');
-            let matched = false;
-            for (let opt of fgSelect.options) {
-                if (opt.value.toLowerCase() === (client.fg || '').toLowerCase()) {
-                    fgSelect.value = opt.value;
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                fgSelect.value = '__custom_resched__';
-                document.getElementById('customReschedFGInput').classList.remove('hidden');
-                document.getElementById('customReschedFGInput').value = client.fg;
-            } else {
-                document.getElementById('customReschedFGInput').classList.add('hidden');
-            }
-
-            showToast(`Data ${client.nama} terpilih!`);
-        }
-
-        function onReschedPaketChange(adjustTime = true) {
-            const paketKey = document.getElementById('reschedPaket').value;
-            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
-            const dpAwal = window._selectedClientDP || 100000;
-            const sisaPelunasan = Math.max(0, pkg.harga - dpAwal);
-
-            document.getElementById('reschedOutHarga').textContent = formatRupiah(pkg.harga);
-            document.getElementById('reschedOutDP').textContent = formatRupiah(dpAwal);
-            document.getElementById('reschedOutPelunasan').textContent = formatRupiah(sisaPelunasan);
-
-            if (adjustTime) {
-                const currentJam = document.getElementById('reschedJam').value.trim();
-                const startHour = currentJam.split('-')[0].trim();
-                if (startHour) {
-                    document.getElementById('reschedJam').value = calculateTimeRange(startHour, pkg.duration);
-                }
-            }
-
-            window._currentReschedFinancials = {
-                paket: pkg.label,
-                harga: pkg.harga,
-                dp: dpAwal,
-                pelunasan: sisaPelunasan,
-                feeFG: pkg.feeFG,
-                bersih: pkg.bersih
-            };
-        }
-
-        document.addEventListener('click', (e) => {
-            const box = document.getElementById('searchResultsBox');
-            if (box && !e.target.closest('#reschedNama') && !e.target.closest('#searchResultsBox')) {
-                box.classList.add('hidden');
-            }
-        });
-
-        async function submitReschedule() {
-            const scriptUrl = getActiveScriptUrl();
-            const nama = document.getElementById('reschedNama').value.trim();
-            const isoDateBaru = document.getElementById('reschedTanggalPicker').value;
-            const jamBaru = document.getElementById('reschedJam').value.trim();
-            const fgBaru = getActiveReschedFG();
-            const lokasiBaru = document.getElementById('reschedLokasi').value.trim();
-
-            if (!nama || !isoDateBaru || !jamBaru) return alert('Nama Klien, Tanggal Baru, dan Jam Baru wajib diisi!');
-
-            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
-            let isoDateLama = null;
-            if (window._selectedClientOriginalDate) isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
-
-            const clientObj = window._selectedClientObject || {};
-            const noWaVal = clientObj.noWa || '';
-            const fin = window._currentReschedFinancials || {};
-
-            const btn = document.getElementById('btnSubmitReschedule');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengupdate...';
-
-            const payload = {
-                action: "reschedule",
-                nama: nama,
-                sheetAsal: clientObj.sheetName || '',
-                tanggalLama: clientObj.tanggal || '',
-                tanggalBaru: tglBaruFormatted,
-                isoDateBaru: isoDateBaru,
-                isoDateLama: isoDateLama,
-                jamBaru: jamBaru,
-                fgBaru: fgBaru,
-                lokasiBaru: lokasiBaru || clientObj.lokasi,
-                noWa: noWaVal,
-                paketBaru: fin.paket || clientObj.paket || 'Silver',
-                hargaBaru: fin.harga !== undefined ? fin.harga : clientObj.harga,
-                pelunasanBaru: fin.pelunasan !== undefined ? fin.pelunasan : clientObj.pelunasan,
-                feeFGBaru: fin.feeFG !== undefined ? fin.feeFG : undefined,
-                bersihBaru: fin.bersih !== undefined ? fin.bersih : undefined
-            };
-
-            try {
-                await fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                showSuccessAlert('Reschedule Berhasil Diupdate!', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
-                refreshClientDatabase(false);
-            } catch (err) {
-                showToast('Gagal update reschedule', false);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Update Jadwal & Paket di Sheet & GCal';
-            }
-        }
-
-        function getActiveReschedFG() {
-            const select = document.getElementById('reschedFG');
-            if (select.value === '__custom_resched__') {
-                return document.getElementById('customReschedFGInput').value.trim() || 'Raihan';
-            }
-            return select.value;
-        }
-
-        function onReschedFGChange(val) {
-            const customInput = document.getElementById('customReschedFGInput');
-            if (val === '__custom_resched__') {
-                customInput.classList.remove('hidden');
-                customInput.focus();
-            } else {
-                customInput.classList.add('hidden');
-            }
-        }
-
-        function getActiveFG() {
-            const select = document.getElementById('selectFG');
-            if (select.value === '__custom__') {
-                return document.getElementById('customFGInput').value.trim() || 'Raihan';
-            }
-            return select.value;
-        }
-
-        function onFGChange(val) {
-            const customInput = document.getElementById('customFGInput');
-            if (val === '__custom__') {
-                customInput.classList.remove('hidden');
-                customInput.focus();
-            } else {
-                customInput.classList.add('hidden');
-            }
-            onFieldUpdate();
-        }
-
-        function onFieldUpdate() {}
-
-        function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
-            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
-
-            showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
-        }
-
         function showCustomModalChat(title, text, waClean = '') {
             document.getElementById('modalChatTitle').innerHTML = `<i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i> ${title}`;
             document.getElementById('fgChatPreview').value = text;
@@ -2867,6 +2592,34 @@
 
             const chatArea = document.getElementById('fgChatPreview');
             if (chatArea) chatArea.value = chat;
+        }
+
+        function getActiveFG() {
+            const select = document.getElementById('selectFG');
+            if (select.value === '__custom__') {
+                return document.getElementById('customFGInput').value.trim() || 'Raihan';
+            }
+            return select.value;
+        }
+
+        function onFGChange(val) {
+            const customInput = document.getElementById('customFGInput');
+            if (val === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+            onFieldUpdate();
+        }
+
+        function onFieldUpdate() {}
+
+        function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
+            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
+
+            showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
         }
 
         function openModalSettings() { document.getElementById('modalSettings').classList.remove('hidden'); }
