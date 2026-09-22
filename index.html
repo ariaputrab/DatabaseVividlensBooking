@@ -997,7 +997,6 @@
             return "flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap";
         }
 
-        // --- DASHBOARD METRICS ---
         function updateDashboardMetrics() {
             const now = new Date();
             const dateDisplay = document.getElementById('currentDateDisplay');
@@ -1070,7 +1069,6 @@
             `;
         }
 
-        // --- INBOX APPROVAL LOGIC ---
         async function fetchPendingBookings(showToastNotice = true) {
             if (!supabaseGalleryClient) return;
             try {
@@ -1247,7 +1245,6 @@
             }
         }
 
-        // --- FETCH TAB SEMUA BOOKING (TABEL LIST EXCEL ELEGAN) ---
         async function fetchAllBookingsDatabase(showToastNotice = true) {
             if (cachedClients.length === 0) {
                 await refreshClientDatabase(false);
@@ -1358,7 +1355,6 @@
             }).join('');
         }
 
-        // Membuka Modal Detail dari Tabel (Termasuk Form Reschedule)
         function openClientDetailModal(idx) {
             const c = window._allBookingItems ? window._allBookingItems[idx] : null;
             if (!c) return;
@@ -1401,7 +1397,6 @@
                         </button>
                     </div>
 
-                    <!-- FORM RESCHEDULE DI DALAM MODAL -->
                     <div class="border-t border-slate-200 pt-3 space-y-3">
                         <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                             <i class="fa-solid fa-rotate text-blue-600"></i> Reschedule Jadwal / Paket & FG
@@ -2600,23 +2595,25 @@
             const prefix = currentInvoiceData.isLunas ? 'Kwitansi_Lunas' : 'Invoice_Pelunasan';
             const cleanFileName = `${prefix}_VividLens_${currentInvoiceData.nama.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
 
-            const opt = {
-                margin:       10,
-                filename:     cleanFileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
-            };
+            setTimeout(() => {
+                const opt = {
+                    margin:       10,
+                    filename:     cleanFileName,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+                    jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+                };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                showToast("File PDF berhasil diunduh!");
-            }).catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                alert("Gagal mengunduh PDF: " + err.message);
-            });
+                html2pdf().set(opt).from(element).save().then(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    showToast("File PDF berhasil diunduh!");
+                }).catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    alert("Gagal mengunduh PDF: " + err.message);
+                });
+            }, 300);
         }
 
         async function handleCreateDriveAndGallery(nama, tanggal, jam, paket, kampus, noWa, btnEl) {
