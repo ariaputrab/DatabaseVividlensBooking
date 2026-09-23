@@ -371,6 +371,17 @@
             </div>
         </div>
 
+        <!-- HALAMAN DETAIL KLIEN & RESCHEDULE KHUSUS (FULL PAGE VIEW) -->
+        <div id="sectionClientDetail" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-3xl mx-auto space-y-6 hidden">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <button onclick="closeClientDetailPage()" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar
+                </button>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Halaman Detail Klien</span>
+            </div>
+            <div id="clientDetailPageContent" class="space-y-4"></div>
+        </div>
+
         <!-- TAB TRACKER STATUS SELEKSI FOTO -->
         <div id="sectionTracker" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3">
@@ -634,22 +645,6 @@
             </div>
         </div>
 
-        <!-- MODAL DETAIL KLIK DARI SEMUA BOOKING (DENGAN FORM RESCHEDULE) -->
-        <div id="modalAllBookingDetail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-            <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-id-card text-slate-700 text-base"></i>
-                        <h3 class="font-bold text-sm text-slate-900">Detail Sesi Klien & Reschedule</h3>
-                    </div>
-                    <button onclick="closeAllBookingModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
-                <div id="allBookingModalContent"></div>
-            </div>
-        </div>
-
         <!-- MODAL INVOICE RESMI & DOWNLOAD PDF -->
         <div id="modalInvoice" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto touch-scroll">
@@ -703,34 +698,34 @@
 
                     <div class="space-y-2">
                         <span class="text-[10px] text-slate-400 uppercase font-bold block">Rincian Pembayaran:</span>
-                        <div class="border border-slate-200 rounded-xl overflow-hidden text-xs">
-                            <table class="w-full text-left">
-                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold">
+                        <div class="border border-slate-300 rounded-xl overflow-hidden text-xs">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-100 border-b border-slate-300 text-slate-600 text-[10px] uppercase font-bold">
                                     <tr>
-                                        <th class="p-2.5">Deskripsi Layanan</th>
+                                        <th class="p-2.5 border-r border-slate-300">Deskripsi Layanan</th>
                                         <th class="p-2.5 text-right">Jumlah</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100">
+                                <tbody class="divide-y divide-slate-200">
                                     <tr>
-                                        <td class="p-2.5">
+                                        <td class="p-2.5 border-r border-slate-200">
                                             <span id="invPackageTitle" class="font-bold text-slate-800 block">Paket Wisuda</span>
                                             <span class="text-[10px] text-slate-400">Dokumentasi wisuda eksklusif VividLens</span>
                                         </td>
                                         <td id="invPackagePrice" class="p-2.5 text-right font-semibold text-slate-800">Rp0</td>
                                     </tr>
                                     <tr class="bg-slate-50/50" id="invDPRow">
-                                        <td class="p-2 text-slate-600">DP Terbayar (Booking Fee)</td>
+                                        <td class="p-2 border-r border-slate-200 text-slate-600">DP Terbayar (Booking Fee)</td>
                                         <td id="invDPPaid" class="p-2 text-right font-medium text-emerald-600">- Rp0</td>
                                     </tr>
                                     <tr class="bg-slate-50/50 hidden" id="invFullPaidRow">
-                                        <td class="p-2 text-slate-600">Total Pelunasan Masuk</td>
+                                        <td class="p-2 border-r border-slate-200 text-slate-600">Total Pelunasan Masuk</td>
                                         <td id="invFullPaidVal" class="p-2 text-right font-medium text-emerald-600">Rp0</td>
                                     </tr>
                                 </tbody>
                                 <tfoot class="bg-slate-900 text-white font-bold">
                                     <tr>
-                                        <td class="p-3 text-xs" id="invFooterTotalLabel">Sisa Pelunasan H-1</td>
+                                        <td class="p-3 text-xs border-r border-slate-700" id="invFooterTotalLabel">Sisa Pelunasan H-1</td>
                                         <td id="invTotalDue" class="p-3 text-right text-sm text-amber-300">Rp0</td>
                                     </tr>
                                 </tfoot>
@@ -948,6 +943,9 @@
             const isAllBooking = mode === 'allBooking';
             const isPaymentFg = mode === 'paymentFg';
             const isNew = mode === 'new';
+
+            const detailSec = document.getElementById('sectionClientDetail');
+            if(detailSec) detailSec.classList.add('hidden');
 
             document.getElementById('sectionDashboard').classList.toggle('hidden', !isDashboard);
             document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
@@ -1355,6 +1353,7 @@
             }).join('');
         }
 
+        // Halaman Detail Klien Khusus (Full View) + Reschedule Terintegrasi
         function openClientDetailModal(idx) {
             const c = window._allBookingItems ? window._allBookingItems[idx] : null;
             if (!c) return;
@@ -1367,44 +1366,50 @@
             const dp = parseInt(c.dp) || 0;
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
-            const feeFG = parseInt(c.feeFG) || 225000;
-            const bersihStudio = parseInt(c.bersih) || (h - feeFG);
-            const isFgPaid = (c.statusFG || '').toUpperCase().trim() === 'PAID';
 
             const isoDateVal = cleanToISODate(c.tanggal) || '';
             const matchedPkgKey = matchPackageKey(c.paket);
 
-            const modalContent = document.getElementById('allBookingModalContent');
-            modalContent.innerHTML = `
-                <div class="space-y-4 text-xs">
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+            document.getElementById('sectionAllBooking').classList.add('hidden');
+            const detailSec = document.getElementById('sectionClientDetail');
+            detailSec.classList.remove('hidden');
+
+            const contentEl = document.getElementById('clientDetailPageContent');
+            contentEl.innerHTML = `
+                <div class="space-y-5 text-xs">
+                    <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-2">
                         <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${c.sheetName || 'Sheet'}</span>
-                            <span class="font-bold text-slate-700">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
+                            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md">Tab ${c.sheetName || 'Sheet'}</span>
+                            <span class="font-bold text-slate-700 text-sm">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
                         </div>
-                        <h3 class="font-bold text-base text-slate-900">${c.nama}</h3>
-                        <p class="text-slate-500">${c.kampus || 'Umum'} • Lokasi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
+                        <h3 class="font-bold text-lg text-slate-900">${c.nama}</h3>
+                        <p class="text-slate-500 text-sm">${c.kampus || 'Umum'} • Lokasi Sesi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
+                        <div class="flex flex-wrap gap-2 pt-2 text-slate-600">
+                            <span><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WA: <strong>${c.noWa || '-'}</strong></span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-camera text-blue-600 mr-1"></i> FG: <strong>${c.fg || 'Raihan'}</strong></span>
+                        </div>
                     </div>
 
-                    <div class="flex gap-2">
+                    <div class="flex gap-3">
                         ${!isLunas ? `
-                            <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this); closeAllBookingModal();" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 flex-1 shadow-xs">
-                                <i class="fa-solid fa-check"></i> Set Lunas
+                            <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this); closeClientDetailPage();" class="py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-sm active:scale-95">
+                                <i class="fa-solid fa-check"></i> Ubah Status Jadi Lunas
                             </button>
                         ` : ''}
-                        <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-xs">
-                            <i class="fa-solid fa-file-invoice"></i> Invoice PDF
+                        <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-sm active:scale-95">
+                            <i class="fa-solid fa-file-invoice"></i> Lihat & Unduh Invoice PDF
                         </button>
                     </div>
 
-                    <div class="border-t border-slate-200 pt-3 space-y-3">
-                        <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                            <i class="fa-solid fa-rotate text-blue-600"></i> Reschedule Jadwal / Paket & FG
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                            <i class="fa-solid fa-rotate text-blue-600"></i> Form Reschedule / Ganti Jadwal, Paket & FG
                         </h4>
 
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase">Ganti Paket Wisuda</label>
-                            <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
+                            <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
                                 <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
                                 <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
                                 <option value="Silver">Silver (Rp350k • 1 Jam)</option>
@@ -1419,25 +1424,25 @@
                             </select>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Tanggal Baru</label>
-                                <input type="date" id="modalReschedTanggal" value="${isoDateVal}" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900 cursor-pointer">
+                                <input type="date" id="modalReschedTanggal" value="${isoDateVal}" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900 cursor-pointer">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Jam Baru</label>
-                                <input type="text" id="modalReschedJam" value="${c.jam || ''}" placeholder="09:00 - 10:00" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-700 outline-none">
+                                <input type="text" id="modalReschedJam" value="${c.jam || ''}" placeholder="09:00 - 10:00" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-700 outline-none">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Lokasi Baru</label>
-                                <input type="text" id="modalReschedLokasi" value="${c.lokasi || ''}" placeholder="Lokasi sesi..." class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900">
+                                <input type="text" id="modalReschedLokasi" value="${c.lokasi || ''}" placeholder="Lokasi sesi..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Fotografer (FG)</label>
-                                <select id="modalReschedFG" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
+                                <select id="modalReschedFG" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
                                     <option value="Raihan">Raihan</option>
                                     <option value="Zidane">Zidane</option>
                                     <option value="Dava">Dava</option>
@@ -1451,8 +1456,8 @@
                             </div>
                         </div>
 
-                        <button onclick="submitModalReschedule()" id="btnModalReschedSubmit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5 mt-2">
-                            <i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule
+                        <button onclick="submitModalReschedule()" id="btnModalReschedSubmit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 mt-4">
+                            <i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule ke Sheet & GCal
                         </button>
                     </div>
                 </div>
@@ -1468,11 +1473,13 @@
                 }
             }
 
-            document.getElementById('modalAllBookingDetail').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function closeAllBookingModal() {
-            document.getElementById('modalAllBookingDetail').classList.add('hidden');
+        function closeClientDetailPage() {
+            document.getElementById('sectionClientDetail').classList.add('hidden');
+            document.getElementById('sectionAllBooking').classList.remove('hidden');
+            renderAllBookingList();
         }
 
         function onModalReschedPaketChange() {
@@ -1535,13 +1542,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                showToast('Reschedule berhasil diperbarui!');
-                closeAllBookingModal();
+                showSuccessAlert('Reschedule Berhasil Diupdate!', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
+                closeClientDetailPage();
                 refreshClientDatabase(false);
             } catch (err) {
                 alert('Gagal memperbarui reschedule: ' + err.message);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule';
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule ke Sheet & GCal';
             }
         }
 
