@@ -1353,7 +1353,6 @@
             }).join('');
         }
 
-        // Halaman Detail Klien Khusus (Full View) + Reschedule Terintegrasi
         function openClientDetailModal(idx) {
             const c = window._allBookingItems ? window._allBookingItems[idx] : null;
             if (!c) return;
@@ -1442,7 +1441,7 @@
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-400 uppercase">Fotografer (FG)</label>
-                                <select id="modalReschedFG" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
+                                <select id="modalReschedFG" onchange="onModalReschedFGChange(this.value)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
                                     <option value="Raihan">Raihan</option>
                                     <option value="Zidane">Zidane</option>
                                     <option value="Dava">Dava</option>
@@ -1452,7 +1451,9 @@
                                     <option value="Surya">Surya</option>
                                     <option value="Vero">Vero</option>
                                     <option value="Satria">Satria</option>
+                                    <option value="__custom__">+ Ketik Manual...</option>
                                 </select>
+                                <input type="text" id="modalCustomFGInput" placeholder="Ketik nama FG baru..." class="w-full mt-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none hidden">
                             </div>
                         </div>
 
@@ -1466,11 +1467,19 @@
             document.getElementById('modalReschedPaket').value = matchedPkgKey;
             
             const fgSel = document.getElementById('modalReschedFG');
+            let matched = false;
             for (let opt of fgSel.options) {
                 if (opt.value.toLowerCase() === (c.fg || '').toLowerCase()) {
                     fgSel.value = opt.value;
+                    matched = true;
                     break;
                 }
+            }
+            if (!matched && c.fg) {
+                fgSel.value = '__custom__';
+                const customIn = document.getElementById('modalCustomFGInput');
+                customIn.classList.remove('hidden');
+                customIn.value = c.fg;
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1480,6 +1489,24 @@
             document.getElementById('sectionClientDetail').classList.add('hidden');
             document.getElementById('sectionAllBooking').classList.remove('hidden');
             renderAllBookingList();
+        }
+
+        function onModalReschedFGChange(val) {
+            const customInput = document.getElementById('modalCustomFGInput');
+            if (val === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function getModalActiveFG() {
+            const select = document.getElementById('modalReschedFG');
+            if (select.value === '__custom__') {
+                return document.getElementById('modalCustomFGInput').value.trim() || 'Raihan';
+            }
+            return select.value;
         }
 
         function onModalReschedPaketChange() {
@@ -1501,7 +1528,7 @@
             const isoDateBaru = document.getElementById('modalReschedTanggal').value;
             const jamBaru = document.getElementById('modalReschedJam').value.trim();
             const lokasiBaru = document.getElementById('modalReschedLokasi').value.trim();
-            const fgBaru = document.getElementById('modalReschedFG').value;
+            const fgBaru = getModalActiveFG();
             const paketKey = document.getElementById('modalReschedPaket').value;
             const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
 
