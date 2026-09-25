@@ -933,6 +933,18 @@
             return `${parseInt(d, 10)}-${mName}-${y}`;
         }
 
+        // Fungsi helper pelindung untuk mengesan nombor WhatsApp dari cache Google Sheets jika tiada
+        function getClientWhatsAppNumber(namaKlien, fallbackNoWa) {
+            if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && fallbackNoWa.trim() !== '') {
+                return fallbackNoWa;
+            }
+            const found = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === (namaKlien || '').toLowerCase().trim());
+            if (found && found.noWa && found.noWa !== '-') {
+                return found.noWa;
+            }
+            return '-';
+        }
+
         function switchMode(mode) {
             const isDashboard = mode === 'dashboard';
             const isApproval = mode === 'approval';
@@ -1368,6 +1380,7 @@
 
             const isoDateVal = cleanToISODate(c.tanggal) || '';
             const matchedPkgKey = matchPackageKey(c.paket);
+            const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
 
             document.getElementById('sectionAllBooking').classList.add('hidden');
             const detailSec = document.getElementById('sectionClientDetail');
@@ -1384,7 +1397,7 @@
                         <h3 class="font-bold text-lg text-slate-900">${c.nama}</h3>
                         <p class="text-slate-500 text-sm">${c.kampus || 'Umum'} • Lokasi Sesi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
                         <div class="flex flex-wrap gap-2 pt-2 text-slate-600">
-                            <span><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WA: <strong>${c.noWa || '-'}</strong></span>
+                            <span><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WA: <strong>${clientWa}</strong></span>
                             <span>•</span>
                             <span><i class="fa-solid fa-camera text-blue-600 mr-1"></i> FG: <strong>${c.fg || 'Raihan'}</strong></span>
                         </div>
@@ -1893,7 +1906,7 @@
                                     <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1"><i class="fa-solid fa-check"></i> Set Lunas</button>
                                 ` : ''}
                                 <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
-                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
+                                <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
                             </div>
                         </div>
                     `;
@@ -2292,6 +2305,7 @@
                     const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
                     const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
                     const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
+                    const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
 
                     return `
                         <div class="p-4 bg-slate-50 hover:bg-amber-50/40 border ${isLunas ? 'border-emerald-200' : 'border-amber-200'} rounded-2xl transition space-y-3">
@@ -2331,13 +2345,13 @@
                                     </button>
                                 ` : ''}
 
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${clientWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                                     <i class="fa-solid fa-copy"></i> Salin Teks
                                 </button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid fa-file-invoice"></i> Invoice
                                 </button>
-                                <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                                <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${clientWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                                     <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> Chat FG
                                 </button>
                                 ${isGalleryCreated && driveUrl ? `
@@ -2345,7 +2359,7 @@
                                         <i class="fa-brands fa-google-drive"></i> Drive
                                     </a>
                                 ` : ''}
-                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                                <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${clientWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                                     <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
                                 </button>
                             </div>
@@ -2365,6 +2379,7 @@
             const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
             const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
             const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
+            const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
 
             const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
 
@@ -2404,7 +2419,7 @@
                             </button>
                         ` : ''}
 
-                        <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                        <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${clientWa}', '${c.payment}', '${c.lokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                             <i class="fa-solid fa-copy"></i> Salin Teks
                         </button>
 
@@ -2412,7 +2427,7 @@
                             <i class="fa-solid fa-file-invoice"></i> Invoice
                         </button>
                         
-                        <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${c.noWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                        <button onclick="markFGSent('${c.nama}'); prepareAndShowFGChat('${c.nama}', '${c.fg}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.kampus}', '${c.paket}', '${clientWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
                             <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> Chat FG
                         </button>
 
@@ -2422,7 +2437,7 @@
                             </a>
                         ` : ''}
 
-                        <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${c.noWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                        <button onclick="handleCreateDriveAndGallery('${c.nama}', '${c.tanggal}', '${c.jam}', '${c.paket}', '${c.kampus}', '${clientWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
                         </button>
                     </div>
@@ -2431,7 +2446,8 @@
         }
 
         function openTagihanChat(nama, kampus, paket, harga, dp, sisa, tanggal, jam, noWa, statusPayment, lokasi) {
-            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+            const validWa = getClientWhatsAppNumber(nama, noWa);
+            const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
             const payLink = `https://database-vividlens-booking.vercel.app/pay.html?nama=${encodeURIComponent(nama)}`;
             const isLunas = (statusPayment || '').toUpperCase().trim() === 'LUNAS' || Number(sisa) <= 0;
 
@@ -2667,7 +2683,8 @@
 
                 if (existingClient && existingClient.drive_link) {
                     const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
-                    const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                    const validWa = getClientWhatsAppNumber(nama, noWa);
+                    const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
                     const kuotaFoto = existingClient.limit_foto || 40;
 
                     const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
@@ -2734,7 +2751,8 @@
                 renderCombinedSchedule();
 
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
-                const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                const validWa = getClientWhatsAppNumber(nama, noWa);
+                const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
                 const deliveryMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
@@ -2813,8 +2831,9 @@
         function onFieldUpdate() {}
 
         function prepareAndShowFGChat(nama, fgName, tanggal, jam, lokasi, kampus, paket, noWa) {
-            const waClean = (noWa || '').replace(/\D/g, '').replace(/^0/, '62');
-            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${noWa || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
+            const validWa = getClientWhatsAppNumber(nama, noWa);
+            const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
+            const chat = `Hallo Kak ${nama || '...'}\nPerkenalkan, saya ${fgName || 'Raihan'} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${tanggal || '-'}\nJam : ${jam || '-'}\nLokasi : ${lokasi || '-'}\nKampus : ${kampus || '-'}\nPaket : ${paket || '-'}\nWA: ${validWa}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
 
             showCustomModalChat("Format Chat Konfirmasi FG", chat, waClean);
         }
