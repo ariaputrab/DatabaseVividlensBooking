@@ -933,14 +933,20 @@
             return `${parseInt(d, 10)}-${mName}-${y}`;
         }
 
-        // Fungsi helper pelindung untuk mengesan nombor WhatsApp dari cache Google Sheets jika tiada
         function getClientWhatsAppNumber(namaKlien, fallbackNoWa) {
-            if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && fallbackNoWa.trim() !== '') {
+            if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && String(fallbackNoWa).trim() !== '') {
                 return fallbackNoWa;
             }
-            const found = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === (namaKlien || '').toLowerCase().trim());
-            if (found && found.noWa && found.noWa !== '-') {
-                return found.noWa;
+            const cleanName = (namaKlien || '').toLowerCase().trim();
+            const foundSheetClient = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === cleanName);
+            if (foundSheetClient) {
+                if (foundSheetClient.noWa && foundSheetClient.noWa !== '-') return foundSheetClient.noWa;
+                if (foundSheetClient.no_wa && foundSheetClient.no_wa !== '-') return foundSheetClient.no_wa;
+            }
+            const foundSupabaseClient = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
+            if (foundSupabaseClient) {
+                if (foundSupabaseClient.no_wa && foundSupabaseClient.no_wa !== '-') return foundSupabaseClient.no_wa;
+                if (foundSupabaseClient.noWa && foundSupabaseClient.noWa !== '-') return foundSupabaseClient.noWa;
             }
             return '-';
         }
@@ -1567,7 +1573,7 @@
                 jamBaru: jamBaru,
                 fgBaru: fgBaru,
                 lokasiBaru: lokasiBaru || clientObj.lokasi,
-                noWa: clientObj.noWa || '',
+                noWa: getClientWhatsAppNumber(nama, clientObj.noWa),
                 paketBaru: pkg.label,
                 hargaBaru: pkg.harga,
                 pelunasanBaru: sisaPelunasan,
@@ -1846,6 +1852,7 @@
                     const bersihStudio = parseInt(c.bersih) || (h - feeFG);
 
                     const isFgPaid = (c.statusFG || c.status_fg || '').toUpperCase().trim() === 'PAID';
+                    const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
 
                     return `
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -1905,7 +1912,7 @@
                                 ${!isLunas ? `
                                     <button onclick="setClientAsPaid('${c.nama}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1"><i class="fa-solid fa-check"></i> Set Lunas</button>
                                 ` : ''}
-                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.noWa}', '${c.payment}', '${c.lokasi}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
+                                <button onclick="openTagihanChat('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${clientWa}', '${c.payment}', '${c.lokasi}')" class="flex-1 py-2 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-copy"></i> Salin Teks</button>
                                 <button onclick="openInvoiceModal('${c.nama}', '${c.kampus}', '${c.paket}', '${h}', '${dp}', '${sisa}', '${c.tanggal}', '${c.jam}', '${c.lokasi}', '${c.fg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice</button>
                             </div>
                         </div>
