@@ -2312,14 +2312,33 @@
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
 
-            const safeName = (c.nama || '').replace(/'/g, "\\'");
-            const cleanNameKey = c.nama.replace(/\s+/g, '_');
-            const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === c.nama.toLowerCase().trim());
-            const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem(`gallery_created_${cleanNameKey}`) === 'true';
-            const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
-            const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
+            // Bersihkan string dari karakter petik ganda/tunggal agar aman di dalam atribut onclick HTML
+            const rawNama = String(c.nama || '').trim();
+            const safeName = rawNama.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const cleanNameKey = rawNama.replace(/\s+/g, '_');
 
-            const isFGSent = localStorage.getItem(`fg_chat_sent_${cleanNameKey}`) === 'true';
+            const rawKampus = String(c.kampus || '').trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const rawPaket = String(c.paket || 'Silver').trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const rawLokasi = String(c.lokasi || '-').trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const rawFg = String(c.fg || 'Raihan').trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const rawSheet = String(c.sheetName || 'Sheet1').trim().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            const cachedSupabaseItem = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === rawNama.toLowerCase().trim());
+            const isGalleryCreated = (cachedSupabaseItem && cachedSupabaseItem.drive_link) || localStorage.getItem('gallery_created_' + cleanNameKey) === 'true';
+            const driveUrl = cachedSupabaseItem ? cachedSupabaseItem.drive_link : '';
+            const clientWa = getClientWhatsAppNumber(rawNama, c.noWa);
+            const isFGSent = localStorage.getItem('fg_chat_sent_' + cleanNameKey) === 'true';
+
+            const lunasBtnHtml = !isLunas ? '<button onclick="setClientAsPaid(\'' + safeName + '\', \'' + rawSheet + '\', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95"><i class="fa-solid fa-check-circle"></i> Set Lunas</button>' : '';
+            
+            const driveBtnHtml = (isGalleryCreated && driveUrl) ? '<a href="' + driveUrl + '" target="_blank" class="py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>' : '';
+
+            const fgBtnClass = isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white';
+            const fgIconClass = isFGSent ? 'fa-check-double' : 'fa-comment-dots';
+
+            const galleryBtnClass = isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white';
+            const galleryIconClass = isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles';
+            const galleryText = isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive';
 
             return `
                 <div class="p-4 bg-slate-50 hover:bg-blue-50/40 border ${isYesterday ? 'border-purple-200' : 'border-slate-200'} rounded-2xl transition space-y-3">
@@ -2351,32 +2370,24 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 pt-1">
-                        ${!isLunas ? `
-                            <button onclick="setClientAsPaid('${safeName}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Ubah Status Jadi Lunas">
-                                <i class="fa-solid fa-check-circle"></i> Set Lunas
-                            </button>
-                        ` : ''}
+                        ${lunasBtnHtml}
 
-                        <button onclick="openTagihanChat('${safeName}', '${c.kampus || ''}', '${c.paket || ''}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${clientWa}', '${c.payment || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
+                        <button onclick="openTagihanChat('${safeName}', '${rawKampus}', '${rawPaket}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${clientWa}', '${c.payment || ''}', '${rawLokasi}')" class="py-2 px-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Salin Teks Tagihan">
                             <i class="fa-solid fa-copy"></i> Salin Teks
                         </button>
 
-                        <button onclick="openInvoiceModal('${safeName}', '${c.kampus || ''}', '${c.paket || ''}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}', '${c.fg || ''}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                        <button onclick="openInvoiceModal('${safeName}', '${rawKampus}', '${rawPaket}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${rawLokasi}', '${rawFg}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid fa-file-invoice"></i> Invoice
                         </button>
                         
-                        <button onclick="markFGSent('${safeName}'); prepareAndShowFGChat('${safeName}', '${c.fg || ''}', '${c.tanggal || ''}', '${c.jam || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}', '${c.kampus || ''}', '${c.paket || ''}', '${clientWa}')" class="py-2 px-3 ${isFGSent ? 'bg-emerald-800 text-white' : 'bg-slate-800 hover:bg-black text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
-                            <i class="fa-solid ${isFGSent ? 'fa-check-double' : 'fa-comment-dots'}"></i> Chat FG
+                        <button onclick="markFGSent('${safeName}'); prepareAndShowFGChat('${safeName}', '${rawFg}', '${c.tanggal || ''}', '${c.jam || ''}', '${rawLokasi}', '${rawKampus}', '${rawPaket}', '${clientWa}')" class="py-2 px-3 ${fgBtnClass} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95">
+                            <i class="fa-solid ${fgIconClass}"></i> Chat FG
                         </button>
 
-                        ${isGalleryCreated && driveUrl ? `
-                            <a href="${driveUrl}" target="_blank" class="py-2 px-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95" title="Buka Google Drive Klien">
-                                <i class="fa-brands fa-google-drive"></i> Buka Drive
-                            </a>
-                        ` : ''}
+                        ${driveBtnHtml}
 
-                        <button onclick="handleCreateDriveAndGallery('${safeName}', '${c.tanggal || ''}', '${c.jam || ''}', '${c.paket || ''}', '${c.kampus || ''}', '${clientWa}', this)" class="py-2 px-3 ${isGalleryCreated ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                            <i class="fa-solid ${isGalleryCreated ? 'fa-paper-plane' : 'fa-wand-magic-sparkles'} text-[11px]"></i> ${isGalleryCreated ? 'Kirim Link Galeri' : 'Buat Galeri & Drive'}
+                        <button onclick="handleCreateDriveAndGallery('${safeName}', '${c.tanggal || ''}', '${c.jam || ''}', '${rawPaket}', '${rawKampus}', '${clientWa}', this)" class="py-2 px-3 ${galleryBtnClass} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                            <i class="fa-solid ${galleryIconClass} text-[11px]"></i> ${galleryText}
                         </button>
                     </div>
                 </div>
