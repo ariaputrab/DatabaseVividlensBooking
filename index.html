@@ -2608,28 +2608,33 @@
             const scriptUrl = getActiveScriptUrl();
             if (!scriptUrl) return alert('Atur URL Apps Script terlebih dahulu!');
 
-            const cleanSlugNama = nama.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const cleanNama = (nama || '').trim();
+            const cleanSlugNama = cleanNama.toLowerCase().replace(/[^a-z0-9]/g, '');
             const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
             let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
 
             if (supabaseGalleryClient) {
-                const { data: existingClient } = await supabaseGalleryClient
-                    .from('clients')
-                    .select('*')
-                    .eq('slug', slug)
-                    .maybeSingle();
+                try {
+                    const { data: existingClient } = await supabaseGalleryClient
+                        .from('clients')
+                        .select('*')
+                        .eq('slug', slug)
+                        .maybeSingle();
 
-                if (existingClient && existingClient.drive_link) {
-                    const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
-                    const validWa = getClientWhatsAppNumber(nama, noWa);
-                    const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
-                    const kuotaFoto = existingClient.limit_foto || 40;
+                    if (existingClient && existingClient.drive_link) {
+                        const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
+                        const validWa = getClientWhatsAppNumber(cleanNama, noWa);
+                        const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
+                        const kuotaFoto = existingClient.limit_foto || 40;
 
-                    const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
+                        const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
-                    showCustomModalChat("Kirim Link Galeri (Sudah Ada)", readyMessage, waClean);
-                    showToast("Galeri klien ini sudah pernah dibuat sebelumnya!");
-                    return;
+                        showCustomModalChat("Kirim Link Galeri (Sudah Ada)", readyMessage, waClean);
+                        showToast("Galeri klien ini sudah pernah dibuat sebelumnya!");
+                        return;
+                    }
+                } catch (e) {
+                    console.log("Supabase check warning:", e);
                 }
             }
 
@@ -2643,7 +2648,7 @@
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: "create_drive_folder",
-                        nama: nama,
+                        nama: cleanNama,
                         tanggal: tanggal,
                         jam: jam,
                         paket: paket,
@@ -2669,7 +2674,7 @@
                         .from('clients')
                         .insert([{
                             slug: slug,
-                            nama: nama,
+                            nama: cleanNama,
                             univ: kampus || 'Umum',
                             tanggal: isoTanggal,
                             limit_foto: kuotaFoto,
@@ -2682,17 +2687,17 @@
                     }
                 }
 
-                const cleanNameKey = nama.replace(/\s+/g, '_');
+                const cleanNameKey = cleanNama.replace(/\s+/g, '_');
                 localStorage.setItem(`gallery_created_${cleanNameKey}`, 'true');
                 
                 await fetchSupabaseClients(false);
                 renderCombinedSchedule();
 
                 const clientGalleryUrl = `${GALLERY_BASE_DOMAIN}/${slug}`;
-                const validWa = getClientWhatsAppNumber(nama, noWa);
+                const validWa = getClientWhatsAppNumber(cleanNama, noWa);
                 const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
 
-                const deliveryMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak ( ${kuotaFoto} foto) dengan cara:\n\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nApabila setelah 20 hari meminta upload ulang, akan dikenakan biaya administrasi sebesar Rp50.000.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
+                const deliveryMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${clientGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
                 showCustomModalChat("Kirim Link Galeri Seleksi Klien", deliveryMessage, waClean);
                 showToast("Folder Drive & Galeri Supabase Berhasil Dibuat!");
