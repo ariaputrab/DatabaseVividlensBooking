@@ -34,7 +34,6 @@
         
         <!-- Header (Logo / Inisial VL) -->
         <div class="text-center space-y-2">
-            <!-- Ganti bagian img di bawah ini jika kamu punya file logo sendiri, misal <img src="logo.png" class="w-12 h-12 object-contain mx-auto"> -->
             <div class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-base font-black mx-auto shadow-sm">
                 VL
             </div>
@@ -56,7 +55,6 @@
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-slate-600 uppercase">Jam Mulai Foto</label>
-                    <!-- Tanpa default 15:00, dikosongkan agar klien wajib memilih -->
                     <input type="time" id="clientJamMulai" step="60" onchange="calculateDetails()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer">
                 </div>
             </div>
@@ -222,6 +220,9 @@
         const SUPABASE_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Ubah dengan URL Apps Script Anda agar data juga masuk ke tab "From Supabase" di Spreadsheet
+        const SCRIPT_URL_BACKUP = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
+
         const MONTH_NAMES = {
             '01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun',
             '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
@@ -309,6 +310,7 @@
             const addTextInfo = details.addCount > 0 ? ` (Tambah ${details.addCount} Orang)` : '';
             const finalPaketLabel = details.addCount > 0 ? `${paket}${addTextInfo}` : paket;
 
+            // 1. Simpan ke Supabase
             try {
                 await supabaseClient.from('booking_requests').insert([{
                     nama, kampus, lokasi, tanggal: isoDate, jam: details.jam,
@@ -318,6 +320,23 @@
                 }]);
             } catch (err) {
                 console.log("Supabase insert error:", err);
+            }
+
+            // 2. Kirim juga sebagai cadangan ke Google Sheets tab "From Supabase"
+            try {
+                await fetch(SCRIPT_URL_BACKUP, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: "save_pending",
+                        nama, kampus, lokasi, tanggal: sheetDate, jam: details.jam,
+                        paket: finalPaketLabel, harga: details.finalHarga, dp: 100000,
+                        noWa, ig
+                    })
+                });
+            } catch (e) {
+                console.log("Sheet backup sync warning:", e);
             }
 
             // Siapkan link pay.html milik klien
