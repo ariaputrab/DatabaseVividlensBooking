@@ -644,6 +644,31 @@
             </div>
         </div>
 
+        <!-- MODAL EDIT KUOTA FOTO KLIEN -->
+        <div id="modalEditQuota" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-sm text-slate-900">Edit Kuota Foto Klien</h3>
+                    <button onclick="closeEditQuotaModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <span id="editQuotaClientName" class="font-bold text-slate-800 text-sm block">Nama Klien</span>
+                        <span class="text-slate-400 text-[11px]">Atur jumlah maksimal foto yang bisa dipilih di galeri.</span>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Jumlah Kuota Foto</label>
+                        <input type="number" id="inputEditQuotaVal" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none" value="35">
+                    </div>
+                    <button onclick="saveClientQuota()" class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow transition">
+                        Simpan Kuota Foto
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL INVOICE RESMI & DOWNLOAD PDF -->
         <div id="modalInvoice" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
             <div class="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto touch-scroll">
@@ -885,6 +910,7 @@
         let isFetchingClients = false;
         let activeScheduleSubTab = 'today';
         let currentInvoiceData = null;
+        let currentEditClientName = "";
 
         let calendarCurrentDate = new Date();
 
@@ -933,14 +959,12 @@
             return `${parseInt(d, 10)}-${mName}-${y}`;
         }
 
-        // Fungsi getClientWhatsAppNumber diperbarui agar mengecek berbagai variasi properti no_wa / noWa dari Supabase dan Sheets
         function getClientWhatsAppNumber(namaKlien, fallbackNoWa) {
             if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && String(fallbackNoWa).trim() !== '') {
                 return formatWaString(fallbackNoWa);
             }
             const cleanName = (namaKlien || '').toLowerCase().trim();
             
-            // 1. Cari di data klien cache secara umum
             for (let record of cachedClients) {
                 if (record && record.nama && record.nama.toLowerCase().trim() === cleanName) {
                     const wa = record.no_wa || record.noWa || record.whatsapp || record.noHp;
@@ -948,7 +972,6 @@
                 }
             }
 
-            // 2. Jika tidak ketemu, cari langsung ke baris data yang berasal dari tab "From Supabase"
             const supabaseRecord = cachedClients.find(c => {
                 const isMatchName = c.nama && c.nama.toLowerCase().trim() === cleanName;
                 const isFromSupabaseSheet = c.sheetName && c.sheetName.toLowerCase().includes('supabase');
@@ -963,7 +986,6 @@
                 }
             }
 
-            // 3. Cari di data mentah Supabase (jika ada cache-nya)
             const foundPending = cachedPendingBookings.find(b => b.nama && b.nama.toLowerCase().trim() === cleanName);
             if (foundPending && (foundPending.no_wa || foundPending.noWa)) {
                 return formatWaString(foundPending.no_wa || foundPending.noWa);
@@ -972,11 +994,9 @@
             return '-';
         }
 
-        // Helper untuk merapikan teks "WA: 08xxxx" atau mengambil angka murninya saja
         function formatWaString(rawStr) {
             if (!rawStr) return '-';
             const str = String(rawStr);
-            // Jika ada teks "WA:", coba ambil angka setelahnya
             const match = str.match(/WA\s*[:\-]?\s*([0-9+\s\-]{9,16})/i) || str.match(/\b(08[0-9]{8,13})\b/);
             if (match) {
                 return (match[1] || match[0]).trim();
@@ -1961,6 +1981,51 @@
             document.getElementById('modalDayDetail').classList.add('hidden');
         }
 
+        function openEditQuotaModal(namaKlien) {
+            currentEditClientName = namaKlien;
+            document.getElementById('editQuotaClientName').textContent = namaKlien;
+            
+            const found = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === namaKlien.toLowerCase().trim());
+            const defaultQuota = found ? (found.limit_foto || 35) : 35;
+            
+            document.getElementById('inputEditQuotaVal').value = defaultQuota;
+            document.getElementById('modalEditQuota').classList.remove('hidden');
+        }
+
+        function closeEditQuotaModal() {
+            document.getElementById('modalEditQuota').classList.add('hidden');
+        }
+
+        async function saveClientQuota() {
+            const newQuota = parseInt(document.getElementById('inputEditQuotaVal').value) || 35;
+            if (!supabaseGalleryClient) return alert('Koneksi Supabase belum siap!');
+
+            const cleanName = currentEditClientName.toLowerCase().trim();
+            const found = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
+
+            if (!found) {
+                alert('Data galeri klien ini belum ada di tabel Supabase. Silakan klik tombol "Buat Galeri & Drive" terlebih dahulu!');
+                closeEditQuotaModal();
+                return;
+            }
+
+            try {
+                const { error } = await supabaseGalleryClient
+                    .from('clients')
+                    .update({ limit_foto: newQuota })
+                    .eq('id', found.id);
+
+                if (error) throw error;
+
+                showToast('Kuota foto berhasil diperbarui!');
+                closeEditQuotaModal();
+                await fetchSupabaseClients(false);
+                renderCombinedSchedule();
+            } catch (err) {
+                alert('Gagal menyimpan kuota: ' + err.message);
+            }
+        }
+
         function switchScheduleSubTab(subTab) {
             activeScheduleSubTab = subTab;
             
@@ -2110,7 +2175,7 @@
                     targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
                 }
 
-                const kuotaFoto = c.limit_foto || 40;
+                const kuotaFoto = c.limit_foto || 35;
                 const followUpMsg = `Halo Kak ${c.nama} 👋✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak! 🤍📸`;
                 const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
 
@@ -2421,6 +2486,10 @@
                         <button onclick="handleCreateDriveAndGallery('${safeName}', '${c.tanggal || ''}', '${c.jam || ''}', '${rawPaket}', '${rawKampus}', '${clientWa}', this)" class="py-2 px-3 ${galleryBtnClass} font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
                             <i class="fa-solid ${galleryIconClass} text-[11px]"></i> ${galleryText}
                         </button>
+
+                        <button onclick="openEditQuotaModal('${safeName}')" class="py-2 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1" title="Edit Kuota Foto">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Kuota
+                        </button>
                     </div>
                 </div>
             `;
@@ -2656,6 +2725,8 @@
             const cleanSlugUniv = (kampus || 'umum').toLowerCase().replace(/[^a-z0-9]/g, '');
             let slug = `${cleanSlugNama}-${cleanSlugUniv}`;
 
+            let kuotaFoto = 35; // Default
+
             if (supabaseGalleryClient) {
                 try {
                     const { data: existingClient } = await supabaseGalleryClient
@@ -2668,7 +2739,7 @@
                         const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
                         const validWa = getClientWhatsAppNumber(cleanNama, noWa);
                         const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
-                        const kuotaFoto = existingClient.limit_foto || 35;
+                        kuotaFoto = existingClient.limit_foto || 35;
 
                         const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
@@ -2710,7 +2781,7 @@
 
                 const matchedKey = matchPackageKey(paket);
                 const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
-                const kuotaFoto = pkg.quota || 35;
+                kuotaFoto = pkg.quota || 35;
 
                 if (supabaseGalleryClient) {
                     const { error: supabaseError } = await supabaseGalleryClient
