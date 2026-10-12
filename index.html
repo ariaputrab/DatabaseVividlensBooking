@@ -565,23 +565,22 @@
                         <label class="text-[10px] text-slate-400 uppercase font-bold block">Paket Wisuda</label>
                         <select id="selectPaket" onchange="onPaketChange()" class="w-full font-semibold bg-transparent outline-none cursor-pointer text-slate-900 mt-0.5">
                             <optgroup label="Personal Package">
-                                <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
-                                <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
-                                <option value="Silver" selected>Silver (Rp350k • 1 Jam)</option>
-                                <option value="Gold">Gold (Rp450k • 1.5 Jam)</option>
-                                <option value="Premium">Premium (Rp1.000k • 1.5 Jam)</option>
+                                <option value="Bronze">Bronze (Rp350k • 60m • 25 Foto)</option>
+                                <option value="Silver" selected>Silver (Rp375k • 60m • 35 Foto)</option>
+                                <option value="Gold">Gold (Rp450k • 90m • 25 Foto)</option>
+                                <option value="Diamond">Diamond (Rp475k • 90m • 35 Foto)</option>
+                                <option value="Premium">Premium (Rp1.000k • 90m • Foto + Videografer + Reels)</option>
                             </optgroup>
-                            <optgroup label="Candi Plaosan Package">
-                                <option value="Plaosan A">Plaosan A (Rp370k • 1 Jam)</option>
-                                <option value="Plaosan B">Plaosan B (Rp500k • 1.5 Jam)</option>
-                            </optgroup>
-                            <optgroup label="Group Package">
-                                <option value="Group 1">Package 1 / Group 1 (Rp450k • 1 Jam)</option>
-                                <option value="Group 2">Package 2 / Group 2 (Rp550k • 1.5 Jam)</option>
-                                <option value="Package 3">Package 3 (Rp850k • 1.5 Jam)</option>
+                            <optgroup label="Group Package (Reg: 06:00-17:59 | Night: 18:00-05:59)">
+                                <option value="Group 1 Reguler">Group 1 Reguler - 1-3 Orang (Rp450k • 60m)</option>
+                                <option value="Group 1 Night">Group 1 Night - 1-3 Orang (Rp550k • 60m)</option>
+                                <option value="Group 2 Reguler">Group 2 Reguler - Max 5 Org (Rp600k • 90m)</option>
+                                <option value="Group 2 Night">Group 2 Night - Max 5 Org (Rp650k • 90m)</option>
+                                <option value="Group 3 Reguler">Group 3 Reguler - Max 8 Org (Rp900k • 90m)</option>
+                                <option value="Group 3 Night">Group 3 Night - Max 8 Org (Rp950k • 90m)</option>
                             </optgroup>
                             <optgroup label="Couple Package">
-                                <option value="Couple Package">Couple Package (Rp500k • 1 Jam)</option>
+                                <option value="Couple Package">Couple Package - 2 Orang (Rp550k • 60m)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -597,7 +596,7 @@
                 <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Harga</span>
-                        <span id="outHargaPaket" class="font-bold text-slate-800 text-sm">Rp350.000</span>
+                        <span id="outHargaPaket" class="font-bold text-slate-800 text-sm">Rp375.000</span>
                     </div>
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Total DP</span>
@@ -605,11 +604,11 @@
                     </div>
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Pelunasan</span>
-                        <span id="outPelunasan" class="font-bold text-blue-700 text-sm">Rp250.000</span>
+                        <span id="outPelunasan" class="font-bold text-blue-700 text-sm">Rp275.000</span>
                     </div>
                     <div>
                         <span class="text-[10px] text-slate-400 block font-bold uppercase">Fee FG / Bersih</span>
-                        <span id="outFeeBersih" class="font-bold text-emerald-700 text-sm">Rp225k / Rp125k</span>
+                        <span id="outFeeBersih" class="font-bold text-emerald-700 text-sm">Rp250k / Rp125k</span>
                     </div>
                 </div>
 
@@ -841,17 +840,18 @@
         }
 
         const PACKAGE_DATA = {
-            'Bronze 30 Min': { harga: 285000, feeFG: 185000, bersih: 100000, duration: 30, quota: 10, label: 'Bronze 30 Min' },
-            'Bronze': { harga: 325000, feeFG: 225000, bersih: 100000, duration: 60, quota: 20, label: 'Bronze' },
-            'Silver': { harga: 350000, feeFG: 225000, bersih: 125000, duration: 60, quota: 40, label: 'Silver' },
-            'Gold': { harga: 450000, feeFG: 325000, bersih: 125000, duration: 90, quota: 50, label: 'Gold' },
-            'Premium': { harga: 1000000, feeFG: 700000, bersih: 300000, duration: 90, quota: 50, label: 'Premium' },
-            'Plaosan A': { harga: 370000, feeFG: 270000, bersih: 100000, duration: 60, quota: 40, label: 'Plaosan A' },
-            'Plaosan B': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 90, quota: 50, label: 'Plaosan B' },
-            'Group 1': { harga: 450000, feeFG: 350000, bersih: 100000, duration: 60, quota: 30, label: 'Group 1' },
-            'Group 2': { harga: 550000, feeFG: 450000, bersih: 100000, duration: 90, quota: 40, label: 'Group 2' },
-            'Package 3': { harga: 850000, feeFG: 600000, bersih: 250000, duration: 90, quota: 50, label: 'Package 3' },
-            'Couple Package': { harga: 500000, feeFG: 350000, bersih: 150000, duration: 60, quota: 50, label: 'Couple Package' }
+            'Bronze': { harga: 350000, feeFG: 225000, bersih: 125000, duration: 60, quota: 25, label: 'Bronze' },
+            'Silver': { harga: 375000, feeFG: 250000, bersih: 125000, duration: 60, quota: 35, label: 'Silver' },
+            'Gold': { harga: 450000, feeFG: 325000, bersih: 125000, duration: 90, quota: 25, label: 'Gold' },
+            'Diamond': { harga: 475000, feeFG: 350000, bersih: 125000, duration: 90, quota: 35, label: 'Diamond' },
+            'Premium': { harga: 1000000, feeFG: 850000, bersih: 150000, duration: 90, quota: 40, label: 'Premium' },
+            'Group 1 Reguler': { harga: 450000, feeFG: 350000, bersih: 100000, duration: 60, quota: 30, label: 'Group 1 Reguler' },
+            'Group 1 Night': { harga: 550000, feeFG: 450000, bersih: 100000, duration: 60, quota: 30, label: 'Group 1 Night' },
+            'Group 2 Reguler': { harga: 600000, feeFG: 450000, bersih: 150000, duration: 90, quota: 40, label: 'Group 2 Reguler' },
+            'Group 2 Night': { harga: 650000, feeFG: 550000, bersih: 100000, duration: 90, quota: 40, label: 'Group 2 Night' },
+            'Group 3 Reguler': { harga: 900000, feeFG: 600000, bersih: 300000, duration: 90, quota: 50, label: 'Group 3 Reguler' },
+            'Group 3 Night': { harga: 950000, feeFG: 750000, bersih: 200000, duration: 90, quota: 50, label: 'Group 3 Night' },
+            'Couple Package': { harga: 550000, feeFG: 400000, bersih: 150000, duration: 60, quota: 30, label: 'Couple Package' }
         };
 
         const MONTHS_MAP = {
@@ -1206,7 +1206,7 @@
             
             const addCountMatch = booking.paket.match(/Tambah\s*(\d+)/i);
             const addCount = addCountMatch ? parseInt(addCountMatch[1], 10) : 0;
-            const finalFeeFG = (pkg.feeFG || 225000) + (addCount * 50000);
+            const finalFeeFG = (pkg.feeFG || 250000) + (addCount * 100000);
             const finalBersih = (booking.harga - finalFeeFG);
 
             const payload = {
@@ -1428,17 +1428,18 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase">Ganti Paket Wisuda</label>
                             <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
-                                <option value="Bronze 30 Min">Bronze 30 Min (Rp285k • 30m)</option>
-                                <option value="Bronze">Bronze (Rp325k • 1 Jam)</option>
-                                <option value="Silver">Silver (Rp350k • 1 Jam)</option>
-                                <option value="Gold">Gold (Rp450k • 1.5 Jam)</option>
-                                <option value="Premium">Premium (Rp1.000k • 1.5 Jam)</option>
-                                <option value="Plaosan A">Plaosan A (Rp370k • 1 Jam)</option>
-                                <option value="Plaosan B">Plaosan B (Rp500k • 1.5 Jam)</option>
-                                <option value="Group 1">Group 1 (Rp450k • 1 Jam)</option>
-                                <option value="Group 2">Group 2 (Rp550k • 1.5 Jam)</option>
-                                <option value="Package 3">Package 3 (Rp850k • 1.5 Jam)</option>
-                                <option value="Couple Package">Couple Package (Rp500k • 1 Jam)</option>
+                                <option value="Bronze">Bronze (Rp350k • 60m • 25 Foto)</option>
+                                <option value="Silver">Silver (Rp375k • 60m • 35 Foto)</option>
+                                <option value="Gold">Gold (Rp450k • 90m • 25 Foto)</option>
+                                <option value="Diamond">Diamond (Rp475k • 90m • 35 Foto)</option>
+                                <option value="Premium">Premium (Rp1.000k • 90m)</option>
+                                <option value="Group 1 Reguler">Group 1 Reguler (Rp450k • 60m)</option>
+                                <option value="Group 1 Night">Group 1 Night (Rp550k • 60m)</option>
+                                <option value="Group 2 Reguler">Group 2 Reguler (Rp600k • 90m)</option>
+                                <option value="Group 2 Night">Group 2 Night (Rp650k • 90m)</option>
+                                <option value="Group 3 Reguler">Group 3 Reguler (Rp900k • 90m)</option>
+                                <option value="Group 3 Night">Group 3 Night (Rp950k • 90m)</option>
+                                <option value="Couple Package">Couple Package (Rp550k • 60m)</option>
                             </select>
                         </div>
 
@@ -2077,7 +2078,7 @@
                     targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
                 }
 
-                const kuotaFoto = c.limit_foto || 40;
+                const kuotaFoto = c.limit_foto || 35;
                 const followUpMsg = `Halo Kak ${c.nama} 👋✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak! 🤍📸`;
                 const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
 
@@ -2312,7 +2313,6 @@
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
 
-            // Bersihkan string dari karakter petik ganda/tunggal agar aman di dalam atribut onclick HTML
             const rawNama = String(c.nama || '').trim();
             const safeName = rawNama.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const cleanNameKey = rawNama.replace(/\s+/g, '_');
@@ -2636,7 +2636,7 @@
                         const existingGalleryUrl = `${GALLERY_BASE_DOMAIN}/${existingClient.slug}`;
                         const validWa = getClientWhatsAppNumber(cleanNama, noWa);
                         const waClean = (validWa || '').replace(/\D/g, '').replace(/^0/, '62');
-                        const kuotaFoto = existingClient.limit_foto || 40;
+                        const kuotaFoto = existingClient.limit_foto || 35;
 
                         const readyMessage = `Halo Kak! 👋✨\n\nTerima kasih sudah mempercayakan momen spesial Kakak bersama Vividlens Graduation 🤍\n\nFoto preview Kakak sudah siap dan bisa dilihat melalui Galeri Foto Vividlens\n\n🔗 Link Galeri Foto:\n${existingGalleryUrl}\n\nSilakan pilih foto yang ingin diedit sesuai paket Kakak (${kuotaFoto} foto) dengan cara:\n1. Buka link galeri di atas.\n2. Klik foto yang ingin dipilih.\n3. Pilih maksimal foto sesuai paket.\n4. Setelah selesai, klik tombol Salin Format WhatsApp.\n5. Tempel (Paste) hasilnya dan kirim kembali ke chat ini.\n\n⏰ Mohon kirimkan daftar pilihan maksimal 3 hari setelah menerima link ini agar proses editing dapat segera kami kerjakan.\n\n📥 Kami juga menyarankan Kakak untuk mengunduh seluruh file foto, karena galeri akan aktif selama 20 hari. Setelah itu foto akan otomatis dihapus.\n\nTerima kasih sudah menggunakan jasa Vividlens Graduation. Semoga Kakak suka dengan hasil fotonya! 🤍📸`;
 
@@ -2678,7 +2678,7 @@
 
                 const matchedKey = matchPackageKey(paket);
                 const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
-                const kuotaFoto = pkg.quota || 40;
+                const kuotaFoto = pkg.quota || 35;
 
                 if (supabaseGalleryClient) {
                     const { error: supabaseError } = await supabaseGalleryClient
@@ -2846,14 +2846,18 @@
         function matchPackageKey(text) {
             if (!text) return 'Silver';
             const lower = text.toLowerCase();
-            if (lower.includes('30 min') || lower.includes('30m')) return 'Bronze 30 Min';
-            if (lower.includes('plaosan b')) return 'Plaosan B';
-            if (lower.includes('plaosan')) return 'Plaosan A';
-            if (lower.includes('package 3') || lower.includes('group 3') || lower.includes('grup 3')) return 'Package 3';
-            if (lower.includes('package 2') || lower.includes('group 2') || lower.includes('grup 2')) return 'Group 2';
-            if (lower.includes('package 1') || lower.includes('group 1') || lower.includes('grup 1')) return 'Group 1';
+            if (lower.includes('group 3') || lower.includes('grup 3') || lower.includes('package 3')) {
+                return lower.includes('night') ? 'Group 3 Night' : 'Group 3 Reguler';
+            }
+            if (lower.includes('group 2') || lower.includes('grup 2') || lower.includes('package 2')) {
+                return lower.includes('night') ? 'Group 2 Night' : 'Group 2 Reguler';
+            }
+            if (lower.includes('group 1') || lower.includes('grup 1') || lower.includes('package 1')) {
+                return lower.includes('night') ? 'Group 1 Night' : 'Group 1 Reguler';
+            }
             if (lower.includes('couple')) return 'Couple Package';
             if (lower.includes('premium')) return 'Premium';
+            if (lower.includes('diamond')) return 'Diamond';
             if (lower.includes('gold')) return 'Gold';
             if (lower.includes('silver')) return 'Silver';
             if (lower.includes('bronze')) return 'Bronze';
@@ -2872,7 +2876,9 @@
             const paketMatch = raw.match(/Paket\s*:\s*(.+)/i);
             const dpMatch = raw.match(/DP\s*(?:Rp\.?)?\s*([0-9.]+)/i);
 
-            const waMatch = raw.match(/(?:No\.?\s*(?:HP|WA|WhatsApp)|Nomor\s*(?:HP|WA)|WA|WhatsApp)\s*:\s*([0-9+\s-]{9,16})/i);
+            // Perbaikan regex agar fleksibel mendeteksi nomor WhatsApp dalam berbagai format teks chat
+            const waMatch = raw.match(/(?:No\.?\s*(?:HP|WA|WhatsApp)|Nomor\s*(?:HP|WA)|WA|WhatsApp|Handphone)\s*[:\-]?\s*([0-9+\s\-]{9,16})/i) || raw.match(/\b(08[0-9]{8,13})\b/);
+            
             const igMatch = raw.match(/(?:Instagram|IG|TikTok)\s*:\s*([@\w._]+)/i);
             const muaMatch = raw.match(/MUA\s*:\s*(.+)/i);
             const dressMatch = raw.match(/Dress\s*:\s*(.+)/i);
@@ -2882,7 +2888,7 @@
             baseStartTime = jamMatch ? jamMatch[1].trim() : '15:00';
             const lokasi = lokasiMatch ? titleCase(lokasiMatch[1].trim()) : '';
             const kampus = kampusMatch ? kampusMatch[1].trim().toUpperCase() : '';
-            const noWa = waMatch ? waMatch[1].trim() : '';
+            const noWa = waMatch ? (waMatch[1] || waMatch[0]).trim() : '';
             
             let detectedPaketKey = 'Silver';
             if (paketMatch) detectedPaketKey = matchPackageKey(paketMatch[1]);
