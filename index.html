@@ -933,21 +933,31 @@
             return `${parseInt(d, 10)}-${mName}-${y}`;
         }
 
+        // Fungsi getClientWhatsAppNumber diperbarui agar mengecek berbagai variasi properti no_wa / noWa dari Supabase dan Sheets
         function getClientWhatsAppNumber(namaKlien, fallbackNoWa) {
             if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && String(fallbackNoWa).trim() !== '') {
                 return fallbackNoWa;
             }
             const cleanName = (namaKlien || '').toLowerCase().trim();
+            
             const foundSheetClient = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === cleanName);
             if (foundSheetClient) {
                 if (foundSheetClient.noWa && foundSheetClient.noWa !== '-') return foundSheetClient.noWa;
                 if (foundSheetClient.no_wa && foundSheetClient.no_wa !== '-') return foundSheetClient.no_wa;
             }
+
             const foundSupabaseClient = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
             if (foundSupabaseClient) {
                 if (foundSupabaseClient.no_wa && foundSupabaseClient.no_wa !== '-') return foundSupabaseClient.no_wa;
                 if (foundSupabaseClient.noWa && foundSupabaseClient.noWa !== '-') return foundSupabaseClient.noWa;
             }
+
+            const foundPending = cachedPendingBookings.find(b => b.nama && b.nama.toLowerCase().trim() === cleanName);
+            if (foundPending) {
+                if (foundPending.no_wa && foundPending.no_wa !== '-') return foundPending.no_wa;
+                if (foundPending.noWa && foundPending.noWa !== '-') return foundPending.noWa;
+            }
+
             return '-';
         }
 
@@ -1143,7 +1153,7 @@
                                 </div>
                                 <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${b.nama}</h4>
                                 <p class="text-xs text-slate-500">${b.kampus} • Paket ${b.paket} • Lokasi: <span class="font-semibold text-slate-700">${b.lokasi}</span></p>
-                                <p class="text-[11px] text-slate-400 mt-1">WA: ${b.no_wa} | IG: ${b.ig || '-'} | MUA: ${b.mua || '-'} | Dress: ${b.dress || '-'}</p>
+                                <p class="text-[11px] text-slate-400 mt-1">WA: ${b.no_wa || b.noWa || '-'} | IG: ${b.ig || '-'} | MUA: ${b.mua || '-'} | Dress: ${b.dress || '-'}</p>
                             </div>
                             <div class="text-right">
                                 <span class="text-[10px] text-slate-400 block font-bold uppercase">Total Harga</span>
@@ -1226,7 +1236,7 @@
                 feeFG: finalFeeFG,
                 bersih: finalBersih,
                 chatFG: `Form Booking Web - IG: ${booking.ig || '-'} | MUA: ${booking.mua || '-'} | Dress: ${booking.dress || '-'}`,
-                noWa: booking.no_wa,
+                noWa: booking.no_wa || booking.noWa || '',
                 ig: booking.ig,
                 mua: booking.mua,
                 dress: booking.dress
@@ -1428,18 +1438,18 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase">Ganti Paket Wisuda</label>
                             <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
-                                <option value="Bronze">Bronze (Rp350k • 60m • 25 Foto)</option>
-                                <option value="Silver">Silver (Rp375k • 60m • 35 Foto)</option>
-                                <option value="Gold">Gold (Rp450k • 90m • 25 Foto)</option>
-                                <option value="Diamond">Diamond (Rp475k • 90m • 35 Foto)</option>
+                                <option value="Bronze">Bronze (Rp350k • 60m)</option>
+                                <option value="Silver">Silver (Rp375k • 60m)</option>
+                                <option value="Gold">Gold (Rp450k • 90m)</option>
+                                <option value="Diamond">Diamond (Rp475k • 90m)</option>
                                 <option value="Premium">Premium (Rp1.000k • 90m)</option>
-                                <option value="Group 1 Reguler">Group 1 Reguler (Rp450k • 60m)</option>
-                                <option value="Group 1 Night">Group 1 Night (Rp550k • 60m)</option>
-                                <option value="Group 2 Reguler">Group 2 Reguler (Rp600k • 90m)</option>
-                                <option value="Group 2 Night">Group 2 Night (Rp650k • 90m)</option>
-                                <option value="Group 3 Reguler">Group 3 Reguler (Rp900k • 90m)</option>
-                                <option value="Group 3 Night">Group 3 Night (Rp950k • 90m)</option>
-                                <option value="Couple Package">Couple Package (Rp550k • 60m)</option>
+                                <option value="Group 1 Reguler">Group 1 Reguler (Rp450k)</option>
+                                <option value="Group 1 Night">Group 1 Night (Rp550k)</option>
+                                <option value="Group 2 Reguler">Group 2 Reguler (Rp600k)</option>
+                                <option value="Group 2 Night">Group 2 Night (Rp650k)</option>
+                                <option value="Group 3 Reguler">Group 3 Reguler (Rp900k)</option>
+                                <option value="Group 3 Night">Group 3 Night (Rp950k)</option>
+                                <option value="Couple Package">Couple Package (Rp550k)</option>
                             </select>
                         </div>
 
@@ -1599,7 +1609,6 @@
             }
         }
 
-        // Standard Functions (Calendar, Finance, Tracker, Today, etc.)
         function initPaymentFgTab() {
             const picker = document.getElementById('selectPaymentFgDate');
             if (picker && !picker.value) {
@@ -2078,7 +2087,7 @@
                     targetWA = matchSheetClient.noWa.replace(/\D/g, '').replace(/^0/, '62');
                 }
 
-                const kuotaFoto = c.limit_foto || 35;
+                const kuotaFoto = c.limit_foto || 40;
                 const followUpMsg = `Halo Kak ${c.nama} 👋✨\n\nSemoga kabarnya selalu baik ya Kak. Izin mengingatkan kembali untuk pemilihan foto wisudanya melalui link galeri berikut:\n🔗 ${galeriLink}\n\nApakah sudah sempat memilih fotonya Kak? Jika ada kendala dalam memilih atau membuka link galerinya, jangan ragu untuk mengabari kami ya Kak\n\nTerima kasih Kak! 🤍📸`;
                 const waFollowUpLink = targetWA ? `https://wa.me/${targetWA}?text=${encodeURIComponent(followUpMsg)}` : '';
 
@@ -2876,7 +2885,7 @@
             const paketMatch = raw.match(/Paket\s*:\s*(.+)/i);
             const dpMatch = raw.match(/DP\s*(?:Rp\.?)?\s*([0-9.]+)/i);
 
-            // Perbaikan regex agar fleksibel mendeteksi nomor WhatsApp dalam berbagai format teks chat
+            // Regex ekstraksi WhatsApp yang sangat fleksibel
             const waMatch = raw.match(/(?:No\.?\s*(?:HP|WA|WhatsApp)|Nomor\s*(?:HP|WA)|WA|WhatsApp|Handphone)\s*[:\-]?\s*([0-9+\s\-]{9,16})/i) || raw.match(/\b(08[0-9]{8,13})\b/);
             
             const igMatch = raw.match(/(?:Instagram|IG|TikTok)\s*:\s*([@\w._]+)/i);
