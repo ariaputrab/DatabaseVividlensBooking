@@ -2001,19 +2001,22 @@
             if (!supabaseGalleryClient) return alert('Koneksi Supabase belum siap!');
 
             const cleanName = currentEditClientName.toLowerCase().trim();
+            const cleanSlugNama = cleanName.replace(/[^a-z0-9]/g, '');
+            // Buat slug perkiraan untuk mencari record klien
             const found = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
 
             if (!found) {
-                alert('Data galeri klien ini belum ada di tabel Supabase. Silakan klik tombol "Buat Galeri & Drive" terlebih dahulu!');
+                alert('Data galeri klien ini belum ada di tabel Supabase. Silakan buat galeri & drive terlebih dahulu!');
                 closeEditQuotaModal();
                 return;
             }
 
             try {
+                // Update menggunakan slug sebagai acuan unik
                 const { error } = await supabaseGalleryClient
                     .from('clients')
                     .update({ limit_foto: newQuota })
-                    .eq('id', found.id);
+                    .eq('slug', found.slug);
 
                 if (error) throw error;
 
