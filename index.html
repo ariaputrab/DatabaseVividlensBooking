@@ -936,22 +936,52 @@
         // Fungsi getClientWhatsAppNumber diperbarui agar mengecek berbagai variasi properti no_wa / noWa dari Supabase dan Sheets
         function getClientWhatsAppNumber(namaKlien, fallbackNoWa) {
             if (fallbackNoWa && fallbackNoWa !== '-' && fallbackNoWa !== 'undefined' && String(fallbackNoWa).trim() !== '') {
-                return fallbackNoWa;
+                return formatWaString(fallbackNoWa);
             }
             const cleanName = (namaKlien || '').toLowerCase().trim();
             
-            // Cek di seluruh sumber data dan periksa semua kemungkinan variasi nama kolom WhatsApp
-            const allRecords = [...cachedClients, ...cachedSupabaseClients, ...cachedPendingBookings];
-            for (let record of allRecords) {
+            // 1. Cari di data klien cache secara umum
+            for (let record of cachedClients) {
                 if (record && record.nama && record.nama.toLowerCase().trim() === cleanName) {
-                    const wa = record.no_wa || record.noWa || record.whatsapp || record.noHp || record.phone;
-                    if (wa && wa !== '-' && wa !== 'undefined' && String(wa).trim() !== '') {
-                        return String(wa).trim();
-                    }
+                    const wa = record.no_wa || record.noWa || record.whatsapp || record.noHp;
+                    if (wa && wa !== '-' && wa !== 'undefined') return formatWaString(wa);
                 }
             }
 
+            // 2. Jika tidak ketemu, cari langsung ke baris data yang berasal dari tab "From Supabase"
+            const supabaseRecord = cachedClients.find(c => {
+                const isMatchName = c.nama && c.nama.toLowerCase().trim() === cleanName;
+                const isFromSupabaseSheet = c.sheetName && c.sheetName.toLowerCase().includes('supabase');
+                return isMatchName && isFromSupabaseSheet;
+            });
+
+            if (supabaseRecord) {
+                const wa = supabaseRecord.no_wa || supabaseRecord.noWa || supabaseRecord.chatFG || supabaseRecord.catatanWa;
+                if (wa) {
+                    const extracted = formatWaString(wa);
+                    if (extracted !== '-') return extracted;
+                }
+            }
+
+            // 3. Cari di data mentah Supabase (jika ada cache-nya)
+            const foundPending = cachedPendingBookings.find(b => b.nama && b.nama.toLowerCase().trim() === cleanName);
+            if (foundPending && (foundPending.no_wa || foundPending.noWa)) {
+                return formatWaString(foundPending.no_wa || foundPending.noWa);
+            }
+
             return '-';
+        }
+
+        // Helper untuk merapikan teks "WA: 08xxxx" atau mengambil angka murninya saja
+        function formatWaString(rawStr) {
+            if (!rawStr) return '-';
+            const str = String(rawStr);
+            // Jika ada teks "WA:", coba ambil angka setelahnya
+            const match = str.match(/WA\s*[:\-]?\s*([0-9+\s\-]{9,16})/i) || str.match(/\b(08[0-9]{8,13})\b/);
+            if (match) {
+                return (match[1] || match[0]).trim();
+            }
+            return str.trim();
         }
 
         function switchMode(mode) {
