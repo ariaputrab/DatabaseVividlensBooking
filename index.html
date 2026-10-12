@@ -940,22 +940,25 @@
             }
             const cleanName = (namaKlien || '').toLowerCase().trim();
             
-            const foundSheetClient = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === cleanName);
-            if (foundSheetClient) {
-                if (foundSheetClient.noWa && foundSheetClient.noWa !== '-') return foundSheetClient.noWa;
-                if (foundSheetClient.no_wa && foundSheetClient.no_wa !== '-') return foundSheetClient.no_wa;
-            }
-
+            // 1. Cek di data Supabase / booking_requests / clients (Mendukung no_wa dan noWa)
             const foundSupabaseClient = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
             if (foundSupabaseClient) {
                 if (foundSupabaseClient.no_wa && foundSupabaseClient.no_wa !== '-') return foundSupabaseClient.no_wa;
                 if (foundSupabaseClient.noWa && foundSupabaseClient.noWa !== '-') return foundSupabaseClient.noWa;
             }
 
+            // 2. Cek di antrean pending
             const foundPending = cachedPendingBookings.find(b => b.nama && b.nama.toLowerCase().trim() === cleanName);
             if (foundPending) {
                 if (foundPending.no_wa && foundPending.no_wa !== '-') return foundPending.no_wa;
                 if (foundPending.noWa && foundPending.noWa !== '-') return foundPending.noWa;
+            }
+
+            // 3. Cek di cache Google Sheets
+            const foundSheetClient = cachedClients.find(c => c.nama && c.nama.toLowerCase().trim() === cleanName);
+            if (foundSheetClient) {
+                if (foundSheetClient.no_wa && foundSheetClient.no_wa !== '-') return foundSheetClient.no_wa;
+                if (foundSheetClient.noWa && foundSheetClient.noWa !== '-') return foundSheetClient.noWa;
             }
 
             return '-';
