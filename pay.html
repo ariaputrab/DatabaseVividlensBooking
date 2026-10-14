@@ -73,6 +73,10 @@
                 <span id="clientPaket" class="font-bold text-slate-800">-</span>
             </div>
             <div class="flex justify-between">
+                <span class="text-slate-400 font-bold uppercase text-[10px]">Lokasi Foto</span>
+                <span id="clientLokasi" class="font-bold text-slate-800">-</span>
+            </div>
+            <div class="flex justify-between">
                 <span class="text-slate-400 font-bold uppercase text-[10px]">Jadwal Sesi</span>
                 <span id="clientJadwal" class="font-bold text-blue-700">-</span>
             </div>
@@ -162,7 +166,6 @@
                         renderPaymentInfo(found);
                     } else {
                         document.getElementById('clientName').textContent = decodeURIComponent(namaParam);
-                        // Jika belum ada di spreadsheet (baru kirim form dan masuk antrean pending)
                         renderPendingState(decodeURIComponent(namaParam));
                     }
                 }
@@ -174,9 +177,9 @@
         function renderPendingState(nama) {
             document.getElementById('badgeStatus').textContent = "MENUNGGU ACC ADMIN";
             document.getElementById('clientPaket').textContent = "Booking Baru (Pending)";
+            document.getElementById('clientLokasi').textContent = "-";
             document.getElementById('clientJadwal').textContent = "Menunggu konfirmasi admin";
             
-            // Set stepper ke tahap 1 (Booking Diterima)
             document.getElementById('step2Icon').className = "w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold";
             document.getElementById('step2Icon').innerHTML = "2";
             document.getElementById('step2Icon').nextElementSibling.className = "text-[9px] font-medium text-slate-400 block leading-tight";
@@ -190,13 +193,13 @@
 
             document.getElementById('clientName').textContent = c.nama;
             document.getElementById('clientPaket').textContent = `${c.kampus || 'Umum'} • ${c.paket || 'Silver'}`;
+            document.getElementById('clientLokasi').textContent = c.lokasi || '-';
             document.getElementById('clientJadwal').textContent = `${c.tanggal || '-'} (${c.jam || '-'} WIB)`;
             
             document.getElementById('txtHarga').textContent = formatRupiah(h);
             document.getElementById('txtDP').textContent = `- ${formatRupiah(dp)}`;
             document.getElementById('txtSisa').textContent = formatRupiah(sisa);
 
-            // Update Stepper Menjadi Tahap 3 (Terjadwal)
             const icon3 = document.getElementById('step3Icon');
             const text3 = document.getElementById('step3Text');
             icon3.className = "w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
@@ -207,20 +210,17 @@
                 document.getElementById('badgeStatus').textContent = "LUNAS";
                 document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800";
                 
-                // Update Stepper Menjadi Tahap 4 (Lunas)
                 const icon4 = document.getElementById('step4Icon');
                 const text4 = document.getElementById('step4Text');
                 icon4.className = "w-7 h-7 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
                 icon4.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
                 text4.className = "text-[9px] font-bold text-emerald-700 block leading-tight";
 
-                // Ubah kotak sisa pembayaran jadi hijau lunas
                 const boxSisa = document.getElementById('boxSisaContainer');
                 boxSisa.className = "p-3.5 bg-emerald-600 text-white rounded-xl flex justify-between items-center shadow-sm";
                 document.getElementById('txtSisa').textContent = "Rp0 (LUNAS)";
                 document.getElementById('txtSisa').className = "text-base font-black text-white";
 
-                // Sembunyikan QRIS & Tombol Konfirmasi, tampilkan pesan sukses
                 document.getElementById('qrisSection').classList.add('hidden');
                 document.getElementById('lunasSuccessSection').classList.remove('hidden');
             }
