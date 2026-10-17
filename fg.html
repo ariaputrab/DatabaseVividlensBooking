@@ -90,7 +90,7 @@
                 <div class="space-y-3">
                     <div class="flex items-center justify-between px-1">
                         <h3 class="text-base font-extrabold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-blue-500 animate-ping"></span> Fokus Utama / Jadwal Terdekat (H-1)
+                            <span class="w-3 h-3 rounded-full bg-blue-500 animate-ping"></span> Fokus Utama / Sesi Besok (H-1)
                         </h3>
                         <button onclick="loadDataFromBackend()" class="text-xs font-bold bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-xl border border-blue-500/30 hover:bg-blue-600/30 transition">Refresh</button>
                     </div>
@@ -132,7 +132,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_masukkan_url_kamu_disini/exec"; // Ganti URL kamu di sini
+        const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; // Ganti URL kamu di sini
 
         let allClientsData = [];
         let currentFg = "";
@@ -213,7 +213,7 @@
             document.getElementById('statCompletedTasks').textContent = tasks.filter(t => t.statusFG === 'PAID').length;
         }
 
-        // Fungsi pemilah task H-1 vs Upcoming
+        // Fungsi pemilah task berdasarkan tanggal BESOK secara otomatis
         function renderGroupedTasks(tasks) {
             const urgentContainer = document.getElementById('urgentTasksContainer');
             const upcomingContainer = document.getElementById('upcomingTasksContainer');
@@ -224,13 +224,36 @@
                 return;
             }
 
-            // Simulasi logika pemisahan berdasarkan tanggal terdekat (misal selisih 1 hari atau urutan teratas)
-            // Untuk amannya, kita anggap 2 task teratas sebagai prioritas H-1/terdekat, sisanya upcoming (atau bisa disesuaikan dengan tanggal sistem)
-            const urgentTasks = tasks.slice(0, 2); // 2 task teratas sebagai fokus utama
-            const upcomingTasks = tasks.slice(2); // Sisanya upcoming
-
-            urgentContainer.innerHTML = urgentTasks.map(t => generateTaskCard(t, true)).join('');
+            // Hitung tanggal BESOK secara otomatis berdasarkan sistem
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
             
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const monthStr = months[tomorrow.getMonth()];
+
+            // Filter task untuk tanggal BESOK
+            const urgentTasks = tasks.filter(t => {
+                if (!t.tanggal) return false;
+                const cleanTgl = t.tanggal.toString().trim();
+                return cleanTgl.includes(day) && cleanTgl.includes(monthStr);
+            });
+
+            // Sisanya masuk ke jadwal mendatang
+            const urgentIds = new Set(urgentTasks.map(t => t.nama + t.tanggal));
+            const upcomingTasks = tasks.filter(t => !urgentIds.has(t.nama + t.tanggal));
+
+            // Render Fokus Utama / Sesi Besok (H-1)
+            if(urgentTasks.length > 0) {
+                urgentContainer.innerHTML = urgentTasks.map(t => generateTaskCard(t, true)).join('');
+            } else {
+                urgentContainer.innerHTML = `
+                    <div class="glass-card p-6 text-center text-gray-400 rounded-2xl text-xs">
+                        Tidak ada jadwal pemotretan untuk <span class="text-blue-400 font-bold">besok</span>. (Semua jadwal berada di tanggal lain).
+                    </div>`;
+            }
+            
+            // Render Jadwal Mendatang
             if(upcomingTasks.length > 0) {
                 upcomingContainer.innerHTML = upcomingTasks.map(t => generateTaskCard(t, false)).join('');
             } else {
@@ -239,6 +262,7 @@
         }
 
         function generateTaskCard(t, isUrgent) {
+            // Templat chat WhatsApp murni tanpa emoji sesuai permintaan
             const waMessage = `Hallo Kak ${t.nama}\nPerkenalkan, saya ${currentFg} dari tim VividLens Graduation\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${t.tanggal}\nJam : ${t.jam}\nLokasi : ${t.lokasi}\nKampus : ${t.kampus || '-'}\nPaket : ${t.paket}\nWA: ${t.noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa\nTerima kasih, Kak`;
             
             const encodedWaMessage = encodeURIComponent(waMessage);
