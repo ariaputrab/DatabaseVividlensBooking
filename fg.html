@@ -132,7 +132,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec"; // Ganti URL kamu di sini
+        const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; // Ganti URL kamu di sini
 
         let allClientsData = [];
         let currentFg = "";
@@ -213,7 +213,6 @@
             document.getElementById('statCompletedTasks').textContent = tasks.filter(t => t.statusFG === 'PAID').length;
         }
 
-        // Fungsi pemilah task berdasarkan tanggal BESOK secara otomatis
         function renderGroupedTasks(tasks) {
             const urgentContainer = document.getElementById('urgentTasksContainer');
             const upcomingContainer = document.getElementById('upcomingTasksContainer');
@@ -224,7 +223,6 @@
                 return;
             }
 
-            // Hitung tanggal BESOK secara otomatis berdasarkan sistem
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             
@@ -232,18 +230,15 @@
             const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const monthStr = months[tomorrow.getMonth()];
 
-            // Filter task untuk tanggal BESOK
             const urgentTasks = tasks.filter(t => {
                 if (!t.tanggal) return false;
                 const cleanTgl = t.tanggal.toString().trim();
                 return cleanTgl.includes(day) && cleanTgl.includes(monthStr);
             });
 
-            // Sisanya masuk ke jadwal mendatang
             const urgentIds = new Set(urgentTasks.map(t => t.nama + t.tanggal));
             const upcomingTasks = tasks.filter(t => !urgentIds.has(t.nama + t.tanggal));
 
-            // Render Fokus Utama / Sesi Besok (H-1)
             if(urgentTasks.length > 0) {
                 urgentContainer.innerHTML = urgentTasks.map(t => generateTaskCard(t, true)).join('');
             } else {
@@ -253,7 +248,6 @@
                     </div>`;
             }
             
-            // Render Jadwal Mendatang
             if(upcomingTasks.length > 0) {
                 upcomingContainer.innerHTML = upcomingTasks.map(t => generateTaskCard(t, false)).join('');
             } else {
@@ -261,18 +255,39 @@
             }
         }
 
+        async function openClientDrive(nama, tanggal, jam, paket, kampus, btnElement) {
+            const originalText = btnElement.textContent;
+            btnElement.textContent = "Membuka...";
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "create_drive_folder",
+                        nama: nama,
+                        tanggal: tanggal,
+                        jam: jam,
+                        paket: paket,
+                        kampus: kampus
+                    })
+                });
+                const result = await response.json();
+                if (result.status === "success" && result.folderUrl) {
+                    window.open(result.folderUrl, '_blank');
+                } else {
+                    alert("Gagal membuka folder Drive.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Terjadi kesalahan koneksi.");
+            }
+            btnElement.textContent = originalText;
+        }
+
         function generateTaskCard(t, isUrgent) {
-            // Templat chat WhatsApp murni tanpa emoji sesuai permintaan
             const waMessage = `Hallo Kak ${t.nama}\nPerkenalkan, saya ${currentFg} dari tim VividLens Graduation\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${t.tanggal}\nJam : ${t.jam}\nLokasi : ${t.lokasi}\nKampus : ${t.kampus || '-'}\nPaket : ${t.paket}\nWA: ${t.noWa}\n\nApakah sudah sesuai, Kak? Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa\nTerima kasih, Kak`;
             
             const encodedWaMessage = encodeURIComponent(waMessage);
             const cleanPhone = t.noWa.replace(/\D/g, '').replace(/^0/, '62');
-            
-            // GANTI INI: Jika t.driveUrl belum ada, arahkan ke Google Drive utama kamu (bukan mode search)
-            // Kamu bisa masukkan ID folder root atau folder tanggal di sini jika mau, atau biarkan kosong/informasi
-            const driveLink = t.driveUrl && t.driveUrl.startsWith('http') 
-                ? t.driveUrl 
-                : "https://drive.google.com/drive/u/0/my-drive"; // Langsung mengarah ke My Drive utama
 
             const cardStyle = isUrgent ? 'glass-card-highlight border-blue-500' : 'glass-card border-gray-800';
 
@@ -304,14 +319,14 @@
                         </div>
                     </div>
 
-                    <!-- FOLDER DRIVE -->
+                    <!-- FOLDER DRIVE SPESIFIK KLIEN VIA BACKEND -->
                     <div class="bg-blue-950/20 border border-blue-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="text-xs">
                             <span class="font-bold text-blue-400 block">Folder Google Drive Klien</span>
-                            <span class="text-gray-400">Akses folder upload file ${t.nama}</span>
+                            <span class="text-gray-400">Akses langsung folder upload file ${t.nama}</span>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            <a href="${driveLink}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive Klien</a>
+                            <button onclick="openClientDrive('${t.nama}', '${t.tanggal}', '${t.jam}', '${t.paket}', '${t.kampus || 'Umum'}', this)" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive Klien</button>
                             <button onclick="navigator.clipboard.writeText('${t.nama}'); alert('Nama klien berhasil disalin: ${t.nama}');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Nama</button>
                         </div>
                     </div>
