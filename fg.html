@@ -261,8 +261,8 @@
             const encodedWaMessage = encodeURIComponent(waMessage);
             const cleanPhone = t.noWa.replace(/\D/g, '').replace(/^0/, '62');
             
-            // Mengambil link Drive spesifik dari database spreadsheet admin
-            const realDriveUrl = t.driveUrl && t.driveUrl.startsWith('http') ? t.driveUrl : "";
+            // Ambil langsung dari database Google Sheets
+            const driveUrl = t.driveUrl && t.driveUrl.startsWith('http') ? t.driveUrl : "";
 
             const cardStyle = isUrgent ? 'glass-card-highlight border-blue-500' : 'glass-card border-gray-800';
 
@@ -298,14 +298,14 @@
                     <div class="bg-blue-950/20 border border-blue-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="text-xs">
                             <span class="font-bold text-blue-400 block">Folder Google Drive Klien</span>
-                            <span class="text-gray-400">${realDriveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Link folder belum disematkan admin'}</span>
+                            <span class="text-gray-400">${driveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Link folder belum disematkan admin'}</span>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            ${realDriveUrl ? `
-                                <a href="${realDriveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive Klien</a>
-                                <button onclick="navigator.clipboard.writeText('${realDriveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
+                            ${driveUrl ? `
+                                <a href="${driveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive</a>
+                                <button onclick="navigator.clipboard.writeText('${driveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
                             ` : `
-                                <button onclick="navigator.clipboard.writeText('${t.nama}'); alert('Nama klien disalin:${t.nama} (Silakan cari di Drive)');" class="flex-1 sm:flex-initial bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-4 rounded-xl text-xs transition">Salin Nama Klien</button>
+                                <span class="text-xs text-amber-400 font-medium italic">Menunggu link dari admin</span>
                             `}
                         </div>
                     </div>
