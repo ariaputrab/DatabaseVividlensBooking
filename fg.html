@@ -268,10 +268,11 @@
             const encodedWaMessage = encodeURIComponent(waMessage);
             const cleanPhone = t.noWa.replace(/\D/g, '').replace(/^0/, '62');
             
-            // Link Google Drive spesifik klien, fallback pencarian nama jika belum diisi admin di sheet
+            // GANTI INI: Jika t.driveUrl belum ada, arahkan ke Google Drive utama kamu (bukan mode search)
+            // Kamu bisa masukkan ID folder root atau folder tanggal di sini jika mau, atau biarkan kosong/informasi
             const driveLink = t.driveUrl && t.driveUrl.startsWith('http') 
                 ? t.driveUrl 
-                : `https://drive.google.com/drive/u/0/search?q=${encodeURIComponent(t.nama)}`;
+                : "https://drive.google.com/drive/u/0/my-drive"; // Langsung mengarah ke My Drive utama
 
             const cardStyle = isUrgent ? 'glass-card-highlight border-blue-500' : 'glass-card border-gray-800';
 
@@ -303,15 +304,15 @@
                         </div>
                     </div>
 
-                    <!-- FOLDER DRIVE SPESIFIK KLIEN -->
+                    <!-- FOLDER DRIVE -->
                     <div class="bg-blue-950/20 border border-blue-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="text-xs">
                             <span class="font-bold text-blue-400 block">Folder Google Drive Klien</span>
-                            <span class="text-gray-400">Akses langsung folder upload file ${t.nama}</span>
+                            <span class="text-gray-400">Akses folder upload file ${t.nama}</span>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
                             <a href="${driveLink}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive Klien</a>
-                            <button onclick="navigator.clipboard.writeText('${driveLink}'); alert('Link folder Drive ${t.nama} berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
+                            <button onclick="navigator.clipboard.writeText('${t.nama}'); alert('Nama klien berhasil disalin: ${t.nama}');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Nama</button>
                         </div>
                     </div>
 
