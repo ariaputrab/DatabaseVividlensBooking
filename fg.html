@@ -298,12 +298,12 @@
                     <div class="bg-blue-950/20 border border-blue-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="text-xs">
                             <span class="font-bold text-blue-400 block">Folder Google Drive Klien</span>
-                            <span class="text-gray-400">${driveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Link folder belum disematkan admin'}</span>
+                            <span class="text-gray-400">${t.driveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Menunggu link dari admin'}</span>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            ${driveUrl ? `
-                                <a href="${driveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive</a>
-                                <button onclick="navigator.clipboard.writeText('${driveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
+                            ${t.driveUrl ? `
+                                <a href="${t.driveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive</a>
+                                <button onclick="navigator.clipboard.writeText('${t.driveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
                             ` : `
                                 <span class="text-xs text-amber-400 font-medium italic">Menunggu link dari admin</span>
                             `}
