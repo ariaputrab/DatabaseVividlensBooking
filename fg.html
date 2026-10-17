@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Fotografer - VividLens Graduation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
+        .glass-card { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .btn-vivid { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); transition: all 0.2s ease; }
+        .btn-vivid:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <!-- HEADER / LOGO -->
+    <header class="max-w-4xl mx-auto w-full text-center py-6">
+        <h1 class="text-2xl font-bold tracking-wider text-blue-500 uppercase">VividLens Graduation</h1>
+        <p class="text-sm text-gray-400 mt-1">Portal Eksklusif Mitra Fotografer</p>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-4xl mx-auto w-full flex-grow">
+
+        <!-- STEP 1: LOGIN SECTION -->
+        <section id="loginSection" class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl max-w-md mx-auto my-12 text-center">
+            <h2 class="text-xl font-semibold mb-2">Masuk Portal Fotografer</h2>
+            <p class="text-sm text-gray-400 mb-6">Silakan masukkan nama</p>
+            
+            <input type="text" id="fgNameInput" placeholder="Nama Fotografer..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white mb-4 focus:outline-none focus:border-blue-500 text-center font-medium">
+            <button onclick="handleLogin()" class="w-full btn-vivid text-white font-semibold py-3 rounded-xl shadow-lg">Masuk Dashboard</button>
+            <p id="loginError" class="text-red-400 text-sm mt-3 hidden">Nama fotografer tidak ditemukan atau belum ada jadwal aktif.</p>
+        </section>
+
+        <!-- STEP 2: DASHBOARD SECTION (HIDDEN BY DEFAULT) -->
+        <section id="dashboardSection" class="hidden space-y-6">
+            
+            <!-- NAV TABS -->
+            <div class="flex justify-center gap-2 md:gap-4 border-b border-gray-800 pb-4">
+                <button onclick="switchTab('dashboard')" id="tabBtnDashboard" class="px-5 py-2.5 rounded-xl font-medium text-sm transition bg-blue-600 text-white shadow">Dashboard</button>
+                <button onclick="switchTab('tasks')" id="tabBtnTasks" class="px-5 py-2.5 rounded-xl font-medium text-sm transition bg-gray-800 text-gray-300 hover:bg-gray-700">Task Aktif</button>
+                <button onclick="switchTab('history')" id="tabBtnHistory" class="px-5 py-2.5 rounded-xl font-medium text-sm transition bg-gray-800 text-gray-300 hover:bg-gray-700">Riwayat Job</button>
+            </div>
+
+            <!-- TAB CONTENT: DASHBOARD -->
+            <div id="tabDashboard" class="space-y-6">
+                <div class="glass-card rounded-2xl p-6 md:p-8 shadow-xl">
+                    <h2 class="text-2xl font-bold text-white mb-1">Halo, <span id="welcomeFgName" class="text-blue-400">Fotografer</span> 👋</h2>
+                    <p class="text-sm text-gray-400 mb-6">Berikut adalah ringkasan aktivitas pemotretan kamu di VividLens.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+                            <span class="text-xs text-gray-400 block">Total Sesi Aktif</span>
+                            <span id="statActiveTasks" class="text-2xl font-bold text-blue-400">0</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+                            <span class="text-xs text-gray-400 block">Sesi Selesai</span>
+                            <span id="statCompletedTasks" class="text-2xl font-bold text-emerald-400">0</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+                            <span class="text-xs text-gray-400 block">Status Studio</span>
+                            <span class="text-lg font-bold text-emerald-400">VividLens Active</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="alert('SOP Fotografer VividLens:\n1. Datang 15 menit sebelum sesi.\n2. Cek kerapian atribut wisuda klien.\n3. Upload hasil foto tepat waktu ke folder Drive masing-masing.')" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 px-4 rounded-xl text-sm transition">Baca SOP Fotografer</button>
+                        <button onclick="handleLogout()" class="bg-red-500/10 text-red-400 hover:bg-red-500/20 font-medium py-2.5 px-4 rounded-xl text-sm transition">Keluar Sesi</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: TASKS AKTIF -->
+            <div id="tabTasks" class="hidden space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-semibold text-white">Daftar Task Pemotretan</h3>
+                    <button onclick="loadDataFromBackend()" class="text-xs bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/30 hover:bg-blue-600/30">Refresh Data</button>
+                </div>
+                <div id="tasksContainer" class="space-y-4">
+                    <!-- Dynamic Task Cards Render Here -->
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: RIWAYAT -->
+            <div id="tabHistory" class="hidden space-y-4">
+                <h3 class="text-lg font-semibold text-white mb-2">Riwayat & Status Fee</h3>
+                <div id="historyContainer" class="space-y-4">
+                    <!-- Dynamic History Render Here -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-4xl mx-auto w-full text-center py-6 text-xs text-gray-500 border-t border-gray-800/60 mt-12">
+        &copy; 2026 VividLens Graduation Studio. All rights reserved.
+    </footer>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Ganti URL Web App Google Apps Script kamu di sini
+        const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
+
+        let allClientsData = [];
+        let currentFg = "";
+
+        async function handleLogin() {
+            const nameInput = document.getElementById('fgNameInput').value.trim();
+            const errorEl = document.getElementById('loginError');
+            
+            if (!nameInput) {
+                errorEl.textContent = "Silakan masukkan nama fotografer terlebih dahulu!";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            errorEl.classList.add('hidden');
+            currentFg = nameInput;
+
+            // Fetch data dari Apps Script/Backend
+            try {
+                const res = await fetch(APPS_SCRIPT_URL);
+                const result = await res.json();
+                if(result.status === "success") {
+                    allClientsData = result.clients;
+                    
+                    // Filter berdasarkan nama FG
+                    const myTasks = allClientsData.filter(c => c.fg.toLowerCase().includes(currentFg.toLowerCase()));
+                    
+                    if (myTasks.length === 0 && currentFg.toLowerCase() !== "admin") {
+                        errorEl.textContent = `Tidak ada jadwal atas nama "${currentFg}". Coba cek ejaan nama kamu.`;
+                        errorEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    document.getElementById('welcomeFgName').textContent = currentFg;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    
+                    updateDashboardStats(myTasks);
+                    renderTasks(myTasks);
+                    renderHistory(myTasks);
+                } else {
+                    alert("Gagal memuat data dari database.");
+                }
+            } catch(err) {
+                console.error(err);
+                // Fallback demo local jika belum diset url web app-nya
+                document.getElementById('welcomeFgName').textContent = currentFg;
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            currentFg = "";
+            document.getElementById('fgNameInput').value = "";
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tabDashboard').classList.add('hidden');
+            document.getElementById('tabTasks').classList.add('hidden');
+            document.getElementById('tabHistory').classList.add('hidden');
+            
+            document.getElementById('tabBtnDashboard').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-gray-800 text-gray-300 hover:bg-gray-700";
+            document.getElementById('tabBtnTasks').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-gray-800 text-gray-300 hover:bg-gray-700";
+            document.getElementById('tabBtnHistory').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-gray-800 text-gray-300 hover:bg-gray-700";
+
+            if(tab === 'dashboard') {
+                document.getElementById('tabDashboard').classList.remove('hidden');
+                document.getElementById('tabBtnDashboard').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-blue-600 text-white shadow";
+            } else if(tab === 'tasks') {
+                document.getElementById('tabTasks').classList.remove('hidden');
+                document.getElementById('tabBtnTasks').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-blue-600 text-white shadow";
+            } else if(tab === 'history') {
+                document.getElementById('tabHistory').classList.remove('hidden');
+                document.getElementById('tabBtnHistory').className = "px-5 py-2.5 rounded-xl font-medium text-sm transition bg-blue-600 text-white shadow";
+            }
+        }
+
+        function updateDashboardStats(tasks) {
+            document.getElementById('statActiveTasks').textContent = tasks.length;
+            document.getElementById('statCompletedTasks').textContent = tasks.filter(t => t.statusFG === 'PAID').length;
+        }
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasksContainer');
+            if(tasks.length === 0) {
+                container.innerHTML = `<div class="glass-card p-6 text-center text-gray-400 rounded-xl">Belum ada task aktif untuk saat ini.</div>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => `
+                <div class="glass-card rounded-2xl p-6 space-y-4 border border-gray-800">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-md font-semibold">${t.paket}</span>
+                            <h4 class="text-lg font-bold text-white mt-2">${t.nama}</h4>
+                            <p class="text-xs text-gray-400">${t.kampus || 'Umum'} • Lokasi: ${t.lokasi}</p>
+                        </div>
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-medium">${t.tanggal} | ${t.jam}</span>
+                    </div>
+
+                    <div class="bg-gray-900/60 p-4 rounded-xl text-xs space-y-1 border border-gray-800/60">
+                        <p class="text-gray-300">📱 <b>WhatsApp Klien:</b> ${t.noWa}</p>
+                        <p class="text-gray-300">💰 <b>Fee FG:</b> Rp${Number(t.feeFG || 0).toLocaleString('id-ID')} (${t.statusFG || 'UNPAID'})</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <a href="https://wa.me/${t.noWa.replace(/\D/g, '').replace(/^0/, '62')}?text=Halo%20Kak%20${encodeURIComponent(t.nama)},%20aku%20dengan%20${encodeURIComponent(currentFg)},%20fotografer%20VividLens%20untuk%20jadwal%20di%20*${encodeURIComponent(t.lokasi)}*%20tanggal%20*${encodeURIComponent(t.tanggal)}*%20jam%20*${encodeURIComponent(t.jam)}*." target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 px-4 rounded-xl text-xs text-center transition">Kirim Chat Konfirmasi WA</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHistory(tasks) {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = tasks.map(t => `
+                <div class="glass-card rounded-xl p-4 flex justify-between items-center text-sm">
+                    <div>
+                        <p class="font-bold text-white">${t.nama} <span class="text-xs font-normal text-gray-400">(${t.paket})</span></p>
+                        <p class="text-xs text-gray-400">${t.tanggal} - ${t.lokasi}</p>
+                    </div>
+                    <div>
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold ${t.statusFG === 'PAID' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">${t.statusFG || 'UNPAID'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadDataFromBackend() {
+            await handleLogin();
+            alert("Data berhasil diperbarui!");
+        }
+    </script>
+</body>
+</html>
