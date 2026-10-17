@@ -132,7 +132,7 @@
 
     <!-- SCRIPT -->
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec"; // Ganti URL kamu di sini
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
 
         let allClientsData = [];
         let currentFg = "";
@@ -156,7 +156,7 @@
                 if(result.status === "success") {
                     allClientsData = result.clients;
                     
-                    const myTasks = allClientsData.filter(c => c.fg.toLowerCase().includes(currentFg.toLowerCase()));
+                    const myTasks = allClientsData.filter(c => (c.fg || '').toLowerCase().includes(currentFg.toLowerCase()));
                     
                     if (myTasks.length === 0 && currentFg.toLowerCase() !== "admin") {
                         errorEl.textContent = `Tidak ditemukan jadwal aktif untuk nama "${currentFg}". Pastikan ejaan nama sesuai dengan data admin.`;
@@ -261,8 +261,15 @@
             const encodedWaMessage = encodeURIComponent(waMessage);
             const cleanPhone = t.noWa.replace(/\D/g, '').replace(/^0/, '62');
             
-            // Ambil langsung dari database Google Sheets
-            const driveUrl = t.driveUrl && t.driveUrl.startsWith('http') ? t.driveUrl : "";
+            // Cek langsung dari data Supabase (persis seperti admin) atau dari spreadsheet
+            const cleanName = (t.nama || '').toLowerCase().trim();
+            const supabaseItem = (typeof cachedSupabaseClients !== 'undefined') 
+                ? cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName) 
+                : null;
+            
+            const driveUrl = (supabaseItem && supabaseItem.drive_link) 
+                ? supabaseItem.drive_link 
+                : (t.driveUrl && t.driveUrl.startsWith('http') ? t.driveUrl : '');
 
             const cardStyle = isUrgent ? 'glass-card-highlight border-blue-500' : 'glass-card border-gray-800';
 
@@ -275,7 +282,7 @@
                                 ${isUrgent ? '<span class="text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-lg border border-amber-500/30">WAJIB KONFIRMASI H-1</span>' : ''}
                             </div>
                             <h4 class="text-xl font-extrabold text-white mt-2">${t.nama}</h4>
-                            <p class="text-xs font-medium text-gray-400 mt-0.5">Kampus: <span class="text-gray-200 font-semibold">${t.kampus || 'Umum'}</span> • Lokasi: <span class="text-gray-200 font-semibold">${t.lokasi}</span></p>
+                            <p class="text-xs font-medium text-gray-400 mt-0.5">Kampus: <span class="text-gray-200 font-semibold">${t.kampus || 'Umum'}</span> • Lokasi: <span class="text-gray-200 font-semibold">${t.lokasi}</span> • FG: <span class="text-emerald-400 font-semibold">${t.fg || '-'}</span></p>
                         </div>
                         <div class="text-left sm:text-right bg-gray-900/90 px-4 py-2.5 rounded-2xl border border-gray-800">
                             <span class="text-xs font-bold text-blue-400 block">${t.tanggal}</span>
@@ -298,12 +305,12 @@
                     <div class="bg-blue-950/20 border border-blue-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
                         <div class="text-xs">
                             <span class="font-bold text-blue-400 block">Folder Google Drive Klien</span>
-                            <span class="text-gray-400">${t.driveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Menunggu link dari admin'}</span>
+                            <span class="text-gray-400">${driveUrl ? 'Akses langsung folder upload file ' + t.nama : 'Menunggu link dari admin'}</span>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            ${t.driveUrl ? `
-                                <a href="${t.driveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive</a>
-                                <button onclick="navigator.clipboard.writeText('${t.driveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
+                            ${driveUrl ? `
+                                <a href="${driveUrl}" target="_blank" class="flex-1 sm:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs text-center transition">Buka Drive</a>
+                                <button onclick="navigator.clipboard.writeText('${driveUrl}'); alert('Link Drive berhasil disalin!');" class="bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 rounded-xl text-xs transition">Salin Link</button>
                             ` : `
                                 <span class="text-xs text-amber-400 font-medium italic">Menunggu link dari admin</span>
                             `}
