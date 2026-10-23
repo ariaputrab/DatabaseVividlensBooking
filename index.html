@@ -61,6 +61,9 @@
                 <button id="tabCalendarBtn" onclick="switchMode('calendar')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-calendar-days text-[11px]"></i> Kalender
                 </button>
+                <button id="tabListEditBtn" onclick="switchMode('listEdit')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-list-check text-[11px]"></i> List Edit
+                </button>
                 <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
                 </button>
@@ -195,6 +198,25 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- TAB KHUSUS MENU LIST EDIT & DEADLINE 7 HARI -->
+        <div id="sectionListEdit" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-5xl mx-auto space-y-4 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-purple-600"></i> Manajemen List Edit & Deadline 7 Hari
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Centang klien yang masuk antrean edit untuk memicu hitung mundur deadline 7 hari.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <input type="text" id="searchListEditInput" oninput="renderListEditSection()" placeholder="Cari nama klien / FG..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs outline-none flex-1 sm:w-48">
+                </div>
+            </div>
+
+            <div id="listEditContainer" class="space-y-3">
+                <div class="p-8 text-center text-slate-400 text-xs">Memuat daftar list edit...</div>
             </div>
         </div>
 
@@ -1008,6 +1030,7 @@
             const isDashboard = mode === 'dashboard';
             const isApproval = mode === 'approval';
             const isCalendar = mode === 'calendar';
+            const isListEdit = mode === 'listEdit';
             const isFinance = mode === 'finance';
             const isTracker = mode === 'tracker';
             const isToday = mode === 'today';
@@ -1021,6 +1044,8 @@
             document.getElementById('sectionDashboard').classList.toggle('hidden', !isDashboard);
             document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
             document.getElementById('sectionCalendar').classList.toggle('hidden', !isCalendar);
+            const secListEdit = document.getElementById('sectionListEdit');
+            if(secListEdit) secListEdit.classList.toggle('hidden', !isListEdit);
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
@@ -1032,6 +1057,8 @@
             document.getElementById('tabDashboardBtn').className = isDashboard ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabApprovalBtn').className = isApproval ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
+            const btnListEdit = document.getElementById('tabListEditBtn');
+            if(btnListEdit) btnListEdit.className = isListEdit ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTrackerBtn').className = isTracker ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTodayBtn').className = isToday ? getActiveTabClass() : getInactiveTabClass();
@@ -1042,6 +1069,7 @@
 
             if (isApproval) fetchPendingBookings(false);
             if (isTracker) fetchSupabaseClients(false);
+            if (isListEdit) renderListEditSection();
             if (isPaymentFg) initPaymentFgTab();
             if (isAllBooking) fetchAllBookingsDatabase(false);
             if (isDashboard) updateDashboardMetrics();
@@ -1050,6 +1078,7 @@
                 refreshClientDatabase(false);
             } else {
                 if (isCalendar) renderCalendarView();
+                if (isListEdit) renderListEditSection();
                 if (isToday) renderCombinedSchedule();
                 if (isFinance) calculateFinancialStats();
                 if (isPaymentFg) renderPaymentFgDailyView();
@@ -1422,6 +1451,85 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        // Render Menu Tab Baru "List Edit" Mandiri
+        function renderListEditSection() {
+            const container = document.getElementById('listEditContainer');
+            const searchVal = (document.getElementById('searchListEditInput').value || '').toLowerCase();
+            if (!container) return;
+
+            let clients = cachedClients || [];
+            if (searchVal) {
+                clients = clients.filter(c => 
+                    (c.nama || '').toLowerCase().includes(searchVal) || 
+                    (c.fg || '').toLowerCase().includes(searchVal) ||
+                    (c.kampus || '').toLowerCase().includes(searchVal)
+                );
+            }
+
+            if (clients.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien ditemukan.</div>`;
+                return;
+            }
+
+            container.innerHTML = clients.map((c) => {
+                const cleanKey = c.nama.replace(/\s+/g, '_');
+                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+                
+                let deadlineInfo = '<span class="text-slate-400 italic">Belum dicentang (Belum masuk antrean edit)</span>';
+                if (isChecked && timestamp) {
+                    const checkDate = new Date(parseInt(timestamp));
+                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
+                    const now = new Date();
+                    const isOverdue = now > deadlineDate;
+                    
+                    deadlineInfo = `
+                        <span class="font-bold ${isOverdue ? 'text-rose-600' : 'text-purple-700'}">
+                            Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
+                            ${isOverdue ? '(LEWAT DEADLINE!)' : ''}
+                        </span>
+                    `;
+                }
+
+                const safeName = (c.nama || '').replace(/'/g, "\\'");
+
+                return `
+                    <div class="p-4 bg-slate-50 border ${isChecked ? 'border-purple-300 bg-purple-50/20' : 'border-slate-200'} rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
+                                <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
+                            </div>
+                            <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${c.nama}</h4>
+                            <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • Lokasi: ${c.lokasi || '-'}</p>
+                            <div class="mt-1.5 text-xs">${deadlineInfo}</div>
+                        </div>
+
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                            <label class="flex items-center gap-2 font-bold text-xs text-purple-900 bg-white px-3 py-2 rounded-xl border border-purple-200 shadow-xs cursor-pointer select-none">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                <span>List Edit</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleListEditTab(namaKlien, isChecked) {
+            const cleanKey = namaKlien.replace(/\s+/g, '_');
+            if (isChecked) {
+                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
+                localStorage.setItem(`edit_time_${cleanKey}`, Date.now());
+                showToast(`List Edit ${namaKlien} dicentang (Deadline 7 hari aktif)`);
+            } else {
+                localStorage.removeItem(`edit_checked_${cleanKey}`);
+                localStorage.removeItem(`edit_time_${cleanKey}`);
+                showToast(`List Edit ${namaKlien} dibatalkan`);
+            }
+            renderListEditSection();
         }
 
         function openClientDetailModal(idx) {
@@ -1907,18 +2015,6 @@
                     const isFgPaid = (c.statusFG || c.status_fg || '').toUpperCase().trim() === 'PAID';
                     const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
                     const safeName = (c.nama || '').replace(/'/g, "\\'");
-                    const cleanKey = safeName.replace(/\s+/g, '_');
-
-                    // Ambil status checklist edit dan waktu dari localStorage
-                    const isEditedChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                    const checkedTimestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-                    
-                    let deadlineText = "Belum dicentang";
-                    if (isEditedChecked && checkedTimestamp) {
-                        const checkDate = new Date(parseInt(checkedTimestamp));
-                        const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
-                        deadlineText = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-                    }
 
                     return `
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -1932,15 +2028,6 @@
                                     <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • <span class="font-semibold text-slate-700">FG: ${c.fg || 'Raihan'}</span></p>
                                 </div>
                                 <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</span>
-                            </div>
-
-                            <!-- KOTAK CHECKLIST LIST EDIT & DEADLINE 7 HARI -->
-                            <div class="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between gap-2 text-xs">
-                                <label class="flex items-center gap-2 font-bold text-purple-900 cursor-pointer select-none">
-                                    <input type="checkbox" ${isEditedChecked ? 'checked' : ''} onchange="toggleEditChecklist('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                    <span>List Edit (Masuk Antrean)</span>
-                                </label>
-                                <span class="text-[11px] font-semibold text-purple-700" id="deadlineLabel_${cleanKey}">${deadlineText}</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
@@ -1996,31 +2083,6 @@
             }
 
             modal.classList.remove('hidden');
-        }
-
-        // Fungsi pendukung checklist status edit & kalkulator deadline otomatis 7 hari
-        function toggleEditChecklist(namaKlien, isChecked) {
-            const cleanKey = namaKlien.replace(/\s+/g, '_');
-            const labelEl = document.getElementById(`deadlineLabel_${cleanKey}`);
-            
-            if (isChecked) {
-                const nowTimestamp = Date.now();
-                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
-                localStorage.setItem(`edit_time_${cleanKey}`, nowTimestamp);
-                
-                const deadlineDate = new Date(nowTimestamp + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
-                if (labelEl) {
-                    labelEl.textContent = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-                }
-                showToast(`List Edit untuk ${namaKlien} ditandai (Deadline 7 hari)`);
-            } else {
-                localStorage.removeItem(`edit_checked_${cleanKey}`);
-                localStorage.removeItem(`edit_time_${cleanKey}`);
-                if (labelEl) {
-                    labelEl.textContent = "Belum dicentang";
-                }
-                showToast(`List Edit ${namaKlien} dibatalkan`);
-            }
         }
 
         function closeDayDetailModal() {
