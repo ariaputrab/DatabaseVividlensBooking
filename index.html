@@ -1473,6 +1473,7 @@
         // TAB MENU: MANAJEMEN LIST EDIT & DEADLINE 7 HARI (PER TANGGAL SESI)
         // ========================================================
         let listEditCurrentWeekStart = new Date(); // Acuan minggu aktif
+        let currentListEditFilterTab = 'all'; // Filter kategori status aktif
 
         function changeListEditWeek(direction) {
             listEditCurrentWeekStart.setDate(listEditCurrentWeekStart.getDate() + (direction * 7));
@@ -1481,6 +1482,11 @@
 
         function setListEditThisWeek() {
             listEditCurrentWeekStart = new Date();
+            renderListEditSection();
+        }
+
+        function setListEditFilterTab(tabName) {
+            currentListEditFilterTab = tabName;
             renderListEditSection();
         }
 
@@ -1525,6 +1531,32 @@
             renderListEditSection();
         }
 
+        function copyWeeklyEditRecap(startStr, endStr, clientsList) {
+            let text = `📋 **REKAP TUGAS EDITING VIVIDLENS**\n📅 Periode: ${startStr} — ${endStr}\n\n`;
+            
+            if (clientsList.length === 0) {
+                text += `Tidak ada sesi klien pada minggu ini.`;
+            } else {
+                clientsList.forEach((c, idx) => {
+                    const cleanKey = (c.nama || '').replace(/\s+/g, '_');
+                    const isFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
+                    const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                    
+                    let statusLabel = 'Belum Antrean';
+                    if (isFinished) statusLabel = 'SELESAI ✔';
+                    else if (isChecked) statusLabel = 'PROSES EDIT';
+
+                    text += `${idx + 1}. *${c.nama}* (${c.tanggal} | ${c.jam})\n   - Kampus: ${c.kampus || 'Umum'} (${c.paket})\n   - FG: ${c.fg || 'Raihan'} | Status: [${statusLabel}]\n\n`;
+                });
+            }
+
+            text += `_Mohon diselesaikan tepat waktu ya rekan-rekan tim editor! Terima kasih_ ✨`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Rekap tugas mingguan berhasil disalin untuk WhatsApp!");
+            });
+        }
+
         function renderListEditSection() {
             const container = document.getElementById('listEditContainer');
             if (!container) return;
@@ -1537,7 +1569,7 @@
                 return;
             }
 
-            // Pastikan toolbar navigasi minggu & pencarian ada di atas
+            // Pastikan toolbar navigasi minggu & tab kategori ada di atas
             let toolbarEl = document.getElementById('listEditWeekToolbar');
             if (!toolbarEl) {
                 const sectionEl = document.getElementById('sectionListEdit');
@@ -1546,21 +1578,33 @@
                     if (headerDiv) {
                         const toolbarDiv = document.createElement('div');
                         toolbarDiv.id = 'listEditWeekToolbar';
-                        toolbarDiv.className = "flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 pb-2 border-b border-slate-100";
+                        toolbarDiv.className = "space-y-3 pt-3 pb-2 border-b border-slate-100";
                         toolbarDiv.innerHTML = `
-                            <div class="flex items-center gap-2">
-                                <button onclick="changeListEditWeek(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                                    <i class="fa-solid fa-chevron-left mr-1"></i> Minggu Lalu
-                                </button>
-                                <button onclick="setListEditThisWeek()" class="px-3 py-2 bg-purple-100 text-purple-800 hover:bg-purple-200 font-bold text-xs rounded-xl transition">
-                                    Minggu Ini
-                                </button>
-                                <button onclick="changeListEditWeek(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                                    Minggu Depan <i class="fa-solid fa-chevron-right ml-1"></i>
-                                </button>
+                            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <button onclick="changeListEditWeek(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                        <i class="fa-solid fa-chevron-left mr-1"></i> Minggu Lalu
+                                    </button>
+                                    <button onclick="setListEditThisWeek()" class="px-3 py-2 bg-purple-100 text-purple-800 hover:bg-purple-200 font-bold text-xs rounded-xl transition">
+                                        Minggu Ini
+                                    </button>
+                                    <button onclick="changeListEditWeek(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                        Minggu Depan <i class="fa-solid fa-chevron-right ml-1"></i>
+                                    </button>
+                                </div>
+                                <div id="listEditWeekRangeLabel" class="font-bold text-xs text-slate-700 text-center sm:text-right px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
+                                    -
+                                </div>
                             </div>
-                            <div id="listEditWeekRangeLabel" class="font-bold text-xs text-slate-700 text-center sm:text-right px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
-                                -
+
+                            <!-- Bar Kategori Filter Cepat -->
+                            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto touch-scroll" id="listEditFilterTabsContainer">
+                                <button onclick="setListEditFilterTab('all')" id="tabFilterAll" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Semua (<span id="cntAll">0</span>)</button>
+                                <button onclick="setListEditFilterTab('belum')" id="tabFilterBelum" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Belum Antrean (<span id="cntBelum">0</span>)</button>
+                                <button onclick="setListEditFilterTab('proses')" id="tabFilterProses" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Proses Edit (<span id="cntProses">0</span>)</button>
+                                <button onclick="setListEditFilterTab('mendekati')" id="tabFilterMendekati" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">H-2 Deadline (<span id="cntMendekati">0</span>)</button>
+                                <button onclick="setListEditFilterTab('terlambat')" id="tabFilterTerlambat" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Terlambat (<span id="cntTerlambat">0</span>)</button>
+                                <button onclick="setListEditFilterTab('selesai')" id="tabFilterSelesai" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Selesai (<span id="cntSelesai">0</span>)</button>
                             </div>
                         `;
                         headerDiv.after(toolbarDiv);
@@ -1580,21 +1624,109 @@
             endOfWeek.setDate(endOfWeek.getDate() + 6);
             endOfWeek.setHours(23, 59, 59, 999);
 
+            const optDate = { day: 'numeric', month: 'short', year: 'numeric' };
+            const startStrFormatted = startOfWeek.toLocaleDateString('id-ID', optDate);
+            const endStrFormatted = endOfWeek.toLocaleDateString('id-ID', optDate);
+
             const weekRangeLabelEl = document.getElementById('listEditWeekRangeLabel');
             if (weekRangeLabelEl) {
-                const optDate = { day: 'numeric', month: 'short', year: 'numeric' };
-                weekRangeLabelEl.textContent = `📅 Periode: ${startOfWeek.toLocaleDateString('id-ID', optDate)} — ${endOfWeek.toLocaleDateString('id-ID', optDate)}`;
+                weekRangeLabelEl.textContent = `📅 Periode: ${startStrFormatted} — ${endStrFormatted}`;
             }
 
             const searchVal = (document.getElementById('searchListEditInput')?.value || '').toLowerCase();
 
             // Filter data klien yang masuk dalam minggu aktif
-            let filtered = cachedClients.filter(c => {
+            let weekClients = cachedClients.filter(c => {
                 const isoStr = cleanToISODate(c.tanggal);
                 if (!isoStr) return false;
                 const clientDate = new Date(isoStr);
                 return clientDate >= startOfWeek && clientDate <= endOfWeek;
             });
+
+            // Hitung statistik untuk badge tab filter
+            let cntAll = weekClients.length;
+            let cntBelum = 0;
+            let cntProses = 0;
+            let cntMendekati = 0;
+            let cntTerlambat = 0;
+            let cntSelesai = 0;
+            let finishedCountTotal = 0;
+
+            const now = new Date();
+
+            const processedWeekClients = weekClients.map(c => {
+                const cleanKey = (c.nama || '').replace(/\s+/g, '_');
+                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                const isFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
+                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+
+                let category = 'belum';
+                let sisaHari = null;
+                let isOverdue = false;
+
+                if (isFinished) {
+                    category = 'selesai';
+                    cntSelesai++;
+                    finishedCountTotal++;
+                } else if (isChecked && timestamp) {
+                    const checkDate = new Date(parseInt(timestamp));
+                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+                    const diffTime = deadlineDate - now;
+                    sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    isOverdue = now > deadlineDate;
+
+                    if (isOverdue) {
+                        category = 'terlambat';
+                        cntTerlambat++;
+                    } else if (sisaHari <= 2) {
+                        category = 'mendekati';
+                        cntMendekati++;
+                        cntProses++;
+                    } else {
+                        category = 'proses';
+                        cntProses++;
+                    }
+                } else {
+                    cntBelum++;
+                }
+
+                return {
+                    ...c,
+                    cleanKey,
+                    isChecked,
+                    isFinished,
+                    timestamp,
+                    category,
+                    sisaHari,
+                    isOverdue
+                };
+            });
+
+            // Update badge hitungan di tab filter
+            document.getElementById('cntAll').textContent = cntAll;
+            document.getElementById('cntBelum').textContent = cntBelum;
+            document.getElementById('cntProses').textContent = cntProses;
+            document.getElementById('cntMendekati').textContent = cntMendekati;
+            document.getElementById('cntTerlambat').textContent = cntTerlambat;
+            document.getElementById('cntSelesai').textContent = cntSelesai;
+
+            // Styling tombol tab filter aktif
+            ['all', 'belum', 'proses', 'mendekati', 'terlambat', 'selesai'].forEach(t => {
+                const btn = document.getElementById(`tabFilter${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    if (t === currentListEditFilterTab) {
+                        btn.className = "px-3 py-1.5 rounded-lg transition whitespace-nowrap bg-purple-700 text-white font-bold shadow-xs";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-200";
+                    }
+                }
+            });
+
+            // Filter berdasarkan tab kategori aktif
+            let filtered = processedWeekClients;
+            if (currentListEditFilterTab !== 'all') {
+                filtered = processedWeekClients.filter(c => c.category === currentListEditFilterTab);
+            }
 
             // Filter pencarian nama / FG / kampus
             if (searchVal) {
@@ -1606,8 +1738,36 @@
                 );
             }
 
+            // Render Progress Bar Mingguan & Tombol Salin Rekap WhatsApp
+            let progressContainer = document.getElementById('listEditWeeklyProgress');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.id = 'listEditWeeklyProgress';
+                container.before(progressContainer);
+            }
+
+            const percentDone = cntAll > 0 ? Math.round((finishedCountTotal / cntAll) * 100) : 0;
+            progressContainer.innerHTML = `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5 mb-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-purple-600"></i> Progress Penyelesaian Edit Minggu Ini
+                            </h4>
+                            <p class="text-[11px] text-slate-500">${finishedCountTotal} dari ${cntAll} sesi klien telah selesai diedit (${percentDone}%)</p>
+                        </div>
+                        <button onclick="copyWeeklyEditRecap('${startStrFormatted}', '${endStrFormatted}', ${JSON.stringify(weekClients).replace(/"/g, '&quot;')})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> Salin Rekap Tugas WA
+                        </button>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-600 to-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: ${percentDone}%"></div>
+                    </div>
+                </div>
+            `;
+
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-200">Tidak ada jadwal sesi klien pada rentang minggu ini.</div>`;
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-200">Tidak ada sesi klien yang sesuai dengan filter pada minggu ini.</div>`;
                 return;
             }
 
@@ -1639,37 +1799,27 @@
 
                         <div class="space-y-2.5">
                             ${dateClients.map(c => {
-                                const cleanKey = (c.nama || '').replace(/\s+/g, '_');
-                                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                                const isFinishedChecked = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
-                                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-                                
                                 let deadlineBarHtml = '';
                                 let cardBorder = 'border-slate-200 bg-white';
                                 
-                                if (isFinishedChecked) {
+                                if (c.isFinished) {
                                     cardBorder = 'border-emerald-300 bg-emerald-50/20';
-                                } else if (isChecked && timestamp) {
-                                    const checkDate = new Date(parseInt(timestamp));
-                                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
-                                    const now = new Date();
-                                    const isOverdue = now > deadlineDate;
-                                    const diffTime = deadlineDate - now;
-                                    const sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                    
-                                    cardBorder = isOverdue ? 'border-rose-300 bg-rose-50/20' : (sisaHari <= 2 ? 'border-amber-300 bg-amber-50/10' : 'border-purple-300 bg-purple-50/10');
+                                } else if (c.isChecked && c.timestamp) {
+                                    cardBorder = c.isOverdue ? 'border-rose-300 bg-rose-50/20' : (c.sisaHari <= 2 ? 'border-amber-300 bg-amber-50/10' : 'border-purple-300 bg-purple-50/10');
+                                    const deadlineDate = new Date(parseInt(c.timestamp) + (7 * 24 * 60 * 60 * 1000));
                                     
                                     deadlineBarHtml = `
-                                        <div class="mt-2.5 p-2.5 rounded-xl ${isOverdue ? 'bg-rose-100/90 text-rose-900 border border-rose-200' : 'bg-purple-100/80 text-purple-900 border border-purple-200'} flex justify-between items-center text-xs font-semibold">
+                                        <div class="mt-2.5 p-2.5 rounded-xl ${c.isOverdue ? 'bg-rose-100/90 text-rose-900 border border-rose-200' : 'bg-purple-100/80 text-purple-900 border border-purple-200'} flex justify-between items-center text-xs font-semibold">
                                             <span><i class="fa-solid fa-clock mr-1"></i> Deadline: <strong>${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
-                                            <span class="font-bold px-2 py-0.5 rounded ${isOverdue ? 'bg-rose-600 text-white animate-pulse' : 'bg-purple-700 text-white'}">
-                                                ${isOverdue ? 'TERLAMBAT (LEWAT H+7)' : `Sisa ${sisaHari} Hari`}
+                                            <span class="font-bold px-2 py-0.5 rounded ${c.isOverdue ? 'bg-rose-600 text-white animate-pulse' : 'bg-purple-700 text-white'}">
+                                                ${c.isOverdue ? 'TERLAMBAT (LEWAT H+7)' : `Sisa ${c.sisaHari} Hari`}
                                             </span>
                                         </div>
                                     `;
                                 }
 
                                 const safeName = (c.nama || '').replace(/'/g, "\\'");
+                                const globalIdx = cachedClients.findIndex(item => item.nama === c.nama && item.tanggal === c.tanggal);
 
                                 return `
                                     <div class="p-4 rounded-xl border ${cardBorder} shadow-xs space-y-2 transition">
@@ -1679,6 +1829,7 @@
                                                     <span class="text-[10px] font-mono font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
                                                     <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
                                                     <span class="text-[10px] font-semibold text-slate-500">Paket: ${c.paket || 'Silver'}</span>
+                                                    ${c.isFinished ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">SELESAI EDIT ✔</span>' : ''}
                                                 </div>
                                                 <h5 class="font-bold text-sm sm:text-base text-slate-900 pt-0.5">${c.nama}</h5>
                                                 <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Lokasi: <span class="text-slate-700 font-medium">${c.lokasi || '-'}</span></p>
@@ -1687,13 +1838,13 @@
                                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                                                 <!-- Tombol Ceklis List Edit -->
                                                 <label class="flex items-center gap-1.5 font-bold text-[11px] text-purple-900 bg-purple-100/70 hover:bg-purple-100 px-3 py-2 rounded-xl cursor-pointer transition select-none justify-center shadow-xs">
-                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                                    <input type="checkbox" ${c.isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
                                                     <span>List Edit</span>
                                                 </label>
 
                                                 <!-- Tombol Ceklis Selesai Edit -->
                                                 <label class="flex items-center gap-1.5 font-bold text-[11px] text-emerald-900 bg-emerald-100/70 hover:bg-emerald-100 px-3 py-2 rounded-xl cursor-pointer transition select-none justify-center shadow-xs">
-                                                    <input type="checkbox" ${isFinishedChecked ? 'checked' : ''} onchange="toggleFinishedEditTab('${safeName}', this.checked)" class="w-4 h-4 text-emerald-600 rounded accent-emerald-600 cursor-pointer">
+                                                    <input type="checkbox" ${c.isFinished ? 'checked' : ''} onchange="toggleFinishedEditTab('${safeName}', this.checked)" class="w-4 h-4 text-emerald-600 rounded accent-emerald-600 cursor-pointer">
                                                     <span>Selesai Edit</span>
                                                 </label>
 
