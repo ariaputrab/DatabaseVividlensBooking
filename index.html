@@ -1472,48 +1472,90 @@
         // ========================================================
         // TAB MENU: MANAJEMEN LIST EDIT & DEADLINE 7 HARI (PER TANGGAL SESI)
         // ========================================================
+        let listEditCurrentWeekStart = new Date(); // Acuan minggu aktif
+
+        function changeListEditWeek(direction) {
+            listEditCurrentWeekStart.setDate(listEditCurrentWeekStart.getDate() + (direction * 7));
+            renderListEditSection();
+        }
+
+        function setListEditThisWeek() {
+            listEditCurrentWeekStart = new Date();
+            renderListEditSection();
+        }
+
         function renderListEditSection() {
             const container = document.getElementById('listEditContainer');
             if (!container) return;
 
-            // Jika data dari Google Sheets belum termuat, ambil data otomatis
             if (!cachedClients || cachedClients.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Sedang mengambil data klien dari server...</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat data klien...</div>`;
                 refreshClientDatabase(false).then(() => {
-                    if (cachedClients && cachedClients.length > 0) {
-                        renderListEditSection();
-                    } else {
-                        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien yang ditemukan di Google Sheets. Pastikan URL Apps Script sudah benar.</div>`;
-                    }
+                    if (cachedClients && cachedClients.length > 0) renderListEditSection();
                 });
                 return;
             }
 
-            const searchVal = (document.getElementById('searchListEditInput')?.value || '').toLowerCase();
-            const selectedMonth = document.getElementById('selectListEditMonth')?.value || 'all';
-
-            // 1. Filter Berdasarkan Bulan
-            let filtered = cachedClients.filter(c => {
-                const sheetName = (c.sheetName || '').toLowerCase();
-                const tgl = c.tanggal || '';
-                
-                if (selectedMonth === 'all') return true;
-
-                const monthFullName = (NUM_TO_MONTH_FULL[selectedMonth] || '').toLowerCase();
-                const monthShortName = (NUM_TO_MONTH_NAME[selectedMonth] || '').toLowerCase();
-
-                const matchSheet = sheetName.includes(monthFullName) || sheetName.includes(monthShortName);
-                const matchDate = tgl.toLowerCase().includes(monthFullName) || tgl.toLowerCase().includes(monthShortName);
-
-                if (tgl.includes('-') && tgl.length >= 7) {
-                    const parts = tgl.split('-');
-                    if (parts[1] === selectedMonth) return true;
+            // Pastikan toolbar navigasi minggu & pencarian ada di atas
+            let toolbarEl = document.getElementById('listEditWeekToolbar');
+            if (!toolbarEl) {
+                const sectionEl = document.getElementById('sectionListEdit');
+                if (sectionEl) {
+                    const headerDiv = sectionEl.querySelector('.flex.flex-col.sm\\:flex-row');
+                    if (headerDiv) {
+                        const toolbarDiv = document.createElement('div');
+                        toolbarDiv.id = 'listEditWeekToolbar';
+                        toolbarDiv.className = "flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 pb-2 border-b border-slate-100";
+                        toolbarDiv.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <button onclick="changeListEditWeek(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                    <i class="fa-solid fa-chevron-left mr-1"></i> Minggu Lalu
+                                </button>
+                                <button onclick="setListEditThisWeek()" class="px-3 py-2 bg-purple-100 text-purple-800 hover:bg-purple-200 font-bold text-xs rounded-xl transition">
+                                    Minggu Ini
+                                </button>
+                                <button onclick="changeListEditWeek(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                    Minggu Depan <i class="fa-solid fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                            <div id="listEditWeekRangeLabel" class="font-bold text-xs text-slate-700 text-center sm:text-right px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
+                                -
+                            </div>
+                        `;
+                        headerDiv.after(toolbarDiv);
+                    }
                 }
+            }
 
-                return matchSheet || matchDate;
+            // Hitung rentang tanggal dalam 1 minggu (Senin - Minggu)
+            const curr = new Date(listEditCurrentWeekStart);
+            const day = curr.getDay();
+            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
+            
+            const startOfWeek = new Date(curr.setDate(diffToMonday));
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(endOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+
+            const weekRangeLabelEl = document.getElementById('listEditWeekRangeLabel');
+            if (weekRangeLabelEl) {
+                const optDate = { day: 'numeric', month: 'short', year: 'numeric' };
+                weekRangeLabelEl.textContent = `📅 Periode: ${startOfWeek.toLocaleDateString('id-ID', optDate)} — ${endOfWeek.toLocaleDateString('id-ID', optDate)}`;
+            }
+
+            const searchVal = (document.getElementById('searchListEditInput')?.value || '').toLowerCase();
+
+            // Filter data klien yang masuk dalam minggu aktif
+            let filtered = cachedClients.filter(c => {
+                const isoStr = cleanToISODate(c.tanggal);
+                if (!isoStr) return false;
+                const clientDate = new Date(isoStr);
+                return clientDate >= startOfWeek && clientDate <= endOfWeek;
             });
 
-            // 2. Filter Berdasarkan Pencarian (Nama, Kampus, FG, Tanggal)
+            // Filter pencarian nama / FG / kampus
             if (searchVal) {
                 filtered = filtered.filter(b => 
                     (b.nama || '').toLowerCase().includes(searchVal) || 
@@ -1524,46 +1566,43 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien pada periode bulan ini.</div>`;
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-200">Tidak ada jadwal sesi klien pada rentang minggu ini.</div>`;
                 return;
             }
 
-            // 3. Kelompokkan Berdasarkan Tanggal Sesi (Grouping by Date)
+            // Kelompokkan per tanggal
             const groupedByDate = {};
             filtered.forEach(c => {
                 const dateKey = c.tanggal || 'Tanggal Tidak Diketahui';
-                if (!groupedByDate[dateKey]) {
-                    groupedByDate[dateKey] = [];
-                }
+                if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
                 groupedByDate[dateKey].push(c);
             });
 
-            // Urutkan berdasarkan jam sesi
             Object.keys(groupedByDate).forEach(dateKey => {
                 groupedByDate[dateKey].sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
             });
 
-            // 4. Render Tampilan Kartu per Tanggal
+            // Render list detail ke bawah per tanggal
             container.innerHTML = Object.keys(groupedByDate).map(dateKey => {
                 const dateClients = groupedByDate[dateKey];
 
                 return `
-                    <div class="space-y-2.5">
-                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <div class="space-y-3 bg-slate-50/60 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
                             <div class="flex items-center gap-2">
-                                <div class="w-2.5 h-2.5 bg-purple-600 rounded-full"></div>
+                                <i class="fa-solid fa-calendar-day text-purple-600 text-sm"></i>
                                 <h4 class="font-bold text-slate-900 text-sm sm:text-base">${dateKey}</h4>
                             </div>
-                            <span class="text-[11px] font-semibold bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">${dateClients.length} Sesi Klien</span>
+                            <span class="text-[11px] font-bold bg-purple-100 text-purple-800 px-3 py-0.5 rounded-full">${dateClients.length} Sesi Klien</span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div class="space-y-2.5">
                             ${dateClients.map(c => {
                                 const cleanKey = (c.nama || '').replace(/\s+/g, '_');
                                 const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
                                 const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
                                 
-                                let deadlineInfo = '<span class="text-slate-400 italic text-[11px]">Belum masuk antrean edit</span>';
+                                let deadlineBarHtml = '';
                                 let cardBorder = 'border-slate-200 bg-white';
                                 
                                 if (isChecked && timestamp) {
@@ -1575,11 +1614,14 @@
                                     const sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                     
                                     cardBorder = isOverdue ? 'border-rose-300 bg-rose-50/20' : (sisaHari <= 2 ? 'border-amber-300 bg-amber-50/10' : 'border-purple-300 bg-purple-50/10');
-                                    deadlineInfo = `
-                                        <span class="font-bold text-[11px] ${isOverdue ? 'text-rose-600' : (sisaHari <= 2 ? 'text-amber-700' : 'text-purple-700')}">
-                                            Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
-                                            ${isOverdue ? '(LEWAT H+7!)' : `(Sisa ${sisaHari} hr)`}
-                                        </span>
+                                    
+                                    deadlineBarHtml = `
+                                        <div class="mt-2.5 p-2.5 rounded-xl ${isOverdue ? 'bg-rose-100/90 text-rose-900 border border-rose-200' : 'bg-purple-100/80 text-purple-900 border border-purple-200'} flex justify-between items-center text-xs font-semibold">
+                                            <span><i class="fa-solid fa-clock mr-1"></i> Deadline: <strong>${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
+                                            <span class="font-bold px-2 py-0.5 rounded ${isOverdue ? 'bg-rose-600 text-white animate-pulse' : 'bg-purple-700 text-white'}">
+                                                ${isOverdue ? 'TERLAMBAT (LEWAT H+7)' : `Sisa ${sisaHari} Hari`}
+                                            </span>
+                                        </div>
                                     `;
                                 }
 
@@ -1587,30 +1629,33 @@
                                 const globalIdx = cachedClients.findIndex(item => item.nama === c.nama && item.tanggal === c.tanggal);
 
                                 return `
-                                    <div class="p-4 rounded-2xl border ${cardBorder} shadow-xs flex flex-col justify-between space-y-3 transition hover:shadow-sm">
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
-                                                <span class="text-[10px] font-bold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
+                                    <div class="p-4 rounded-xl border ${cardBorder} shadow-xs space-y-2 transition">
+                                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                            <div class="space-y-0.5">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="text-[10px] font-mono font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
+                                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
+                                                    <span class="text-[10px] font-semibold text-slate-500">Paket: ${c.paket || 'Silver'}</span>
+                                                </div>
+                                                <h5 class="font-bold text-sm sm:text-base text-slate-900 pt-0.5">${c.nama}</h5>
+                                                <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Lokasi: <span class="text-slate-700 font-medium">${c.lokasi || '-'}</span></p>
                                             </div>
-                                            <h4 class="font-bold text-sm text-slate-900 mt-1">${c.nama}</h4>
-                                            <p class="text-[11px] text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
-                                        </div>
 
-                                        <div class="pt-2 border-t border-slate-100 space-y-2">
-                                            <div>${deadlineInfo}</div>
-                                            <div class="flex items-center gap-2 pt-1">
-                                                <label class="flex items-center gap-1.5 font-bold text-xs text-purple-900 cursor-pointer select-none bg-purple-100/70 hover:bg-purple-100 px-3 py-1.5 rounded-xl transition flex-1 justify-center">
+                                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                                                <label class="flex items-center gap-2 font-bold text-xs text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-2 rounded-xl border border-purple-200 cursor-pointer transition select-none shadow-xs">
                                                     <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
                                                     <span>List Edit</span>
                                                 </label>
                                                 ${globalIdx !== -1 ? `
-                                                    <button onclick="openClientDetailModal(${globalIdx})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition shadow-xs" title="Buka Detail">
-                                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                                    <button onclick="openClientDetailModal(${globalIdx})" class="px-3 py-2 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition shadow-xs" title="Buka Detail Klien">
+                                                        Detail <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
                                                     </button>
                                                 ` : ''}
                                             </div>
                                         </div>
+
+                                        <!-- Bar Hitung Mundur Deadline 7 Hari (Muncul Saat Dicentang) -->
+                                        ${deadlineBarHtml}
                                     </div>
                                 `;
                             }).join('')}
