@@ -1459,86 +1459,120 @@
             const searchVal = (document.getElementById('searchListEditInput').value || '').toLowerCase();
             if (!container) return;
 
-            let clients = cachedClients || [];
+            // Pastikan ada pemilih bulan di atas tabel jika belum ada
+            let monthFilterEl = document.getElementById('selectListEditMonth');
+            if (!monthFilterEl) {
+                const headerWrapper = container.previousElementSibling;
+                const filterWrapper = document.createElement('div');
+                filterWrapper.className = "flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap mt-2 sm:mt-0";
+                filterWrapper.innerHTML = `
+                    <select id="selectListEditMonth" onchange="renderListEditSection()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer">
+                        <option value="all">Semua Bulan</option>
+                        <option value="01">Januari</option>
+                        <option value="02">Februari</option>
+                        <option value="03">Maret</option>
+                        <option value="04">April</option>
+                        <option value="05">Mei</option>
+                        <option value="06">Juni</option>
+                        <option value="07">Juli</option>
+                        <option value="08">Agustus</option>
+                        <option value="09" selected>September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                `;
+                if (headerWrapper) headerWrapper.appendChild(filterWrapper);
+                monthFilterEl = document.getElementById('selectListEditMonth');
+            }
+
+            const selectedMonth = monthFilterEl ? monthFilterEl.value : 'all';
+
+            // Filter data berdasarkan bulan yang dipilih di tab bulan
+            let filtered = cachedClients.filter(c => {
+                const sheetName = (c.sheetName || '').toLowerCase();
+                const tgl = c.tanggal || '';
+                
+                if (selectedMonth === 'all') return true;
+
+                const monthFullName = (NUM_TO_MONTH_FULL[selectedMonth] || '').toLowerCase();
+                const monthShortName = (NUM_TO_MONTH_NAME[selectedMonth] || '').toLowerCase();
+
+                const matchSheet = sheetName.includes(monthFullName) || sheetName.includes(monthShortName);
+                const matchDate = tgl.toLowerCase().includes(monthFullName) || tgl.toLowerCase().includes(monthShortName);
+
+                if (tgl.includes('-') && tgl.length >= 7) {
+                    const parts = tgl.split('-');
+                    if (parts[1] === selectedMonth) return true;
+                }
+
+                return matchSheet || matchDate;
+            });
+
             if (searchVal) {
-                clients = clients.filter(c => 
-                    (c.nama || '').toLowerCase().includes(searchVal) || 
-                    (c.fg || '').toLowerCase().includes(searchVal) ||
-                    (c.kampus || '').toLowerCase().includes(searchVal)
+                filtered = filtered.filter(b => 
+                    (b.nama || '').toLowerCase().includes(searchVal) || 
+                    (b.fg || '').toLowerCase().includes(searchVal) ||
+                    (b.kampus || '').toLowerCase().includes(searchVal)
                 );
             }
 
-            if (clients.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien ditemukan.</div>`;
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien pada bulan ini.</div>`;
                 return;
             }
 
             container.innerHTML = `
-                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                    <div class="overflow-x-auto touch-scroll">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                                <tr>
-                                    <th class="py-3 px-4">Klien & Kampus</th>
-                                    <th class="py-3 px-3">Jadwal Sesi</th>
-                                    <th class="py-3 px-3">Fotografer (FG)</th>
-                                    <th class="py-3 px-3">Status Deadline (7 Hari)</th>
-                                    <th class="py-3 px-4 text-center">List Edit</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 bg-white">
-                                ${clients.map((c) => {
-                                    const cleanKey = c.nama.replace(/\s+/g, '_');
-                                    const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                                    const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-                                    
-                                    let deadlineInfo = '<span class="text-slate-400 italic">Belum dicentang</span>';
-                                    if (isChecked && timestamp) {
-                                        const checkDate = new Date(parseInt(timestamp));
-                                        const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
-                                        const now = new Date();
-                                        const isOverdue = now > deadlineDate;
-                                        
-                                        deadlineInfo = `
-                                            <span class="font-bold ${isOverdue ? 'text-rose-600' : 'text-purple-700'}">
-                                                ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
-                                                ${isOverdue ? '(LEWAT!)' : ''}
-                                            </span>
-                                        `;
-                                    }
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    ${filtered.map((c) => {
+                        const cleanKey = c.nama.replace(/\s+/g, '_');
+                        const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                        const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+                        
+                        let deadlineInfo = '<span class="text-slate-400 italic text-[11px]">Belum masuk antrean edit</span>';
+                        let cardBorder = 'border-slate-200 bg-white';
+                        
+                        if (isChecked && timestamp) {
+                            const checkDate = new Date(parseInt(timestamp));
+                            const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // +7 Hari
+                            const now = new Date();
+                            const isOverdue = now > deadlineDate;
+                            
+                            cardBorder = isOverdue ? 'border-rose-300 bg-rose-50/20' : 'border-purple-300 bg-purple-50/10';
+                            deadlineInfo = `
+                                <span class="font-bold text-[11px] ${isOverdue ? 'text-rose-600' : 'text-purple-700'}">
+                                    Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
+                                    ${isOverdue ? '(LEWAT H+7!)' : ''}
+                                </span>
+                            `;
+                        }
 
-                                    const safeName = (c.nama || '').replace(/'/g, "\\'");
+                        const safeName = (c.nama || '').replace(/'/g, "\\'");
 
-                                    return `
-                                        <tr class="hover:bg-slate-50/80 transition">
-                                            <td class="py-3 px-4">
-                                                <span class="font-bold text-slate-900 block">${c.nama}</span>
-                                                <span class="text-[11px] text-slate-400 font-medium">${c.kampus || 'Umum'}</span>
-                                            </td>
-                                            <td class="py-3 px-3 whitespace-nowrap">
-                                                <span class="font-semibold text-slate-800 block">${c.tanggal || '-'}</span>
-                                                <span class="text-[11px] font-mono text-blue-700">${c.jam || '-'} WIB</span>
-                                            </td>
-                                            <td class="py-3 px-3 whitespace-nowrap">
-                                                <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px] inline-block">
-                                                    ${c.fg || 'Raihan'}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-3 whitespace-nowrap">
-                                                ${deadlineInfo}
-                                            </td>
-                                            <td class="py-3 px-4 text-center whitespace-nowrap">
-                                                <label class="inline-flex items-center gap-1.5 font-bold text-xs text-purple-900 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200 cursor-pointer select-none">
-                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                                    <span>List Edit</span>
-                                                </label>
-                                            </td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                        return `
+                            <div class="p-4 rounded-2xl border ${cardBorder} shadow-xs flex flex-col justify-between space-y-3 transition hover:shadow-sm">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">${c.tanggal || '-'}</span>
+                                        <span class="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${c.jam || '-'}</span>
+                                    </div>
+                                    <h4 class="font-bold text-sm text-slate-900 mt-1">${c.nama}</h4>
+                                    <p class="text-[11px] text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                                    <p class="text-[11px] text-slate-600 font-medium">FG: <span class="text-emerald-600 font-semibold">${c.fg || 'Raihan'}</span></p>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-100 space-y-2">
+                                    <div>${deadlineInfo}</div>
+                                    <div class="flex items-center justify-between pt-1">
+                                        <label class="flex items-center gap-2 font-bold text-xs text-purple-900 cursor-pointer select-none bg-purple-100/60 hover:bg-purple-100 px-3 py-1.5 rounded-xl transition w-full justify-center">
+                                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                            <span>List Edit (Ceklis)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
