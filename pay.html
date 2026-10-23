@@ -228,10 +228,12 @@
             icon3.innerHTML = '<i class="fa-solid fa-check"></i>';
             text3.className = "text-[8px] font-bold text-slate-700 block leading-tight";
 
-            // Cek Status List Edit & Selesai Edit dari localStorage browser atau parameter
+            // Deteksi Status Edit & Selesai dari URL parameter ATAU localStorage
+            const urlParams = new URLSearchParams(window.location.search);
             const cleanKey = decodedNama.replace(/\s+/g, '_');
-            const isEditChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-            const isEditFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
+            
+            const isEditChecked = urlParams.get('edit') === 'true' || localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+            const isEditFinished = urlParams.get('finish') === 'true' || localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
 
             if (isLunas) {
                 document.getElementById('badgeStatus').textContent = "LUNAS";
