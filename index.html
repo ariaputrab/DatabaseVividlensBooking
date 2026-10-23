@@ -1453,7 +1453,6 @@
             }).join('');
         }
 
-        // Render Menu Tab Baru "List Edit" Mandiri
         function setListEditFilter(filterType) {
             currentListEditFilter = filterType;
             ['all', 'antrean', 'mendekati', 'terlambat'].forEach(f => {
@@ -1470,12 +1469,24 @@
         }
 
         function renderListEditSection() {
-            const tableBody = document.getElementById('listEditTableBody');
+            const container = document.getElementById('listEditTableBody').parentElement.parentElement.parentElement;
+            // Kita render ulang ke container khusus list edit di dalam sectionListEdit
+            const sectionEl = document.getElementById('sectionListEdit');
+            if (!sectionEl) return;
+
+            // Cari atau buat kontainer list per tanggal
+            let listContent = document.getElementById('listEditGroupedContainer');
+            if (!listContent) {
+                const innerBox = sectionEl.querySelector('.border.border-slate-200.rounded-2xl');
+                if (innerBox) {
+                    innerBox.innerHTML = '<div id="listEditGroupedContainer" class="p-4 sm:p-5 space-y-6"></div>';
+                    listContent = document.getElementById('listEditGroupedContainer');
+                }
+            }
+            if (!listContent) return;
+
             const searchVal = (document.getElementById('searchListEditInput')?.value || '').toLowerCase();
             const selectedMonth = document.getElementById('selectListEditMonth')?.value || 'all';
-            const sortMode = document.getElementById('selectListEditSort')?.value || 'deadline_asc';
-            const subtitle = document.getElementById('listEditSubtitle');
-            if (!tableBody) return;
 
             // 1. Filter Berdasarkan Bulan
             let filtered = cachedClients.filter(c => {
@@ -1498,12 +1509,11 @@
                 return matchSheet || matchDate;
             });
 
-            // Hitung statistik untuk Badge Kategori
+            // Hitung statistik badge kategori
             let countAll = filtered.length;
             let countAntrean = 0;
             let countMendekati = 0;
             let countTerlambat = 0;
-
             const now = new Date();
 
             const processed = filtered.map(c => {
@@ -1511,13 +1521,11 @@
                 const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
                 const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
 
-                let status = 'Belum Masuk Antrean';
                 let sisaHari = null;
                 let isOverdue = false;
                 let deadlineDateStr = '-';
 
                 if (isChecked && timestamp) {
-                    status = 'Antrean Edit';
                     const checkDate = new Date(parseInt(timestamp));
                     const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
                     deadlineDateStr = deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1527,10 +1535,8 @@
 
                     if (sisaHari < 0) {
                         isOverdue = true;
-                        status = 'Terlambat';
                         countTerlambat++;
                     } else if (sisaHari <= 2) {
-                        status = 'Mendekati Batas';
                         countMendekati++;
                     } else {
                         countAntrean++;
@@ -1544,20 +1550,23 @@
                     cleanKey,
                     isChecked,
                     timestamp,
-                    status,
                     sisaHari,
                     isOverdue,
                     deadlineDateStr
                 };
             });
 
-            // Update Angka Badge Kategori di Atas
-            document.getElementById('countAll').textContent = countAll;
-            document.getElementById('countAntrean').textContent = countAntrean;
-            document.getElementById('countMendekati').textContent = countMendekati;
-            document.getElementById('countTerlambat').textContent = countTerlambat;
+            // Update Badge Kategori
+            const badgeAll = document.getElementById('countAll');
+            const badgeAntrean = document.getElementById('countAntrean');
+            const badgeMendekati = document.getElementById('countMendekati');
+            const badgeTerlambat = document.getElementById('countTerlambat');
+            if(badgeAll) badgeAll.textContent = countAll;
+            if(badgeAntrean) badgeAntrean.textContent = countAntrean;
+            if(badgeMendekati) badgeMendekati.textContent = countMendekati;
+            if(badgeTerlambat) badgeTerlambat.textContent = countTerlambat;
 
-            // 2. Filter Berdasarkan Kategori Status Tab
+            // 2. Filter Tab Kategori
             if (currentListEditFilter === 'antrean') {
                 filtered = processed.filter(c => c.isChecked);
             } else if (currentListEditFilter === 'mendekati') {
@@ -1568,99 +1577,109 @@
                 filtered = processed;
             }
 
-            // 3. Filter Berdasarkan Pencarian (Nama / FG)
+            // 3. Filter Pencarian Nama / FG / Kampus
             if (searchVal) {
                 filtered = filtered.filter(b => 
                     (b.nama || '').toLowerCase().includes(searchVal) || 
                     (b.fg || '').toLowerCase().includes(searchVal) ||
-                    (b.kampus || '').toLowerCase().includes(searchVal)
+                    (b.kampus || '').toLowerCase().includes(searchVal) ||
+                    (b.tanggal || '').toLowerCase().includes(searchVal)
                 );
             }
 
-            // 4. Sorting Data
-            filtered.sort((a, b) => {
-                if (sortMode === 'deadline_asc') {
-                    if (!a.timestamp && !b.timestamp) return 0;
-                    if (!a.timestamp) return 1;
-                    if (!b.timestamp) return -1;
-                    return (a.timestamp - b.timestamp);
-                } else if (sortMode === 'date_asc') {
-                    return cleanToISODate(a.tanggal).localeCompare(cleanToISODate(b.tanggal));
-                } else if (sortMode === 'date_desc') {
-                    return cleanToISODate(b.tanggal).localeCompare(cleanToISODate(a.tanggal));
-                } else if (sortMode === 'name_asc') {
-                    return (a.nama || '').localeCompare(b.nama || '');
-                }
-                return 0;
-            });
-
-            if (subtitle) subtitle.textContent = `Menampilkan ${filtered.length} data klien untuk manajemen list edit.`;
-
             if (filtered.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="p-8 text-center text-slate-400 text-xs italic">
-                            Tidak ada data klien yang sesuai dengan filter.
-                        </td>
-                    </tr>
-                `;
+                listContent.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien yang sesuai dengan filter.</div>`;
                 return;
             }
 
-            tableBody.innerHTML = filtered.map((c, idx) => {
-                const safeName = (c.nama || '').replace(/'/g, "\\'");
-                const globalIdx = cachedClients.findIndex(item => item.nama === c.nama && item.tanggal === c.tanggal);
-
-                // Badge Status Styling
-                let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">Belum Masuk</span>';
-                let deadlineDisplay = '<span class="text-slate-400 italic"> - </span>';
-
-                if (c.isChecked && c.timestamp) {
-                    if (c.isOverdue) {
-                        statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 animate-pulse">Terlambat</span>';
-                        deadlineDisplay = `<span class="font-bold text-rose-600 block">${c.deadlineDateStr}</span><span class="text-[10px] text-rose-500 font-semibold">Lewat ${Math.abs(c.sisaHari)} hari</span>`;
-                    } else if (c.sisaHari <= 2) {
-                        statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Mendekati Batas</span>';
-                        deadlineDisplay = `<span class="font-bold text-amber-700 block">${c.deadlineDateStr}</span><span class="text-[10px] text-amber-600 font-semibold">Sisa ${c.sisaHari} hari lagi</span>`;
-                    } else {
-                        statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">Antrean Edit</span>';
-                        deadlineDisplay = `<span class="font-bold text-slate-800 block">${c.deadlineDateStr}</span><span class="text-[10px] text-purple-600 font-semibold">Sisa ${c.sisaHari} hari lagi</span>`;
-                    }
+            // 4. Kelompokkan berdasarkan tanggal sesi (Grouping by Date)
+            const groupedByDate = {};
+            filtered.forEach(c => {
+                const dateKey = c.tanggal || 'Tanggal Tidak Diketahui';
+                if (!groupedByDate[dateKey]) {
+                    groupedByDate[dateKey] = [];
                 }
+                groupedByDate[dateKey].push(c);
+            });
+
+            // Urutkan jam di dalam masing-masing tanggal
+            Object.keys(groupedByDate).forEach(dateKey => {
+                groupedByDate[dateKey].sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
+            });
+
+            // Render tampilan per tanggal (mirip kalender harian)
+            listContent.innerHTML = Object.keys(groupedByDate).map(dateKey => {
+                const dateClients = groupedByDate[dateKey];
 
                 return `
-                    <tr class="hover:bg-slate-50/80 transition group">
-                        <td class="py-3 px-4">
-                            <span class="font-bold text-slate-900 block">${c.nama}</span>
-                            <span class="text-[11px] text-slate-400 font-medium">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</span>
-                        </td>
-                        <td class="py-3 px-3 whitespace-nowrap">
-                            <span class="font-semibold text-slate-800 block">${c.tanggal || '-'}</span>
-                            <span class="text-[11px] font-mono text-blue-700">${c.jam || '-'} WIB</span>
-                        </td>
-                        <td class="py-3 px-3 whitespace-nowrap">
-                            <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px] inline-block">
-                                ${c.fg || 'Raihan'}
-                            </span>
-                        </td>
-                        <td class="py-3 px-3 whitespace-nowrap">
-                            ${statusBadge}
-                        </td>
-                        <td class="py-3 px-3 whitespace-nowrap">
-                            ${deadlineDisplay}
-                        </td>
-                        <td class="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
-                            <label class="inline-flex items-center gap-1.5 font-bold text-xs text-purple-900 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-xl border border-purple-200 cursor-pointer transition select-none shadow-xs align-middle" title="Ceklis List Edit">
-                                <input type="checkbox" ${c.isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                <span class="text-[11px]">Ceklis</span>
-                            </label>
-                            ${globalIdx !== -1 ? `
-                                <button onclick="openClientDetailModal(${globalIdx})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition shadow-xs align-middle" title="Buka Detail">
-                                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                                </button>
-                            ` : ''}
-                        </td>
-                    </tr>
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 bg-purple-600 rounded-full"></div>
+                                <h4 class="font-bold text-slate-900 text-sm sm:text-base">${dateKey}</h4>
+                            </div>
+                            <span class="text-[11px] font-semibold bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">${dateClients.length} Sesi Klien</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            ${dateClients.map(c => {
+                                const cleanKey = (c.nama || '').replace(/\s+/g, '_');
+                                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+                                
+                                let deadlineInfo = '<span class="text-slate-400 italic text-[11px]">Belum masuk antrean edit</span>';
+                                let cardBorder = 'border-slate-200 bg-white';
+                                
+                                if (isChecked && timestamp) {
+                                    const checkDate = new Date(parseInt(timestamp));
+                                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+                                    const now = new Date();
+                                    const isOverdue = now > deadlineDate;
+                                    const diffTime = deadlineDate - now;
+                                    const sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    
+                                    cardBorder = isOverdue ? 'border-rose-300 bg-rose-50/20' : (sisaHari <= 2 ? 'border-amber-300 bg-amber-50/10' : 'border-purple-300 bg-purple-50/10');
+                                    deadlineInfo = `
+                                        <span class="font-bold text-[11px] ${isOverdue ? 'text-rose-600' : (sisaHari <= 2 ? 'text-amber-700' : 'text-purple-700')}">
+                                            Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
+                                            ${isOverdue ? '(LEWAT H+7!)' : `(Sisa ${sisaHari} hr)`}
+                                        </span>
+                                    `;
+                                }
+
+                                const safeName = (c.nama || '').replace(/'/g, "\\'");
+                                const globalIdx = cachedClients.findIndex(item => item.nama === c.nama && item.tanggal === c.tanggal);
+
+                                return `
+                                    <div class="p-4 rounded-2xl border ${cardBorder} shadow-xs flex flex-col justify-between space-y-3 transition hover:shadow-sm">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
+                                                <span class="text-[10px] font-bold text-slate-500">FG: ${c.fg || 'Raihan'}</span>
+                                            </div>
+                                            <h4 class="font-bold text-sm text-slate-900 mt-1">${c.nama}</h4>
+                                            <p class="text-[11px] text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
+                                        </div>
+
+                                        <div class="pt-2 border-t border-slate-100 space-y-2">
+                                            <div>${deadlineInfo}</div>
+                                            <div class="flex items-center gap-2 pt-1">
+                                                <label class="flex items-center gap-1.5 font-bold text-xs text-purple-900 cursor-pointer select-none bg-purple-100/70 hover:bg-purple-100 px-3 py-1.5 rounded-xl transition flex-1 justify-center">
+                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                                    <span>List Edit</span>
+                                                </label>
+                                                ${globalIdx !== -1 ? `
+                                                    <button onclick="openClientDetailModal(${globalIdx})" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition shadow-xs" title="Buka Detail">
+                                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
                 `;
             }).join('');
         }
