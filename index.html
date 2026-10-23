@@ -1476,10 +1476,15 @@
             const container = document.getElementById('listEditContainer');
             if (!container) return;
 
+            // Jika data dari Google Sheets belum termuat, ambil data otomatis
             if (!cachedClients || cachedClients.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat data klien...</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Sedang mengambil data klien dari server...</div>`;
                 refreshClientDatabase(false).then(() => {
-                    if (cachedClients && cachedClients.length > 0) renderListEditSection();
+                    if (cachedClients && cachedClients.length > 0) {
+                        renderListEditSection();
+                    } else {
+                        container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien yang ditemukan di Google Sheets. Pastikan URL Apps Script sudah benar.</div>`;
+                    }
                 });
                 return;
             }
@@ -1508,7 +1513,7 @@
                 return matchSheet || matchDate;
             });
 
-            // 2. Filter Berdasarkan Pencarian
+            // 2. Filter Berdasarkan Pencarian (Nama, Kampus, FG, Tanggal)
             if (searchVal) {
                 filtered = filtered.filter(b => 
                     (b.nama || '').toLowerCase().includes(searchVal) || 
@@ -1519,11 +1524,11 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien pada periode ini.</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic">Tidak ada data klien pada periode bulan ini.</div>`;
                 return;
             }
 
-            // 3. Kelompokkan berdasarkan tanggal sesi (Grouping by Date)
+            // 3. Kelompokkan Berdasarkan Tanggal Sesi (Grouping by Date)
             const groupedByDate = {};
             filtered.forEach(c => {
                 const dateKey = c.tanggal || 'Tanggal Tidak Diketahui';
@@ -1533,12 +1538,12 @@
                 groupedByDate[dateKey].push(c);
             });
 
-            // Urutkan jam sesi di dalam tiap tanggal
+            // Urutkan berdasarkan jam sesi
             Object.keys(groupedByDate).forEach(dateKey => {
                 groupedByDate[dateKey].sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
             });
 
-            // Render tampilan per tanggal
+            // 4. Render Tampilan Kartu per Tanggal
             container.innerHTML = Object.keys(groupedByDate).map(dateKey => {
                 const dateClients = groupedByDate[dateKey];
 
