@@ -1473,49 +1473,74 @@
                 return;
             }
 
-            container.innerHTML = clients.map((c) => {
-                const cleanKey = c.nama.replace(/\s+/g, '_');
-                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-                
-                let deadlineInfo = '<span class="text-slate-400 italic">Belum dicentang (Belum masuk antrean edit)</span>';
-                if (isChecked && timestamp) {
-                    const checkDate = new Date(parseInt(timestamp));
-                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
-                    const now = new Date();
-                    const isOverdue = now > deadlineDate;
-                    
-                    deadlineInfo = `
-                        <span class="font-bold ${isOverdue ? 'text-rose-600' : 'text-purple-700'}">
-                            Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
-                            ${isOverdue ? '(LEWAT DEADLINE!)' : ''}
-                        </span>
-                    `;
-                }
+            container.innerHTML = `
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                    <div class="overflow-x-auto touch-scroll">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                                <tr>
+                                    <th class="py-3 px-4">Klien & Kampus</th>
+                                    <th class="py-3 px-3">Jadwal Sesi</th>
+                                    <th class="py-3 px-3">Fotografer (FG)</th>
+                                    <th class="py-3 px-3">Status Deadline (7 Hari)</th>
+                                    <th class="py-3 px-4 text-center">List Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs text-slate-700 bg-white">
+                                ${clients.map((c) => {
+                                    const cleanKey = c.nama.replace(/\s+/g, '_');
+                                    const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                                    const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+                                    
+                                    let deadlineInfo = '<span class="text-slate-400 italic">Belum dicentang</span>';
+                                    if (isChecked && timestamp) {
+                                        const checkDate = new Date(parseInt(timestamp));
+                                        const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+                                        const now = new Date();
+                                        const isOverdue = now > deadlineDate;
+                                        
+                                        deadlineInfo = `
+                                            <span class="font-bold ${isOverdue ? 'text-rose-600' : 'text-purple-700'}">
+                                                ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} 
+                                                ${isOverdue ? '(LEWAT!)' : ''}
+                                            </span>
+                                        `;
+                                    }
 
-                const safeName = (c.nama || '').replace(/'/g, "\\'");
+                                    const safeName = (c.nama || '').replace(/'/g, "\\'");
 
-                return `
-                    <div class="p-4 bg-slate-50 border ${isChecked ? 'border-purple-300 bg-purple-50/20' : 'border-slate-200'} rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
-                                <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
-                            </div>
-                            <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${c.nama}</h4>
-                            <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • Lokasi: ${c.lokasi || '-'}</p>
-                            <div class="mt-1.5 text-xs">${deadlineInfo}</div>
-                        </div>
-
-                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                            <label class="flex items-center gap-2 font-bold text-xs text-purple-900 bg-white px-3 py-2 rounded-xl border border-purple-200 shadow-xs cursor-pointer select-none">
-                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                <span>List Edit</span>
-                            </label>
-                        </div>
+                                    return `
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="py-3 px-4">
+                                                <span class="font-bold text-slate-900 block">${c.nama}</span>
+                                                <span class="text-[11px] text-slate-400 font-medium">${c.kampus || 'Umum'}</span>
+                                            </td>
+                                            <td class="py-3 px-3 whitespace-nowrap">
+                                                <span class="font-semibold text-slate-800 block">${c.tanggal || '-'}</span>
+                                                <span class="text-[11px] font-mono text-blue-700">${c.jam || '-'} WIB</span>
+                                            </td>
+                                            <td class="py-3 px-3 whitespace-nowrap">
+                                                <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[11px] inline-block">
+                                                    ${c.fg || 'Raihan'}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-3 whitespace-nowrap">
+                                                ${deadlineInfo}
+                                            </td>
+                                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                                <label class="inline-flex items-center gap-1.5 font-bold text-xs text-purple-900 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200 cursor-pointer select-none">
+                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                                    <span>List Edit</span>
+                                                </label>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
         }
 
         function toggleListEditTab(namaKlien, isChecked) {
