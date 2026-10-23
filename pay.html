@@ -26,38 +26,44 @@
             <span class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-amber-100 text-amber-800" id="badgeStatus">PROSES VERIFIKASI</span>
         </div>
 
-        <!-- VISUAL ALUR STATUS (STEPPER) -->
+        <!-- VISUAL ALUR STATUS (STEPPER 6 TAHAP) -->
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">Status Pesanan Anda</span>
             
-            <div class="grid grid-cols-4 gap-1 text-center">
-                <!-- Step 1: Booking Diterima -->
+            <div class="grid grid-cols-6 gap-1 text-center">
+                <!-- Step 1: Booking -->
                 <div class="space-y-1">
-                    <div id="step1Icon" class="w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                        <i class="fa-solid fa-check text-[10px]"></i>
+                    <div id="step1Icon" class="w-6 h-6 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                        <i class="fa-solid fa-check"></i>
                     </div>
-                    <span class="text-[9px] font-bold text-slate-700 block leading-tight">Booking Diterima</span>
+                    <span class="text-[8px] font-bold text-slate-700 block leading-tight">Booking</span>
                 </div>
-                <!-- Step 2: DP Diterima -->
+                <!-- Step 2: DP -->
                 <div class="space-y-1">
-                    <div id="step2Icon" class="w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                        <i class="fa-solid fa-check text-[10px]"></i>
+                    <div id="step2Icon" class="w-6 h-6 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                        <i class="fa-solid fa-check"></i>
                     </div>
-                    <span class="text-[9px] font-bold text-slate-700 block leading-tight">DP Diterima</span>
+                    <span class="text-[8px] font-bold text-slate-700 block leading-tight">DP</span>
                 </div>
                 <!-- Step 3: Terjadwal -->
                 <div class="space-y-1">
-                    <div id="step3Icon" class="w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold">
-                        3
-                    </div>
-                    <span id="step3Text" class="text-[9px] font-medium text-slate-400 block leading-tight">Terjadwal</span>
+                    <div id="step3Icon" class="w-6 h-6 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold">3</div>
+                    <span id="step3Text" class="text-[8px] font-medium text-slate-400 block leading-tight">Terjadwal</span>
                 </div>
                 <!-- Step 4: Lunas -->
                 <div class="space-y-1">
-                    <div id="step4Icon" class="w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold">
-                        4
-                    </div>
-                    <span id="step4Text" class="text-[9px] font-medium text-slate-400 block leading-tight">Lunas</span>
+                    <div id="step4Icon" class="w-6 h-6 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold">4</div>
+                    <span id="step4Text" class="text-[8px] font-medium text-slate-400 block leading-tight">Lunas</span>
+                </div>
+                <!-- Step 5: Proses Edit -->
+                <div class="space-y-1">
+                    <div id="step5Icon" class="w-6 h-6 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <span id="step5Text" class="text-[8px] font-medium text-slate-400 block leading-tight">Edit</span>
+                </div>
+                <!-- Step 6: Selesai -->
+                <div class="space-y-1">
+                    <div id="step6Icon" class="w-6 h-6 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-flag-checkered"></i></div>
+                    <span id="step6Text" class="text-[8px] font-medium text-slate-400 block leading-tight">Selesai</span>
                 </div>
             </div>
         </div>
@@ -121,7 +127,7 @@
             </button>
         </div>
 
-        <!-- Pesan Sukses Lunas (Hanya tampil jika sudah lunas) -->
+        <!-- Pesan Sukses Lunas -->
         <div id="lunasSuccessSection" class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 hidden">
             <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
                 <i class="fa-solid fa-check"></i>
@@ -129,6 +135,19 @@
             <div>
                 <span class="text-xs font-bold text-emerald-900 block">Pembayaran Lunas</span>
                 <p class="text-[11px] text-emerald-700 mt-0.5">Terima kasih! Sesi foto wisuda Anda sudah lunas sepenuhnya. Sampai jumpa di sesi pemotretan!</p>
+            </div>
+        </div>
+
+        <!-- Pesan Khusus Ketika Selesai Edit & Ucapan Selamat -->
+        <div id="selesaiEditSuccessSection" class="p-4 bg-purple-50 border border-purple-200 rounded-2xl text-center space-y-3 hidden">
+            <div class="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center mx-auto text-xl shadow-inner">
+                <i class="fa-solid fa-award"></i>
+            </div>
+            <div class="space-y-1">
+                <span class="text-xs font-bold text-purple-900 block text-base">Selamat atas Kelulusan Anda! 🎉</span>
+                <p class="text-xs text-purple-700 leading-relaxed">
+                    Halo Kak! Pengerjaan editing foto wisuda Kakak sudah selesai sepenuhnya dengan hasil terbaik. Terima kasih telah mempercayakan momen berharga ini bersama VividLens Graduation! 🤍📸
+                </p>
             </div>
         </div>
 
@@ -154,19 +173,21 @@
                 return;
             }
 
+            const decodedNama = decodeURIComponent(namaParam).trim();
+
             try {
                 const res = await fetch(SCRIPT_URL);
                 const data = await res.json();
                 
                 if (data && data.status === 'success' && data.clients) {
-                    const found = data.clients.find(c => c.nama.toLowerCase().trim() === decodeURIComponent(namaParam).toLowerCase().trim());
+                    const found = data.clients.find(c => c.nama.toLowerCase().trim() === decodedNama.toLowerCase());
                     
                     if (found) {
                         globalClientData = found;
-                        renderPaymentInfo(found);
+                        renderPaymentInfo(found, decodedNama);
                     } else {
-                        document.getElementById('clientName').textContent = decodeURIComponent(namaParam);
-                        renderPendingState(decodeURIComponent(namaParam));
+                        document.getElementById('clientName').textContent = decodedNama;
+                        renderPendingState(decodedNama);
                     }
                 }
             } catch (err) {
@@ -180,12 +201,12 @@
             document.getElementById('clientLokasi').textContent = "-";
             document.getElementById('clientJadwal').textContent = "Menunggu konfirmasi admin";
             
-            document.getElementById('step2Icon').className = "w-7 h-7 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold";
-            document.getElementById('step2Icon').innerHTML = "2";
-            document.getElementById('step2Icon').nextElementSibling.className = "text-[9px] font-medium text-slate-400 block leading-tight";
+            document.getElementById('step2Icon').className = "w-6 h-6 mx-auto rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-[10px] font-bold";
+            document.getElementById('step2Icon').textContent = "2";
+            document.getElementById('step2Icon').nextElementSibling.className = "text-[8px] font-medium text-slate-400 block leading-tight";
         }
 
-        function renderPaymentInfo(c) {
+        function renderPaymentInfo(c, decodedNama) {
             const h = parseInt(c.harga) || 350000;
             const dp = parseInt(c.dp) || 100000;
             const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
@@ -200,21 +221,28 @@
             document.getElementById('txtDP').textContent = `- ${formatRupiah(dp)}`;
             document.getElementById('txtSisa').textContent = formatRupiah(sisa);
 
+            // Step 3 (Terjadwal) Aktif
             const icon3 = document.getElementById('step3Icon');
             const text3 = document.getElementById('step3Text');
-            icon3.className = "w-7 h-7 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
-            icon3.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
-            text3.className = "text-[9px] font-bold text-slate-700 block leading-tight";
+            icon3.className = "w-6 h-6 mx-auto rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm";
+            icon3.innerHTML = '<i class="fa-solid fa-check"></i>';
+            text3.className = "text-[8px] font-bold text-slate-700 block leading-tight";
+
+            // Cek Status List Edit & Selesai Edit dari localStorage browser atau parameter
+            const cleanKey = decodedNama.replace(/\s+/g, '_');
+            const isEditChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+            const isEditFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
 
             if (isLunas) {
                 document.getElementById('badgeStatus').textContent = "LUNAS";
                 document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800";
                 
+                // Step 4 (Lunas) Aktif
                 const icon4 = document.getElementById('step4Icon');
                 const text4 = document.getElementById('step4Text');
-                icon4.className = "w-7 h-7 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-sm";
-                icon4.innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
-                text4.className = "text-[9px] font-bold text-emerald-700 block leading-tight";
+                icon4.className = "w-6 h-6 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm";
+                icon4.innerHTML = '<i class="fa-solid fa-check"></i>';
+                text4.className = "text-[8px] font-bold text-emerald-700 block leading-tight";
 
                 const boxSisa = document.getElementById('boxSisaContainer');
                 boxSisa.className = "p-3.5 bg-emerald-600 text-white rounded-xl flex justify-between items-center shadow-sm";
@@ -223,6 +251,30 @@
 
                 document.getElementById('qrisSection').classList.add('hidden');
                 document.getElementById('lunasSuccessSection').classList.remove('hidden');
+            }
+
+            // Jika Masuk Proses Edit
+            if (isEditChecked) {
+                const icon5 = document.getElementById('step5Icon');
+                const text5 = document.getElementById('step5Text');
+                icon5.className = "w-6 h-6 mx-auto rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm";
+                icon5.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+                text5.className = "text-[8px] font-bold text-purple-700 block leading-tight";
+                document.getElementById('badgeStatus').textContent = "PROSES EDIT FOTO";
+                document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-purple-100 text-purple-800";
+            }
+
+            // Jika Selesai Edit
+            if (isEditFinished) {
+                const icon6 = document.getElementById('step6Icon');
+                const text6 = document.getElementById('step6Text');
+                icon6.className = "w-6 h-6 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm";
+                icon6.innerHTML = '<i class="fa-solid fa-flag-checkered"></i>';
+                text6.className = "text-[8px] font-bold text-emerald-700 block leading-tight";
+                document.getElementById('badgeStatus').textContent = "SELESAI DIEDIT";
+                document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800";
+
+                document.getElementById('selesaiEditSuccessSection').classList.remove('hidden');
             }
         }
 
