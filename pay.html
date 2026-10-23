@@ -138,6 +138,17 @@
             </div>
         </div>
 
+        <!-- Kotak Informasi Estimasi Proses Edit (7-10 Hari) -->
+        <div id="prosesEditInfoSection" class="p-4 bg-purple-50 border border-purple-200 rounded-2xl text-center space-y-2 hidden">
+            <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto text-base">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-purple-900 block">Foto Sedang Dalam Proses Edit ⏳</span>
+                <p class="text-[11px] text-purple-700 mt-0.5">Estimasi waktu pengerjaan editing adalah <strong>7–10 hari kerja</strong> terhitung sejak sesi foto selesai. Mohon ditunggu ya Kak, hasil terbaik segera kami kirimkan!</p>
+            </div>
+        </div>
+
         <!-- Pesan Khusus Ketika Selesai Edit & Ucapan Selamat -->
         <div id="selesaiEditSuccessSection" class="p-4 bg-purple-50 border border-purple-200 rounded-2xl text-center space-y-3 hidden">
             <div class="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center mx-auto text-xl shadow-inner">
@@ -264,6 +275,11 @@
                 text5.className = "text-[8px] font-bold text-purple-700 block leading-tight";
                 document.getElementById('badgeStatus').textContent = "PROSES EDIT FOTO";
                 document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-purple-100 text-purple-800";
+
+                // Tampilkan info estimasi 7-10 hari jika belum selesai
+                if (!isEditFinished) {
+                    document.getElementById('prosesEditInfoSection').classList.remove('hidden');
+                }
             }
 
             // Jika Selesai Edit
@@ -276,6 +292,8 @@
                 document.getElementById('badgeStatus').textContent = "SELESAI DIEDIT";
                 document.getElementById('badgeStatus').className = "text-[10px] uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800";
 
+                // Sembunyikan info estimasi, tampilkan kotak sukses/selamat
+                document.getElementById('prosesEditInfoSection').classList.add('hidden');
                 document.getElementById('selesaiEditSuccessSection').classList.remove('hidden');
             }
         }
