@@ -18,7 +18,7 @@
         }
         input, select, textarea { font-size: 15px !important; }
         @media (min-width: 640px) { input, select, textarea { font-size: 13px !important; } }
-        .touch-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .touch-scroll::-webkit-scrollbar { width: 4px; }
         .touch-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
         #invoicePaper {
@@ -60,9 +60,6 @@
                 </button>
                 <button id="tabCalendarBtn" onclick="switchMode('calendar')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-calendar-days text-[11px]"></i> Kalender
-                </button>
-                <button id="tabListEditBtn" onclick="switchMode('listEdit')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
-                    <i class="fa-solid fa-list-check text-[11px]"></i> List Edit
                 </button>
                 <button id="tabFinanceBtn" onclick="switchMode('finance')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-chart-pie text-[11px]"></i> Rekap Kas
@@ -198,41 +195,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- TAB MENU LIST EDIT (DI KELOMPOKKAN PER TANGGAL SEPERTI KALENDER HARIAN) -->
-        <div id="sectionListEdit" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm max-w-6xl mx-auto space-y-4 hidden">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
-                <div>
-                    <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-list-check text-purple-600"></i> Manajemen List Edit & Deadline 7 Hari
-                    </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Centang klien yang masuk antrean edit untuk memicu hitung mundur deadline 7 hari.</p>
-                </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-                    <select id="selectListEditMonth" onchange="renderListEditSection()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs outline-none cursor-pointer">
-                        <option value="all">Semua Bulan</option>
-                        <option value="01">Januari</option>
-                        <option value="02">Februari</option>
-                        <option value="03">Maret</option>
-                        <option value="04">April</option>
-                        <option value="05">Mei</option>
-                        <option value="06">Juni</option>
-                        <option value="07">Juli</option>
-                        <option value="08">Agustus</option>
-                        <option value="09" selected>September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Desember</option>
-                    </select>
-                    <input type="text" id="searchListEditInput" oninput="renderListEditSection()" placeholder="Cari nama klien / FG..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs outline-none flex-1 sm:w-48">
-                </div>
-            </div>
-
-            <!-- Kontainer Utama List Edit Berdasarkan Tanggal Sesi -->
-            <div id="listEditContainer" class="space-y-6 pt-2">
-                <div class="p-8 text-center text-slate-400 text-xs italic">Memuat daftar list edit...</div>
             </div>
         </div>
 
@@ -1046,7 +1008,6 @@
             const isDashboard = mode === 'dashboard';
             const isApproval = mode === 'approval';
             const isCalendar = mode === 'calendar';
-            const isListEdit = mode === 'listEdit';
             const isFinance = mode === 'finance';
             const isTracker = mode === 'tracker';
             const isToday = mode === 'today';
@@ -1060,8 +1021,6 @@
             document.getElementById('sectionDashboard').classList.toggle('hidden', !isDashboard);
             document.getElementById('sectionApproval').classList.toggle('hidden', !isApproval);
             document.getElementById('sectionCalendar').classList.toggle('hidden', !isCalendar);
-            const secListEdit = document.getElementById('sectionListEdit');
-            if(secListEdit) secListEdit.classList.toggle('hidden', !isListEdit);
             document.getElementById('sectionFinance').classList.toggle('hidden', !isFinance);
             document.getElementById('sectionTracker').classList.toggle('hidden', !isTracker);
             document.getElementById('sectionTodaySchedule').classList.toggle('hidden', !isToday);
@@ -1073,8 +1032,6 @@
             document.getElementById('tabDashboardBtn').className = isDashboard ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabApprovalBtn').className = isApproval ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabCalendarBtn').className = isCalendar ? getActiveTabClass() : getInactiveTabClass();
-            const btnListEdit = document.getElementById('tabListEditBtn');
-            if(btnListEdit) btnListEdit.className = isListEdit ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabFinanceBtn').className = isFinance ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTrackerBtn').className = isTracker ? getActiveTabClass() : getInactiveTabClass();
             document.getElementById('tabTodayBtn').className = isToday ? getActiveTabClass() : getInactiveTabClass();
@@ -1085,7 +1042,6 @@
 
             if (isApproval) fetchPendingBookings(false);
             if (isTracker) fetchSupabaseClients(false);
-            if (isListEdit) renderListEditSection();
             if (isPaymentFg) initPaymentFgTab();
             if (isAllBooking) fetchAllBookingsDatabase(false);
             if (isDashboard) updateDashboardMetrics();
@@ -1094,7 +1050,6 @@
                 refreshClientDatabase(false);
             } else {
                 if (isCalendar) renderCalendarView();
-                if (isListEdit) renderListEditSection();
                 if (isToday) renderCombinedSchedule();
                 if (isFinance) calculateFinancialStats();
                 if (isPaymentFg) renderPaymentFgDailyView();
@@ -1468,487 +1423,372 @@
                 `;
             }).join('');
         }
-        function openClientDetailModal(index) {
-            const client = cachedClients[index];
-            if (!client) {
-                alert('Data detail klien tidak ditemukan.');
-                return;
-            }
-            
-            // Simpan index aktif untuk form reschedule
-            window._currentDetailIndex = index;
 
-            // Sembunyikan semua section utama, lalu tampilkan section halaman detail khusus
-            const sections = ['sectionDashboard', 'sectionApproval', 'sectionCalendar', 'sectionListEdit', 'sectionFinance', 'sectionTracker', 'sectionTodaySchedule', 'sectionAllBooking', 'sectionPaymentFg', 'sectionNewBooking'];
-            sections.forEach(secId => {
-                const el = document.getElementById(secId);
-                if (el) el.classList.add('hidden');
-            });
+        function openClientDetailModal(idx) {
+            const c = window._allBookingItems ? window._allBookingItems[idx] : null;
+            if (!c) return;
 
-            const detailPage = document.getElementById('sectionClientDetail');
-            const contentContainer = document.getElementById('clientDetailPageContent');
-            if (!detailPage || !contentContainer) return;
+            window._selectedClientOriginalDate = c.tanggal;
+            window._selectedClientObject = c;
+            window._selectedClientDP = parseInt(c.dp) || 100000;
 
-            const h = parseInt(client.harga) || 0;
-            const dp = parseInt(client.dp) || 0;
-            const isLunas = (client.payment || '').toUpperCase().trim() === 'LUNAS';
+            const h = parseInt(c.harga) || 0;
+            const dp = parseInt(c.dp) || 0;
+            const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
             const sisa = isLunas ? 0 : Math.max(0, h - dp);
-            const safeName = (client.nama || '').replace(/'/g, "\\'");
-            const rawSheet = client.sheetName || 'Sheet1';
 
-            // Render isi halaman detail khusus secara lengkap seperti semula
-            contentContainer.innerHTML = `
-                <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${client.payment || 'DP'}</span>
-                            <h3 class="font-bold text-lg text-slate-900 mt-1">${client.nama}</h3>
-                            <p class="text-xs text-slate-500">${client.kampus || 'Umum'} • Paket ${client.paket || 'Silver'}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-400 block font-bold uppercase">Jadwal Sesi</span>
-                            <span class="font-bold text-blue-700 text-xs">${client.tanggal || '-'} (${client.jam || '-'} WIB)</span>
-                        </div>
-                    </div>
+            const isoDateVal = cleanToISODate(c.tanggal) || '';
+            const matchedPkgKey = matchPackageKey(c.paket);
+            const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-200">
-                        <div>
-                            <span class="text-slate-400 font-bold uppercase text-[10px] block">Lokasi & FG</span>
-                            <p class="font-semibold text-slate-800">${client.lokasi || '-'}</p>
-                            <p class="text-slate-600 mt-0.5">Fotografer: <span class="font-bold">${client.fg || 'Raihan'}</span></p>
+            document.getElementById('sectionAllBooking').classList.add('hidden');
+            const detailSec = document.getElementById('sectionClientDetail');
+            detailSec.classList.remove('hidden');
+
+            const contentEl = document.getElementById('clientDetailPageContent');
+            contentEl.innerHTML = `
+                <div class="space-y-5 text-xs">
+                    <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md">Tab ${c.sheetName || 'Sheet'}</span>
+                            <span class="font-bold text-slate-700 text-sm">${c.tanggal || '-'} • ${c.jam || '-'} WIB</span>
                         </div>
-                        <div>
-                            <span class="text-slate-400 font-bold uppercase text-[10px] block">Kontak WhatsApp</span>
-                            <p class="font-semibold text-emerald-700">${client.noWa || '-'}</p>
+                        <h3 class="font-bold text-lg text-slate-900">${c.nama}</h3>
+                        <p class="text-slate-500 text-sm">${c.kampus || 'Umum'} • Lokasi Sesi: <strong class="text-slate-800">${c.lokasi || '-'}</strong></p>
+                        <div class="flex flex-wrap gap-2 pt-2 text-slate-600">
+                            <span><i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> WA: <strong>${clientWa}</strong></span>
+                            <span>•</span>
+                            <span><i class="fa-solid fa-camera text-blue-600 mr-1"></i> FG: <strong>${c.fg || 'Raihan'}</strong></span>
                         </div>
                     </div>
 
-                    <div class="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                        <div>
-                            <span class="text-slate-400 font-bold uppercase text-[10px] block">Rincian Finansial</span>
-                            <span class="text-slate-700">Total: <strong>${formatRupiah(h)}</strong> | DP: <strong class="text-emerald-600">${formatRupiah(dp)}</strong></span>
-                        </div>
-                        <span class="font-bold ${isLunas ? 'text-emerald-600' : 'text-rose-600'}">Sisa: ${formatRupiah(sisa)}</span>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        ${!isLunas ? `<button onclick="setClientAsPaid('${safeName}', '${rawSheet}', this)" class="py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center gap-1.5"><i class="fa-solid fa-check"></i> Set Lunas</button>` : ''}
-                        <button onclick="openInvoiceModal('${safeName}', '${client.kampus || ''}', '${client.paket || ''}', '${h}', '${dp}', '${sisa}', '${client.tanggal || ''}', '${client.jam || ''}', '${(client.lokasi || '').replace(/'/g, "\\'")}', '${client.fg || ''}', ${isLunas})" class="py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Buka Invoice / Kwitansi PDF</button>
-                    </div>
-                </div>
-
-                <!-- Form Reschedule Bawaan Semula -->
-                <div class="p-5 bg-white border border-slate-200 rounded-2xl space-y-4">
-                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days text-blue-600"></i> Form Reschedule / Ubah Jadwal & Paket
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div class="space-y-1">
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">Tanggal Baru</label>
-                            <input type="date" id="rescheduleTanggal" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none" value="${cleanToISODate(client.tanggal)}">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">Jam Sesi Baru</label>
-                            <input type="text" id="rescheduleJam" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none" value="${client.jam || ''}">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">Lokasi Baru</label>
-                            <input type="text" id="rescheduleLokasi" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none" value="${client.lokasi || ''}">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] text-slate-400 font-bold uppercase">Fotografer (FG)</label>
-                            <input type="text" id="rescheduleFg" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none" value="${client.fg || 'Raihan'}">
-                        </div>
-                    </div>
-                    <button onclick="submitReschedule()" class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow transition">
-                        Simpan Perubahan Jadwal & Sync Google Calendar
-                    </button>
-                </div>
-            `;
-
-            detailPage.classList.remove('hidden');
-        }
-
-        // ========================================================
-        // TAB MENU: MANAJEMEN LIST EDIT & DEADLINE 7 HARI (PER TANGGAL SESI)
-        // ========================================================
-        let listEditCurrentWeekStart = new Date(); // Acuan minggu aktif
-        let currentListEditFilterTab = 'all'; // Filter kategori status aktif
-
-        function changeListEditWeek(direction) {
-            listEditCurrentWeekStart.setDate(listEditCurrentWeekStart.getDate() + (direction * 7));
-            renderListEditSection();
-        }
-
-        function setListEditThisWeek() {
-            listEditCurrentWeekStart = new Date();
-            renderListEditSection();
-        }
-
-        function setListEditFilterTab(tabName) {
-            currentListEditFilterTab = tabName;
-            renderListEditSection();
-        }
-
-        function toggleListEditTab(namaKlien, isChecked) {
-            const cleanKey = namaKlien.replace(/\s+/g, '_');
-            if (isChecked) {
-                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
-                localStorage.setItem(`edit_time_${cleanKey}`, Date.now());
-                showToast(`List Edit ${namaKlien} dicentang (Deadline 7 hari aktif)`);
-            } else {
-                localStorage.removeItem(`edit_checked_${cleanKey}`);
-                localStorage.removeItem(`edit_time_${cleanKey}`);
-                showToast(`List Edit ${namaKlien} dibatalkan`);
-            }
-            renderListEditSection();
-        }
-
-        function toggleFinishedEditTab(namaKlien, isChecked) {
-            const cleanKey = namaKlien.replace(/\s+/g, '_');
-            if (isChecked) {
-                localStorage.setItem(`edit_finished_${cleanKey}`, 'true');
-                showToast(`Pekerjaan edit untuk ${namaKlien} ditandai SELESAI! 🎉`);
-            } else {
-                localStorage.removeItem(`edit_finished_${cleanKey}`);
-                showToast(`Status selesai edit ${namaKlien} dibatalkan`);
-            }
-            renderListEditSection();
-        }
-
-        function copyWeeklyEditRecap(startStr, endStr, clientsList) {
-            let text = `📋 **REKAP TUGAS EDITING VIVIDLENS**\n📅 Periode: ${startStr} — ${endStr}\n\n`;
-            
-            if (clientsList.length === 0) {
-                text += `Tidak ada sesi klien pada minggu ini.`;
-            } else {
-                clientsList.forEach((c, idx) => {
-                    const cleanKey = (c.nama || '').replace(/\s+/g, '_');
-                    const isFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
-                    const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                    
-                    let statusLabel = 'Belum Antrean';
-                    if (isFinished) statusLabel = 'SELESAI ✔';
-                    else if (isChecked) statusLabel = 'PROSES EDIT';
-
-                    text += `${idx + 1}. *${c.nama}* (${c.tanggal} | ${c.jam})\n   - Kampus: ${c.kampus || 'Umum'} (${c.paket})\n   - FG: ${c.fg || 'Raihan'} | Status: [${statusLabel}]\n\n`;
-                });
-            }
-
-            text += `_Mohon diselesaikan tepat waktu ya rekan-rekan tim editor! Terima kasih_ ✨`;
-
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("Rekap tugas mingguan berhasil disalin untuk WhatsApp!");
-            });
-        }
-
-        function renderListEditSection() {
-            const container = document.getElementById('listEditContainer');
-            if (!container) return;
-
-            if (!cachedClients || cachedClients.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs italic"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Memuat data klien...</div>`;
-                refreshClientDatabase(false).then(() => {
-                    if (cachedClients && cachedClients.length > 0) renderListEditSection();
-                });
-                return;
-            }
-
-            // Pastikan toolbar navigasi minggu & tab kategori ada di atas
-            let toolbarEl = document.getElementById('listEditWeekToolbar');
-            if (!toolbarEl) {
-                const sectionEl = document.getElementById('sectionListEdit');
-                if (sectionEl) {
-                    const headerDiv = sectionEl.querySelector('.flex.flex-col.sm\\:flex-row');
-                    if (headerDiv) {
-                        const toolbarDiv = document.createElement('div');
-                        toolbarDiv.id = 'listEditWeekToolbar';
-                        toolbarDiv.className = "space-y-3 pt-3 pb-2 border-b border-slate-100";
-                        toolbarDiv.innerHTML = `
-                            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <button onclick="changeListEditWeek(-1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                                        <i class="fa-solid fa-chevron-left mr-1"></i> Minggu Lalu
-                                    </button>
-                                    <button onclick="setListEditThisWeek()" class="px-3 py-2 bg-purple-100 text-purple-800 hover:bg-purple-200 font-bold text-xs rounded-xl transition">
-                                        Minggu Ini
-                                    </button>
-                                    <button onclick="changeListEditWeek(1)" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                                        Minggu Depan <i class="fa-solid fa-chevron-right ml-1"></i>
-                                    </button>
-                                </div>
-                                <div id="listEditWeekRangeLabel" class="font-bold text-xs text-slate-700 text-center sm:text-right px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
-                                    -
-                                </div>
-                            </div>
-
-                            <!-- Bar Kategori Filter Cepat -->
-                            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto touch-scroll" id="listEditFilterTabsContainer">
-                                <button onclick="setListEditFilterTab('all')" id="tabFilterAll" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Semua (<span id="cntAll">0</span>)</button>
-                                <button onclick="setListEditFilterTab('belum')" id="tabFilterBelum" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Belum Antrean (<span id="cntBelum">0</span>)</button>
-                                <button onclick="setListEditFilterTab('proses')" id="tabFilterProses" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Proses Edit (<span id="cntProses">0</span>)</button>
-                                <button onclick="setListEditFilterTab('mendekati')" id="tabFilterMendekati" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">H-2 Deadline (<span id="cntMendekati">0</span>)</button>
-                                <button onclick="setListEditFilterTab('terlambat')" id="tabFilterTerlambat" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Terlambat (<span id="cntTerlambat">0</span>)</button>
-                                <button onclick="setListEditFilterTab('selesai')" id="tabFilterSelesai" class="px-3 py-1.5 rounded-lg transition whitespace-nowrap">Selesai (<span id="cntSelesai">0</span>)</button>
-                            </div>
-                        `;
-                        headerDiv.after(toolbarDiv);
-                    }
-                }
-            }
-
-            // Hitung rentang tanggal dalam 1 minggu (Senin - Minggu)
-            const curr = new Date(listEditCurrentWeekStart);
-            const day = curr.getDay();
-            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
-            
-            const startOfWeek = new Date(curr.setDate(diffToMonday));
-            startOfWeek.setHours(0, 0, 0, 0);
-
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(endOfWeek.getDate() + 6);
-            endOfWeek.setHours(23, 59, 59, 999);
-
-            const optDate = { day: 'numeric', month: 'short', year: 'numeric' };
-            const startStrFormatted = startOfWeek.toLocaleDateString('id-ID', optDate);
-            const endStrFormatted = endOfWeek.toLocaleDateString('id-ID', optDate);
-
-            const weekRangeLabelEl = document.getElementById('listEditWeekRangeLabel');
-            if (weekRangeLabelEl) {
-                weekRangeLabelEl.textContent = `📅 Periode: ${startStrFormatted} — ${endStrFormatted}`;
-            }
-
-            const searchVal = (document.getElementById('searchListEditInput')?.value || '').toLowerCase();
-
-            let weekClients = cachedClients.filter(c => {
-                const isoStr = cleanToISODate(c.tanggal);
-                if (!isoStr) return false;
-                const clientDate = new Date(isoStr);
-                return clientDate >= startOfWeek && clientDate <= endOfWeek;
-            });
-
-            let cntAll = weekClients.length;
-            let cntBelum = 0;
-            let cntProses = 0;
-            let cntMendekati = 0;
-            let cntTerlambat = 0;
-            let cntSelesai = 0;
-            let finishedCountTotal = 0;
-
-            const now = new Date();
-
-            const processedWeekClients = weekClients.map(c => {
-                const cleanKey = (c.nama || '').replace(/\s+/g, '_');
-                const isChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                const isFinished = localStorage.getItem(`edit_finished_${cleanKey}`) === 'true';
-                const timestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-
-                let category = 'belum';
-                let sisaHari = null;
-                let isOverdue = false;
-
-                if (isFinished) {
-                    category = 'selesai';
-                    cntSelesai++;
-                    finishedCountTotal++;
-                } else if (isChecked && timestamp) {
-                    const checkDate = new Date(parseInt(timestamp));
-                    const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000));
-                    const diffTime = deadlineDate - now;
-                    sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    isOverdue = now > deadlineDate;
-
-                    if (isOverdue) {
-                        category = 'terlambat';
-                        cntTerlambat++;
-                    } else if (sisaHari <= 2) {
-                        category = 'mendekati';
-                        cntMendekati++;
-                        cntProses++;
-                    } else {
-                        category = 'proses';
-                        cntProses++;
-                    }
-                } else {
-                    cntBelum++;
-                }
-
-                return {
-                    ...c,
-                    cleanKey,
-                    isChecked,
-                    isFinished,
-                    timestamp,
-                    category,
-                    sisaHari,
-                    isOverdue
-                };
-            });
-
-            document.getElementById('cntAll').textContent = cntAll;
-            document.getElementById('cntBelum').textContent = cntBelum;
-            document.getElementById('cntProses').textContent = cntProses;
-            document.getElementById('cntMendekati').textContent = cntMendekati;
-            document.getElementById('cntTerlambat').textContent = cntTerlambat;
-            document.getElementById('cntSelesai').textContent = cntSelesai;
-
-            ['all', 'belum', 'proses', 'mendekati', 'terlambat', 'selesai'].forEach(t => {
-                const btn = document.getElementById(`tabFilter${t.charAt(0).toUpperCase() + t.slice(1)}`);
-                if (btn) {
-                    if (t === currentListEditFilterTab) {
-                        btn.className = "px-3 py-1.5 rounded-lg transition whitespace-nowrap bg-purple-700 text-white font-bold shadow-xs";
-                    } else {
-                        btn.className = "px-3 py-1.5 rounded-lg transition whitespace-nowrap bg-white text-slate-700 hover:bg-slate-200";
-                    }
-                }
-            });
-
-            let filtered = processedWeekClients;
-            if (currentListEditFilterTab !== 'all') {
-                filtered = processedWeekClients.filter(c => c.category === currentListEditFilterTab);
-            }
-
-            if (searchVal) {
-                filtered = filtered.filter(b => 
-                    (b.nama || '').toLowerCase().includes(searchVal) || 
-                    (b.fg || '').toLowerCase().includes(searchVal) ||
-                    (b.kampus || '').toLowerCase().includes(searchVal) ||
-                    (b.tanggal || '').toLowerCase().includes(searchVal)
-                );
-            }
-
-            let progressContainer = document.getElementById('listEditWeeklyProgress');
-            if (!progressContainer) {
-                progressContainer = document.createElement('div');
-                progressContainer.id = 'listEditWeeklyProgress';
-                container.before(progressContainer);
-            }
-
-            const percentDone = cntAll > 0 ? Math.round((finishedCountTotal / cntAll) * 100) : 0;
-            progressContainer.innerHTML = `
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2.5 mb-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div>
-                            <h4 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-purple-600"></i> Progress Penyelesaian Edit Minggu Ini
-                            </h4>
-                            <p class="text-[11px] text-slate-500">${finishedCountTotal} dari ${cntAll} sesi klien telah selesai diedit (${percentDone}%)</p>
-                        </div>
-                        <button onclick="copyWeeklyEditRecap('${startStrFormatted}', '${endStrFormatted}', ${JSON.stringify(weekClients).replace(/"/g, '&quot;')})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center gap-1.5 active:scale-95">
-                            <i class="fa-brands fa-whatsapp text-sm"></i> Salin Rekap Tugas WA
+                    <div class="flex gap-3">
+                        ${!isLunas ? `
+                            <button onclick="setClientAsPaid('${c.nama.replace(/'/g, "\\'")}', '${c.sheetName || 'Sheet1'}', this); closeClientDetailPage();" class="py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-sm active:scale-95">
+                                <i class="fa-solid fa-check"></i> Ubah Status Jadi Lunas
+                            </button>
+                        ` : ''}
+                        <button onclick="openInvoiceModal('${c.nama.replace(/'/g, "\\'")}', '${c.kampus || ''}', '${c.paket || ''}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}', '${c.fg || ''}', ${isLunas})" class="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 flex-1 shadow-sm active:scale-95">
+                            <i class="fa-solid fa-file-invoice"></i> Lihat & Unduh Invoice PDF
                         </button>
                     </div>
-                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                        <div class="bg-gradient-to-r from-purple-600 to-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: ${percentDone}%"></div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                            <i class="fa-solid fa-rotate text-blue-600"></i> Form Reschedule / Ganti Jadwal, Paket & FG
+                        </h4>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Ganti Paket Wisuda</label>
+                            <select id="modalReschedPaket" onchange="onModalReschedPaketChange()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
+                                <option value="Bronze">Bronze (Rp350k • 60m)</option>
+                                <option value="Silver">Silver (Rp375k • 60m)</option>
+                                <option value="Gold">Gold (Rp450k • 90m)</option>
+                                <option value="Diamond">Diamond (Rp475k • 90m)</option>
+                                <option value="Premium">Premium (Rp1.000k • 90m)</option>
+                                <option value="Group 1 Reguler">Group 1 Reguler (Rp450k)</option>
+                                <option value="Group 1 Night">Group 1 Night (Rp550k)</option>
+                                <option value="Group 2 Reguler">Group 2 Reguler (Rp600k)</option>
+                                <option value="Group 2 Night">Group 2 Night (Rp650k)</option>
+                                <option value="Group 3 Reguler">Group 3 Reguler (Rp900k)</option>
+                                <option value="Group 3 Night">Group 3 Night (Rp950k)</option>
+                                <option value="Couple Package">Couple Package (Rp550k)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Tanggal Baru</label>
+                                <input type="date" id="modalReschedTanggal" value="${isoDateVal}" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900 cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Jam Baru</label>
+                                <input type="text" id="modalReschedJam" value="${c.jam || ''}" placeholder="09:00 - 10:00" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-700 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Lokasi Baru</label>
+                                <input type="text" id="modalReschedLokasi" value="${c.lokasi || ''}" placeholder="Lokasi sesi..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none text-slate-900">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">Fotografer (FG)</label>
+                                <select id="modalReschedFG" onchange="onModalReschedFGChange(this.value)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none cursor-pointer text-slate-900">
+                                    <option value="Raihan">Raihan</option>
+                                    <option value="Zidane">Zidane</option>
+                                    <option value="Dava">Dava</option>
+                                    <option value="Riza">Riza</option>
+                                    <option value="Wahyu">Wahyu</option>
+                                    <option value="Dhika">Dhika</option>
+                                    <option value="Surya">Surya</option>
+                                    <option value="Vero">Vero</option>
+                                    <option value="Satria">Satria</option>
+                                    <option value="__custom__">+ Ketik Manual...</option>
+                                </select>
+                                <input type="text" id="modalCustomFGInput" placeholder="Ketik nama FG baru..." class="w-full mt-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-semibold outline-none hidden">
+                            </div>
+                        </div>
+
+                        <button onclick="submitModalReschedule()" id="btnModalReschedSubmit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 mt-4">
+                            <i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule ke Sheet & GCal
+                        </button>
                     </div>
                 </div>
             `;
 
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="p-10 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-200">Tidak ada sesi klien yang sesuai dengan filter pada minggu ini.</div>`;
+            document.getElementById('modalReschedPaket').value = matchedPkgKey;
+            
+            const fgSel = document.getElementById('modalReschedFG');
+            let matched = false;
+            for (let opt of fgSel.options) {
+                if (opt.value.toLowerCase() === (c.fg || '').toLowerCase()) {
+                    fgSel.value = opt.value;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched && c.fg) {
+                fgSel.value = '__custom__';
+                const customIn = document.getElementById('modalCustomFGInput');
+                customIn.classList.remove('hidden');
+                customIn.value = c.fg;
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeClientDetailPage() {
+            document.getElementById('sectionClientDetail').classList.add('hidden');
+            document.getElementById('sectionAllBooking').classList.remove('hidden');
+            renderAllBookingList();
+        }
+
+        function onModalReschedFGChange(val) {
+            const customInput = document.getElementById('modalCustomFGInput');
+            if (val === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function getModalActiveFG() {
+            const select = document.getElementById('modalReschedFG');
+            if (select.value === '__custom__') {
+                return document.getElementById('modalCustomFGInput').value.trim() || 'Raihan';
+            }
+            return select.value;
+        }
+
+        function onModalReschedPaketChange() {
+            const paketKey = document.getElementById('modalReschedPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+            const currentJam = document.getElementById('modalReschedJam').value.trim();
+            const startHour = currentJam.split('-')[0].trim();
+            if (startHour) {
+                document.getElementById('modalReschedJam').value = calculateTimeRange(startHour, pkg.duration);
+            }
+            window._modalReschedPkg = pkg;
+        }
+
+        async function submitModalReschedule() {
+            const scriptUrl = getActiveScriptUrl();
+            const clientObj = window._selectedClientObject || {};
+            const nama = clientObj.nama;
+            
+            const isoDateBaru = document.getElementById('modalReschedTanggal').value;
+            const jamBaru = document.getElementById('modalReschedJam').value.trim();
+            const lokasiBaru = document.getElementById('modalReschedLokasi').value.trim();
+            const fgBaru = getModalActiveFG();
+            const paketKey = document.getElementById('modalReschedPaket').value;
+            const pkg = PACKAGE_DATA[paketKey] || PACKAGE_DATA['Silver'];
+
+            if (!isoDateBaru || !jamBaru) return alert('Tanggal dan Jam baru wajib diisi!');
+
+            const tglBaruFormatted = isoToSheetDate(isoDateBaru);
+            const isoDateLama = cleanToISODate(window._selectedClientOriginalDate);
+            const dpAwal = parseInt(clientObj.dp) || 100000;
+            const sisaPelunasan = Math.max(0, pkg.harga - dpAwal);
+
+            const btn = document.getElementById('btnModalReschedSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+            const payload = {
+                action: "reschedule",
+                nama: nama,
+                sheetAsal: clientObj.sheetName || '',
+                tanggalLama: clientObj.tanggal || '',
+                tanggalBaru: tglBaruFormatted,
+                isoDateBaru: isoDateBaru,
+                isoDateLama: isoDateLama,
+                jamBaru: jamBaru,
+                fgBaru: fgBaru,
+                lokasiBaru: lokasiBaru || clientObj.lokasi,
+                noWa: getClientWhatsAppNumber(nama, clientObj.noWa),
+                paketBaru: pkg.label,
+                hargaBaru: pkg.harga,
+                pelunasanBaru: sisaPelunasan,
+                feeFGBaru: pkg.feeFG,
+                bersihBaru: pkg.bersih
+            };
+
+            try {
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showSuccessAlert('Reschedule Berhasil Diupdate!', `Jadwal, lokasi, dan paket untuk ${nama} berhasil diperbarui di Google Sheets & Google Calendar.`);
+                closeClientDetailPage();
+                refreshClientDatabase(false);
+            } catch (err) {
+                alert('Gagal memperbarui reschedule: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Simpan Perubahan Reschedule ke Sheet & GCal';
+            }
+        }
+
+        function initPaymentFgTab() {
+            const picker = document.getElementById('selectPaymentFgDate');
+            if (picker && !picker.value) {
+                const now = new Date();
+                const isoToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                picker.value = isoToday;
+            }
+            renderPaymentFgDailyView();
+        }
+
+        function setTodayPaymentFgDate() {
+            const now = new Date();
+            const isoToday = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            document.getElementById('selectPaymentFgDate').value = isoToday;
+            renderPaymentFgDailyView();
+        }
+
+        function renderPaymentFgDailyView() {
+            const pickerVal = document.getElementById('selectPaymentFgDate').value;
+            const container = document.getElementById('paymentFgListContainer');
+            if (!pickerVal || !container) return;
+
+            const dayClients = cachedClients.filter(c => cleanToISODate(c.tanggal) === pickerVal);
+            dayClients.sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
+
+            let totalOmzet = 0;
+            let totalFeeFG = 0;
+            let totalBersih = 0;
+
+            dayClients.forEach(c => {
+                const h = parseInt(c.harga) || 0;
+                const matchedKey = matchPackageKey(c.paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                const fee = parseInt(c.feeFG) || pkg.feeFG;
+                const bersih = parseInt(c.bersih) || (h - fee);
+
+                totalOmzet += h;
+                totalFeeFG += fee;
+                totalBersih += bersih;
+            });
+
+            document.getElementById('pfTotalJob').textContent = `${dayClients.length} Sesi`;
+            document.getElementById('pfTotalOmzet').textContent = formatRupiah(totalOmzet);
+            document.getElementById('pfTotalFeeFG').textContent = formatRupiah(totalFeeFG);
+            document.getElementById('pfTotalBersih').textContent = formatRupiah(totalBersih);
+
+            if (dayClients.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-2">
+                        <i class="fa-regular fa-calendar-xmark text-3xl text-slate-300"></i>
+                        <p class="font-bold text-xs sm:text-sm text-slate-700">Tidak ada jadwal job pada tanggal ini</p>
+                        <p class="text-[11px] text-slate-400">Silakan pilih tanggal lain melalui pemilih tanggal di atas.</p>
+                    </div>
+                `;
                 return;
             }
 
-            const groupedByDate = {};
-            filtered.forEach(c => {
-                const dateKey = c.tanggal || 'Tanggal Tidak Diketahui';
-                if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-                groupedByDate[dateKey].push(c);
-            });
+            container.innerHTML = dayClients.map(c => {
+                const h = parseInt(c.harga) || 0;
+                const dp = parseInt(c.dp) || 0;
+                const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+                const sisa = isLunas ? 0 : Math.max(0, h - dp);
 
-            Object.keys(groupedByDate).forEach(dateKey => {
-                groupedByDate[dateKey].sort((a, b) => (a.jam || '').localeCompare(b.jam || ''));
-            });
+                const matchedKey = matchPackageKey(c.paket);
+                const pkg = PACKAGE_DATA[matchedKey] || PACKAGE_DATA['Silver'];
+                const feeFG = parseInt(c.feeFG) || pkg.feeFG;
+                const bersihStudio = parseInt(c.bersih) || (h - feeFG);
 
-            container.innerHTML = Object.keys(groupedByDate).map(dateKey => {
-                const dateClients = groupedByDate[dateKey];
+                const isFgPaid = (c.statusFG || c.status_fg || '').toUpperCase().trim() === 'PAID';
 
                 return `
-                    <div class="space-y-3 bg-slate-50/60 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-day text-purple-600 text-sm"></i>
-                                <h4 class="font-bold text-slate-900 text-sm sm:text-base">${dateKey}</h4>
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${c.payment || 'DP'}</span>
+                                    <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
+                                </div>
+                                <h4 class="font-bold text-sm sm:text-base text-slate-900 mt-1">${c.nama}</h4>
+                                <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • Lokasi: <span class="text-slate-700 font-semibold">${c.lokasi || '-'}</span></p>
                             </div>
-                            <span class="text-[11px] font-bold bg-purple-100 text-purple-800 px-3 py-0.5 rounded-full">${dateClients.length} Sesi Klien</span>
                         </div>
 
-                        <div class="space-y-2.5">
-                            ${dateClients.map(c => {
-                                let deadlineBarHtml = '';
-                                let cardBorder = 'border-slate-200 bg-white';
-                                
-                                if (c.isFinished) {
-                                    cardBorder = 'border-emerald-300 bg-emerald-50/20';
-                                } else if (c.isChecked && c.timestamp) {
-                                    cardBorder = c.isOverdue ? 'border-rose-300 bg-rose-50/20' : (c.sisaHari <= 2 ? 'border-amber-300 bg-amber-50/10' : 'border-purple-300 bg-purple-50/10');
-                                    const deadlineDate = new Date(parseInt(c.timestamp) + (7 * 24 * 60 * 60 * 1000));
-                                    
-                                    deadlineBarHtml = `
-                                        <div class="mt-2.5 p-2.5 rounded-xl ${c.isOverdue ? 'bg-rose-100/90 text-rose-900 border border-rose-200' : 'bg-purple-100/80 text-purple-900 border border-purple-200'} flex justify-between items-center text-xs font-semibold">
-                                            <span><i class="fa-solid fa-clock mr-1"></i> Deadline: <strong>${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
-                                            <span class="font-bold px-2 py-0.5 rounded ${c.isOverdue ? 'bg-rose-600 text-white animate-pulse' : 'bg-purple-700 text-white'}">
-                                                ${c.isOverdue ? 'TERLAMBAT (LEWAT H+7)' : `Sisa ${c.sisaHari} Hari`}
-                                            </span>
-                                        </div>
-                                    `;
-                                }
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
+                            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                                <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider block">Pembayaran Klien</span>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Harga Paket:</span>
+                                    <span class="font-semibold text-slate-800">${formatRupiah(h)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Terbayar (DP):</span>
+                                    <span class="font-semibold text-emerald-600">${formatRupiah(dp)}</span>
+                                </div>
+                                <div class="flex justify-between pt-1 border-t border-slate-100 font-bold">
+                                    <span class="text-slate-700">Sisa Piutang:</span>
+                                    <span class="${isLunas ? 'text-emerald-600' : 'text-rose-600'}">${formatRupiah(sisa)}</span>
+                                </div>
+                            </div>
 
-                                const safeName = (c.nama || '').replace(/'/g, "\\'");
+                            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                                <span class="text-[9px] font-bold uppercase text-amber-700 tracking-wider block">Fee Fotografer & Studio</span>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Fee FG (${c.fg || 'FG'}):</span>
+                                    <span class="font-semibold text-amber-800">${formatRupiah(feeFG)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500">Bersih Studio:</span>
+                                    <span class="font-semibold text-emerald-700">${formatRupiah(bersihStudio)}</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-1 border-t border-slate-100">
+                                    <span class="font-bold text-slate-700">Status Vendor ke FG:</span>
+                                    ${isFgPaid ? `
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[10px]">PAID ✔</span>
+                                    ` : `
+                                        <button onclick="setFgAsPaid('${c.nama.replace(/'/g, "\\'")}', '${c.sheetName || 'Sheet1'}', this)" class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white font-bold text-[10px] rounded-lg transition active:scale-95 shadow-xs">
+                                            Tandai Paid
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
 
-                                return `
-                                    <div class="p-4 rounded-xl border ${cardBorder} shadow-xs space-y-2 transition">
-                                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                            <div class="space-y-0.5">
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <span class="text-[10px] font-mono font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${c.jam || '-'} WIB</span>
-                                                    <span class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">FG: ${c.fg || 'Raihan'}</span>
-                                                    <span class="text-[10px] font-semibold text-slate-500">Paket: ${c.paket || 'Silver'}</span>
-                                                    ${c.isFinished ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">SELESAI EDIT ✔</span>' : ''}
-                                                </div>
-                                                <h5 class="font-bold text-sm sm:text-base text-slate-900 pt-0.5">${c.nama}</h5>
-                                                <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Lokasi: <span class="text-slate-700 font-medium">${c.lokasi || '-'}</span></p>
-                                            </div>
-
-                                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                                                <!-- Tombol Ceklis List Edit -->
-                                                <label class="flex items-center gap-1.5 font-bold text-[11px] text-purple-900 bg-purple-100/70 hover:bg-purple-100 px-3 py-2 rounded-xl cursor-pointer transition select-none justify-center shadow-xs">
-                                                    <input type="checkbox" ${c.isChecked ? 'checked' : ''} onchange="toggleListEditTab('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                                    <span>List Edit</span>
-                                                </label>
-
-                                                <!-- Tombol Ceklis Selesai Edit -->
-                                                <label class="flex items-center gap-1.5 font-bold text-[11px] text-emerald-900 bg-emerald-100/70 hover:bg-emerald-100 px-3 py-2 rounded-xl cursor-pointer transition select-none justify-center shadow-xs">
-                                                    <input type="checkbox" ${c.isFinished ? 'checked' : ''} onchange="toggleFinishedEditTab('${safeName}', this.checked)" class="w-4 h-4 text-emerald-600 rounded accent-emerald-600 cursor-pointer">
-                                                    <span>Selesai Edit</span>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Bar Hitung Mundur Deadline 7 Hari (Muncul Saat Dicentang) -->
-                                        ${deadlineBarHtml}
-                                    </div>
-                                `;
-                            }).join('')}
+                        <div class="flex gap-2 pt-1">
+                            ${!isLunas ? `
+                                <button onclick="setClientAsPaid('${c.nama.replace(/'/g, "\\'")}', '${c.sheetName || 'Sheet1'}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                    <i class="fa-solid fa-check"></i> Set Lunas
+                                </button>
+                            ` : ''}
+                            <button onclick="openInvoiceModal('${c.nama.replace(/'/g, "\\'")}', '${c.kampus || ''}', '${c.paket || ''}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}', '${c.fg || ''}', ${isLunas})" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-invoice"></i> Invoice
+                            </button>
                         </div>
                     </div>
                 `;
             }).join('');
-        }
-        
-
-        function toggleListEditTab(namaKlien, isChecked) {
-            const cleanKey = namaKlien.replace(/\s+/g, '_');
-            if (isChecked) {
-                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
-                localStorage.setItem(`edit_time_${cleanKey}`, Date.now());
-                showToast(`List Edit ${namaKlien} dicentang (Deadline 7 hari aktif)`);
-            } else {
-                localStorage.removeItem(`edit_checked_${cleanKey}`);
-                localStorage.removeItem(`edit_time_${cleanKey}`);
-                showToast(`List Edit ${namaKlien} dibatalkan`);
-            }
-            renderListEditSection();
         }
 
         // ========================================================
@@ -2067,6 +1907,18 @@
                     const isFgPaid = (c.statusFG || c.status_fg || '').toUpperCase().trim() === 'PAID';
                     const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
                     const safeName = (c.nama || '').replace(/'/g, "\\'");
+                    const cleanKey = safeName.replace(/\s+/g, '_');
+
+                    // Ambil status checklist edit dan waktu dari localStorage
+                    const isEditedChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
+                    const checkedTimestamp = localStorage.getItem(`edit_time_${cleanKey}`);
+                    
+                    let deadlineText = "Belum dicentang";
+                    if (isEditedChecked && checkedTimestamp) {
+                        const checkDate = new Date(parseInt(checkedTimestamp));
+                        const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
+                        deadlineText = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                    }
 
                     return `
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -2080,6 +1932,15 @@
                                     <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • <span class="font-semibold text-slate-700">FG: ${c.fg || 'Raihan'}</span></p>
                                 </div>
                                 <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</span>
+                            </div>
+
+                            <!-- KOTAK CHECKLIST LIST EDIT & DEADLINE 7 HARI -->
+                            <div class="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                                <label class="flex items-center gap-2 font-bold text-purple-900 cursor-pointer select-none">
+                                    <input type="checkbox" ${isEditedChecked ? 'checked' : ''} onchange="toggleEditChecklist('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
+                                    <span>List Edit (Masuk Antrean)</span>
+                                </label>
+                                <span class="text-[11px] font-semibold text-purple-700" id="deadlineLabel_${cleanKey}">${deadlineText}</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
@@ -2135,6 +1996,31 @@
             }
 
             modal.classList.remove('hidden');
+        }
+
+        // Fungsi pendukung checklist status edit & kalkulator deadline otomatis 7 hari
+        function toggleEditChecklist(namaKlien, isChecked) {
+            const cleanKey = namaKlien.replace(/\s+/g, '_');
+            const labelEl = document.getElementById(`deadlineLabel_${cleanKey}`);
+            
+            if (isChecked) {
+                const nowTimestamp = Date.now();
+                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
+                localStorage.setItem(`edit_time_${cleanKey}`, nowTimestamp);
+                
+                const deadlineDate = new Date(nowTimestamp + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
+                if (labelEl) {
+                    labelEl.textContent = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                }
+                showToast(`List Edit untuk ${namaKlien} ditandai (Deadline 7 hari)`);
+            } else {
+                localStorage.removeItem(`edit_checked_${cleanKey}`);
+                localStorage.removeItem(`edit_time_${cleanKey}`);
+                if (labelEl) {
+                    labelEl.textContent = "Belum dicentang";
+                }
+                showToast(`List Edit ${namaKlien} dibatalkan`);
+            }
         }
 
         function closeDayDetailModal() {
@@ -2218,9 +2104,6 @@
                     updateDashboardMetrics();
                     if (document.getElementById('sectionAllBooking') && !document.getElementById('sectionAllBooking').classList.contains('hidden')) {
                         renderAllBookingList();
-                    }
-                    if (document.getElementById('sectionListEdit') && !document.getElementById('sectionListEdit').classList.contains('hidden')) {
-                        renderListEditSection();
                     }
                     if (showToastNotice) showToast(`Berhasil memuat ${cachedClients.length} klien`);
                 }
@@ -3321,77 +3204,15 @@
             const selectAllMonth = document.getElementById('selectAllBookingMonth');
             if (selectAllMonth) selectAllMonth.value = currentMonthStr;
 
-            const selectListMonth = document.getElementById('selectListEditMonth');
-            if (selectListMonth) selectListMonth.value = currentMonthStr;
-
             if (activeUrl) {
                 refreshClientDatabase(false).then(() => {
                     renderCalendarView();
                     updateDashboardMetrics();
-                    renderListEditSection();
                 });
                 fetchSupabaseClients(false);
             }
             recalculateFinancials();
         });
     </script>
-  <!-- Modal Detail Universal untuk Tabel Semua Booking -->
-<div id="universalDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto touch-scroll">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-            <h3 id="uniModalTitle" class="font-bold text-sm text-slate-900">Detail Klien</h3>
-            <button onclick="document.getElementById('universalDetailModal').classList.add('hidden')" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-        <div id="uniModalBody" class="space-y-3 text-xs"></div>
-    </div>
-</div>
-
-<script>
-    // Fungsi pengganti universal agar tombol detail di semua booking dijamin langsung terbuka
-    function openClientDetailModal(index) {
-        const c = cachedClients[index];
-        if (!c) {
-            alert('Data klien tidak ditemukan.');
-            return;
-        }
-
-        const h = parseInt(c.harga) || 0;
-        const dp = parseInt(c.dp) || 0;
-        const isLunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
-        const sisa = isLunas ? 0 : Math.max(0, h - dp);
-        const safeName = (c.nama || '').replace(/'/g, "\\'");
-        const rawSheet = c.sheetName || 'Sheet1';
-
-        document.getElementById('uniModalTitle').textContent = `Detail: ${c.nama}`;
-        document.getElementById('uniModalBody').innerHTML = `
-            <div class="p-3 bg-slate-50 rounded-xl space-y-1.5 border border-slate-200">
-                <div class="flex justify-between items-center">
-                    <span class="font-bold text-slate-900 text-sm">${c.nama}</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isLunas ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${c.payment || 'DP'}</span>
-                </div>
-                <p class="text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'}</p>
-                <p class="text-blue-700 font-semibold">${c.tanggal || '-'} (${c.jam || '-'} WIB)</p>
-                <p class="text-slate-600">Lokasi: <span class="font-medium">${c.lokasi || '-'}</span></p>
-                <p class="text-slate-600">FG: <span class="font-medium">${c.fg || '-'}</span> | WA: <span class="font-medium">${c.noWa || '-'}</span></p>
-            </div>
-
-            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
-                <span class="text-[10px] font-bold uppercase text-slate-400">Rincian Keuangan & Tagihan</span>
-                <div class="flex justify-between"><span>Total Harga:</span><span class="font-semibold">${formatRupiah(h)}</span></div>
-                <div class="flex justify-between"><span>Terbayar (DP):</span><span class="font-semibold text-emerald-600">${formatRupiah(dp)}</span></div>
-                <div class="flex justify-between pt-1 border-t border-slate-100 font-bold"><span>Sisa Piutang:</span><span class="${isLunas ? 'text-emerald-600' : 'text-rose-600'}">${formatRupiah(sisa)}</span></div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                ${!isLunas ? `<button onclick="setClientAsPaid('${safeName}', '${rawSheet}', this)" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition flex items-center gap-1 shadow-xs"><i class="fa-solid fa-check"></i> Set Lunas</button>` : ''}
-                <button onclick="openInvoiceModal('${safeName}', '${c.kampus || ''}', '${c.paket || ''}', '${h}', '${dp}', '${sisa}', '${c.tanggal || ''}', '${c.jam || ''}', '${(c.lokasi || '').replace(/'/g, "\\'")}', '${c.fg || ''}', ${isLunas})" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"><i class="fa-solid fa-file-invoice"></i> Buka Invoice / Kwitansi PDF</button>
-            </div>
-        `;
-
-        document.getElementById('universalDetailModal').classList.remove('hidden');
-    }
-</script>
 </body>
 </html>
