@@ -1907,18 +1907,6 @@
                     const isFgPaid = (c.statusFG || c.status_fg || '').toUpperCase().trim() === 'PAID';
                     const clientWa = getClientWhatsAppNumber(c.nama, c.noWa);
                     const safeName = (c.nama || '').replace(/'/g, "\\'");
-                    const cleanKey = safeName.replace(/\s+/g, '_');
-
-                    // Ambil status checklist edit dan waktu dari localStorage
-                    const isEditedChecked = localStorage.getItem(`edit_checked_${cleanKey}`) === 'true';
-                    const checkedTimestamp = localStorage.getItem(`edit_time_${cleanKey}`);
-                    
-                    let deadlineText = "Belum dicentang";
-                    if (isEditedChecked && checkedTimestamp) {
-                        const checkDate = new Date(parseInt(checkedTimestamp));
-                        const deadlineDate = new Date(checkDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
-                        deadlineText = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-                    }
 
                     return `
                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -1932,15 +1920,6 @@
                                     <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || 'Silver'} • <span class="font-semibold text-slate-700">FG: ${c.fg || 'Raihan'}</span></p>
                                 </div>
                                 <span class="text-xs text-slate-500"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</span>
-                            </div>
-
-                            <!-- KOTAK CHECKLIST LIST EDIT & DEADLINE 7 HARI -->
-                            <div class="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between gap-2 text-xs">
-                                <label class="flex items-center gap-2 font-bold text-purple-900 cursor-pointer select-none">
-                                    <input type="checkbox" ${isEditedChecked ? 'checked' : ''} onchange="toggleEditChecklist('${safeName}', this.checked)" class="w-4 h-4 text-purple-600 rounded accent-purple-600 cursor-pointer">
-                                    <span>List Edit (Masuk Antrean)</span>
-                                </label>
-                                <span class="text-[11px] font-semibold text-purple-700" id="deadlineLabel_${cleanKey}">${deadlineText}</span>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200">
@@ -1998,31 +1977,6 @@
             modal.classList.remove('hidden');
         }
 
-        // Fungsi pendukung checklist status edit & kalkulator deadline otomatis 7 hari
-        function toggleEditChecklist(namaKlien, isChecked) {
-            const cleanKey = namaKlien.replace(/\s+/g, '_');
-            const labelEl = document.getElementById(`deadlineLabel_${cleanKey}`);
-            
-            if (isChecked) {
-                const nowTimestamp = Date.now();
-                localStorage.setItem(`edit_checked_${cleanKey}`, 'true');
-                localStorage.setItem(`edit_time_${cleanKey}`, nowTimestamp);
-                
-                const deadlineDate = new Date(nowTimestamp + (7 * 24 * 60 * 60 * 1000)); // + 7 hari
-                if (labelEl) {
-                    labelEl.textContent = `Deadline: ${deadlineDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-                }
-                showToast(`List Edit untuk ${namaKlien} ditandai (Deadline 7 hari)`);
-            } else {
-                localStorage.removeItem(`edit_checked_${cleanKey}`);
-                localStorage.removeItem(`edit_time_${cleanKey}`);
-                if (labelEl) {
-                    labelEl.textContent = "Belum dicentang";
-                }
-                showToast(`List Edit ${namaKlien} dibatalkan`);
-            }
-        }
-
         function closeDayDetailModal() {
             document.getElementById('modalDayDetail').classList.add('hidden');
         }
@@ -2048,6 +2002,7 @@
 
             const cleanName = currentEditClientName.toLowerCase().trim();
             const cleanSlugNama = cleanName.replace(/[^a-z0-9]/g, '');
+            // Buat slug perkiraan untuk mencari record klien
             const found = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
 
             if (!found) {
@@ -2057,6 +2012,7 @@
             }
 
             try {
+                // Update menggunakan slug sebagai acuan unik
                 const { error } = await supabaseGalleryClient
                     .from('clients')
                     .update({ limit_foto: newQuota })
