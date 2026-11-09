@@ -10,6 +10,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Library HTML to PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- PROTEKSI SESI & LOGOUT OTOMATIS -->
+    <script>
+        const SUPABASE_URL = "https://aizhweokxpxfrczqsuik.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
+        const authClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Cek apakah user sudah login atau belum
+        authClient.auth.getSession().then(({ data: { session } }) => {
+            if (!session) {
+                window.location.href = '/login.html'; // Belum login? Tendang ke halaman login
+            }
+        });
+
+        // Fungsi Logout
+        async function handleLogout() {
+            if (confirm('Yakin ingin keluar dari dasbor VividLens?')) {
+                await authClient.auth.signOut();
+                window.location.href = '/login.html';
+            }
+        }
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { 
@@ -44,9 +67,14 @@
                         <p class="text-[11px] sm:text-xs text-slate-500">Booking & Invoice Automation</p>
                     </div>
                 </div>
-                <button onclick="openModalSettings()" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL">
-                    <i class="fa-solid fa-gear text-base"></i>
-                </button>
+                <div class="flex items-center gap-1.5 sm:hidden">
+                    <button onclick="openModalSettings()" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL">
+                        <i class="fa-solid fa-gear text-base"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="w-8 h-8 flex items-center justify-center text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Keluar / Logout">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Tab Switcher -->
@@ -82,9 +110,14 @@
                 <button id="tabNewBtn" onclick="switchMode('new')" class="flex-1 sm:flex-none py-2 px-3 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 whitespace-nowrap">
                     <i class="fa-solid fa-plus text-[11px]"></i> Booking
                 </button>
-                <button onclick="openModalSettings()" class="hidden sm:flex w-8 h-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg transition ml-1" title="Pengaturan URL">
-                    <i class="fa-solid fa-gear text-sm"></i>
-                </button>
+                <div class="hidden sm:flex items-center gap-1 ml-1 border-l border-slate-200 pl-1">
+                    <button onclick="openModalSettings()" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-lg transition" title="Pengaturan URL">
+                        <i class="fa-solid fa-gear text-sm"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="w-8 h-8 flex items-center justify-center text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Keluar / Logout">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -2001,8 +2034,6 @@
             if (!supabaseGalleryClient) return alert('Koneksi Supabase belum siap!');
 
             const cleanName = currentEditClientName.toLowerCase().trim();
-            const cleanSlugNama = cleanName.replace(/[^a-z0-9]/g, '');
-            // Buat slug perkiraan untuk mencari record klien
             const found = cachedSupabaseClients.find(sc => sc.nama && sc.nama.toLowerCase().trim() === cleanName);
 
             if (!found) {
@@ -2012,7 +2043,6 @@
             }
 
             try {
-                // Update menggunakan slug sebagai acuan unik
                 const { error } = await supabaseGalleryClient
                     .from('clients')
                     .update({ limit_foto: newQuota })
