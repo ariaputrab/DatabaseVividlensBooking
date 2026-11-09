@@ -11,23 +11,17 @@
     <!-- Library HTML to PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- PROTEKSI SESI & LOGOUT OTOMATIS -->
+    <!-- PROTEKSI LOKAL & LOGOUT GIMMICK -->
     <script>
-        const SUPABASE_URL = "https://aizhweokxpxfrczqsuik.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp";
-        const authClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Cek apakah user sudah login atau belum
-        authClient.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
-                window.location.href = '/login.html'; // Belum login? Tendang ke halaman login
-            }
-        });
+        // Cek apakah sudah login via memori browser
+        if (localStorage.getItem('vividlens_logged_in') !== 'true') {
+            window.location.href = '/login.html';
+        }
 
         // Fungsi Logout
-        async function handleLogout() {
+        function handleLogout() {
             if (confirm('Yakin ingin keluar dari dasbor VividLens?')) {
-                await authClient.auth.signOut();
+                localStorage.removeItem('vividlens_logged_in');
                 window.location.href = '/login.html';
             }
         }
