@@ -73,8 +73,20 @@
         return raw.replace(/\D/g, '').replace(/^0/, '62');
     }
 
+    // Nomor WA klien dalam bentuk yang mudah dibaca (08xxxx)
+    function waDisplay(c) {
+        const str = String(c.noWa || '').trim();
+        const m = str.match(/\b(08[0-9]{8,13})\b/) || str.match(/(\+?62[0-9]{9,13})/);
+        return m ? m[1] : (str && str !== 'undefined' ? str : '-');
+    }
+
+    function copyNum(num, btn) {
+        const done = () => { const o = btn.textContent; btn.textContent = 'Tersalin!'; setTimeout(() => btn.textContent = o, 1500); };
+        if (navigator.clipboard) navigator.clipboard.writeText(num).then(done);
+    }
+
     function buildChat(c) {
-        return `Hallo Kak ${c.nama || '...'}\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${c.tanggal || '-'}\nJam : ${c.jam || '-'}\nLokasi : ${c.lokasi || '-'}\nKampus : ${c.kampus || '-'}\nPaket : ${c.paket || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
+        return `Hallo Kak ${c.nama || '...'}\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${c.tanggal || '-'}\nJam : ${c.jam || '-'}\nLokasi : ${c.lokasi || '-'}\nKampus : ${c.kampus || '-'}\nPaket : ${c.paket || '-'}\nWA: ${waDisplay(c)}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
     }
 
     function copyChat(i, btn) {
@@ -143,6 +155,7 @@
                 window._jobs[i] = { nama: c.nama, iso: c.iso };
                 const drive = driveMap[(c.nama || '').toLowerCase().trim()];
                 const note = noteMap[(c.nama || '').toLowerCase().trim() + '|' + c.iso];
+                const waShow = waDisplay(c);
                 const wa = waNumber(c);
                 return `
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -156,6 +169,8 @@
                         <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || '-'}</p>
                     </div>
                     <p class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</p>
+
+                    ${waShow !== '-' ? `<div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"><span class="text-slate-500">No. WA klien: <b class="text-slate-800">${waShow}</b></span><button onclick="copyNum('${waShow}', this)" class="font-bold text-blue-600">Salin Nomor</button></div>` : ''}
 
                     ${note ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl px-3 py-2 text-xs leading-relaxed"><b class="block text-[10px] uppercase tracking-wide">📌 Catatan dari admin</b>${String(note).replace(/</g, '&lt;')}</div>` : ''}
 
