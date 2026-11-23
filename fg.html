@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jadwal Fotografer - VIVIDLENS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+        textarea { font-size: 13px !important; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen py-4 px-3 sm:py-8">
+<div class="max-w-lg mx-auto space-y-4">
+
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-camera"></i></div>
+            <div>
+                <p class="text-[11px] text-slate-300">VIVIDLENS · Jadwal Fotografer</p>
+                <h1 id="hdTitle" class="font-bold text-base leading-tight">Memuat...</h1>
+            </div>
+        </div>
+        <p id="hdDate" class="text-xs text-slate-300 mt-2"></p>
+    </div>
+
+    <div id="jobList" class="space-y-4">
+        <div class="p-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-lg mb-2 block"></i>Memuat jadwal...</div>
+    </div>
+
+    <p class="text-center text-[10px] text-slate-400">VividLens Graduation</p>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymxf1pIrMhVi77zHolsSVW9gsFLni-xs2kX5zTkbDF-OYX-Jwrb6pqD18g7Vu0kyPw/exec";
+    const sb = supabase.createClient(
+        "https://aizhweokxpxfrczqsuik.supabase.co",
+        "sb_publishable_bEKjQ-KQvs3GZpH0eVaHbw_N0ssNYKp"
+    );
+
+    const MON_KEY = { jan:1, feb:2, mar:3, apr:4, mei:5, may:5, jun:6, jul:7, agu:8, agt:8, aug:8, sep:9, okt:10, oct:10, nov:11, des:12, dec:12 };
+    const pad = n => String(n).padStart(2, '0');
+    const params = new URLSearchParams(location.search);
+    const fgName = (params.get('fg') || '').trim();
+    const tglParam = (params.get('tgl') || '').trim(); // format YYYY-MM-DD
+
+    window._chats = {};
+    window._jobs = {};
+
+    function toISO(raw) {
+        if (!raw) return '';
+        const s = String(raw).trim();
+        if (s.includes('GMT') || isNaN(s[0])) {
+            const p = new Date(s);
+            if (!isNaN(p)) return `${p.getFullYear()}-${pad(p.getMonth() + 1)}-${pad(p.getDate())}`;
+        }
+        const parts = s.split(/[\s\-\/\.]+/);
+        if (parts.length >= 3) {
+            let y = parts[2]; if (y.length === 2) y = '20' + y;
+            const m = isNaN(parts[1]) ? (MON_KEY[parts[1].toLowerCase().substring(0, 3)] || 1) : parseInt(parts[1], 10);
+            return `${y}-${pad(m)}-${pad(parseInt(parts[0], 10))}`;
+        }
+        return '';
+    }
+
+    function waNumber(c) {
+        const str = String(c.noWa || '');
+        const m = str.match(/\b(08[0-9]{8,13})\b/) || str.match(/(\+?62[0-9]{9,13})/);
+        const raw = m ? m[1] : str;
+        return raw.replace(/\D/g, '').replace(/^0/, '62');
+    }
+
+    function buildChat(c) {
+        return `Hallo Kak ${c.nama || '...'}\nPerkenalkan, saya ${fgName} dari tim VividLens Graduation 😊\nIzin konfirmasi kembali untuk jadwal sesi foto Kakak ya:\n\nTanggal : ${c.tanggal || '-'}\nJam : ${c.jam || '-'}\nLokasi : ${c.lokasi || '-'}\nKampus : ${c.kampus || '-'}\nPaket : ${c.paket || '-'}\n\nApakah sudah sesuai, Kak? 😊 Untuk meeting point-nya di sebelah mana yaa Kak?\nJika ada request pose atau moodboard yang ingin direferensikan, boleh dikirimkan juga yaa ✨\nTerima kasih, Kak 🙏🏻`;
+    }
+
+    function copyChat(i, btn) {
+        const text = window._chats[i];
+        const done = () => { const o = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Tersalin!'; setTimeout(() => btn.innerHTML = o, 1500); };
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => { done(); markCopied(i); });
+        else { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); done(); markCopied(i); }
+    }
+
+    // Tandai ke admin bahwa fotografer sudah menyalin / memakai format chat
+    async function markCopied(i) {
+        const j = window._jobs[i];
+        if (!j || !j.iso) return;
+        try {
+            await sb.from('fg_confirm').upsert(
+                { nama: j.nama, tanggal: j.iso, fg: fgName, chat_copied_at: new Date().toISOString() },
+                { onConflict: 'nama,tanggal' }
+            );
+        } catch (e) { console.log('fg_confirm error', e); }
+    }
+
+    async function init() {
+        const box = document.getElementById('jobList');
+        if (!fgName) {
+            document.getElementById('hdTitle').textContent = 'Link tidak valid';
+            box.innerHTML = '<div class="p-6 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-500">Link ini belum berisi nama fotografer. Minta link terbaru ke admin ya.</div>';
+            return;
+        }
+        document.getElementById('hdTitle').textContent = `Halo, ${fgName}! 👋`;
+
+        const now = new Date();
+        const todayISO = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        if (tglParam) {
+            const d = new Date(tglParam + 'T00:00:00');
+            document.getElementById('hdDate').textContent = 'Jadwal sesi: ' + d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        } else {
+            document.getElementById('hdDate').textContent = 'Semua jadwal sesi kamu yang akan datang';
+        }
+
+        try {
+            const [res, drv] = await Promise.all([
+                fetch(SCRIPT_URL).then(r => r.json()),
+                sb.from('clients').select('nama, drive_link').limit(1000)
+            ]);
+            const clients = (res && res.clients) ? res.clients : [];
+            const driveMap = {};
+            (drv.data || []).forEach(r => { if (r.nama && r.drive_link) driveMap[r.nama.toLowerCase().trim()] = r.drive_link; });
+
+            const jobs = clients
+                .filter(c => (c.fg || '').toLowerCase().trim() === fgName.toLowerCase())
+                .map(c => ({ ...c, iso: toISO(c.tanggal) }))
+                .filter(c => tglParam ? c.iso === tglParam : c.iso >= todayISO)
+                .sort((a, b) => a.iso.localeCompare(b.iso) || (a.jam || '').localeCompare(b.jam || ''));
+
+            if (jobs.length === 0) {
+                box.innerHTML = '<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-400">Tidak ada jadwal untuk kamu pada tanggal ini.</div>';
+                return;
+            }
+
+            box.innerHTML = jobs.map((c, i) => {
+                const chat = buildChat(c);
+                window._chats[i] = chat;
+                window._jobs[i] = { nama: c.nama, iso: c.iso };
+                const drive = driveMap[(c.nama || '').toLowerCase().trim()];
+                const wa = waNumber(c);
+                return `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">⏰ ${c.jam || '-'} WIB</span>
+                        ${tglParam ? '' : `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${c.tanggal || '-'}</span>`}
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">Sesi ${i + 1}</span>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-base text-slate-900">${c.nama || '-'}</h2>
+                        <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || '-'}</p>
+                    </div>
+                    <p class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</p>
+
+                    ${drive
+                        ? `<a href="${drive}" target="_blank" class="flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl"><i class="fa-brands fa-google-drive"></i> Buka Folder Google Drive</a>`
+                        : `<div class="py-2.5 text-center bg-slate-50 border border-dashed border-slate-300 text-slate-400 text-xs rounded-xl">Folder Drive belum dibuat admin</div>`}
+
+                    <div class="space-y-2 pt-2 border-t border-slate-100">
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block">Format chat konfirmasi ke klien</span>
+                        <textarea readonly rows="9" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none resize-none leading-relaxed">${chat}</textarea>
+                        <div class="flex gap-2">
+                            <button onclick="copyChat(${i}, this)" class="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl active:scale-95"><i class="fa-solid fa-copy mr-1"></i> Salin Chat</button>
+                            ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(chat)}" target="_blank" onclick="markCopied(${i})" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl text-center active:scale-95"><i class="fa-brands fa-whatsapp mr-1"></i> Kirim via WA</a>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            box.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs">Gagal memuat jadwal. Coba refresh halaman.</div>';
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
