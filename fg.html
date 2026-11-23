@@ -115,13 +115,16 @@
         }
 
         try {
-            const [res, drv] = await Promise.all([
+            const [res, drv, nts] = await Promise.all([
                 fetch(SCRIPT_URL).then(r => r.json()),
-                sb.from('clients').select('nama, drive_link').limit(1000)
+                sb.from('clients').select('nama, drive_link').limit(1000),
+                sb.from('fg_confirm').select('nama, tanggal, note').not('note', 'is', null)
             ]);
             const clients = (res && res.clients) ? res.clients : [];
             const driveMap = {};
             (drv.data || []).forEach(r => { if (r.nama && r.drive_link) driveMap[r.nama.toLowerCase().trim()] = r.drive_link; });
+            const noteMap = {};
+            (nts.data || []).forEach(r => { if (r.nama && r.note && r.note.trim()) noteMap[r.nama.toLowerCase().trim() + '|' + r.tanggal] = r.note; });
 
             const jobs = clients
                 .filter(c => (c.fg || '').toLowerCase().trim() === fgName.toLowerCase())
@@ -139,6 +142,7 @@
                 window._chats[i] = chat;
                 window._jobs[i] = { nama: c.nama, iso: c.iso };
                 const drive = driveMap[(c.nama || '').toLowerCase().trim()];
+                const note = noteMap[(c.nama || '').toLowerCase().trim() + '|' + c.iso];
                 const wa = waNumber(c);
                 return `
                 <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -152,6 +156,8 @@
                         <p class="text-xs text-slate-500">${c.kampus || 'Umum'} • Paket ${c.paket || '-'}</p>
                     </div>
                     <p class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i> ${c.lokasi || '-'}</p>
+
+                    ${note ? `<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl px-3 py-2 text-xs leading-relaxed"><b class="block text-[10px] uppercase tracking-wide">📌 Catatan dari admin</b>${String(note).replace(/</g, '&lt;')}</div>` : ''}
 
                     ${drive
                         ? `<a href="${drive}" target="_blank" class="flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl"><i class="fa-brands fa-google-drive"></i> Buka Folder Google Drive</a>`
