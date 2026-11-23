@@ -404,6 +404,213 @@
         decorateFgStatus();
     };
 
+    // ==========================================================
+    // HALAMAN DETAIL KLIEN DIPERKAYA
+    // (pembayaran, posisi alur, aksi cepat, riwayat/repeat, catatan internal)
+    // ==========================================================
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const rupiah = n => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+    const digitsOf = s => String(s || '').replace(/\D/g, '');
+    let detailToken = 0;
+    let noteTimer;
+
+    function detailRow(tone, label, val) {
+        const map = {
+            ok:   ['bg-emerald-100 text-emerald-700', '✓'],
+            run:  ['bg-purple-100 text-purple-700', '✦'],
+            wait: ['bg-amber-100 text-amber-700', '…'],
+            todo: ['bg-slate-200 text-slate-500', '–']
+        };
+        const [cls, ic] = map[tone];
+        return `<div class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-none ${cls}">${ic}</span><div><div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${label}</div><div class="text-xs font-semibold text-slate-800 leading-snug">${val}</div></div></div>`;
+    }
+
+    function detailSteps(st) {
+        const labels = ['Booking', 'DP', 'Lunas', 'Galeri', 'Seleksi', 'Edit', 'Selesai'];
+        const firstTodo = st.findIndex(v => v === 0);
+        return labels.map((l, i) => {
+            const state = st[i] === 1 ? 'd' : (st[i] === 2 ? 'n' : (i === firstTodo ? 'n' : ''));
+            const cls = state === 'd' ? 'bg-emerald-600 text-white' : (state === 'n' ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-slate-200 text-slate-500');
+            const ico = st[i] === 1 ? '✓' : (st[i] === 2 ? '✦' : (i + 1));
+            return `<div><div class="w-6 h-6 rounded-full mx-auto mb-1 flex items-center justify-center text-[10px] font-bold ${cls}">${ico}</div><div class="text-[9px] ${state ? 'text-slate-800 font-bold' : 'text-slate-400 font-semibold'}">${l}</div></div>`;
+        }).join('');
+    }
+
+    function detailNextStep(lunas, galeri, seleksi, edit) {
+        if (!lunas) return '➡ Berikutnya: tunggu pelunasan klien';
+        if (!galeri) return '➡ Berikutnya: buat galeri & Drive';
+        if (!seleksi) return '➡ Berikutnya: klien memilih foto';
+        if (!edit) return '➡ Berikutnya: mulai proses edit';
+        if (edit === 'PROSES') return '➡ Berikutnya: selesaikan edit sebelum deadline';
+        return '🎉 Semua tahap sudah selesai';
+    }
+
+    window.copyDetailText = function (txt) {
+        if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => showToast('Link portal tersalin'));
+    };
+
+    window.onClientNoteInput = function (ta) {
+        const s = document.getElementById('clientNoteSaved');
+        if (s) s.textContent = 'Menyimpan...';
+        clearTimeout(noteTimer);
+        noteTimer = setTimeout(async () => {
+            const nama = ta.getAttribute('data-nama');
+            try {
+                const { error } = await supabaseGalleryClient.from('client_notes').upsert(
+                    { key: keyNama(nama), nama, note: ta.value, updated_at: new Date().toISOString() },
+                    { onConflict: 'key' }
+                );
+                if (s) s.textContent = error ? 'Gagal menyimpan (cek tabel client_notes)' : '✓ Tersimpan';
+            } catch (e) { if (s) s.textContent = 'Gagal menyimpan'; }
+        }, 700);
+    };
+
+    async function enrichClientDetail() {
+        const c = window._selectedClientObject;
+        const content = document.getElementById('clientDetailPageContent');
+        if (!c || !content) return;
+        const token = ++detailToken;
+        content.querySelectorAll('[data-enrich]').forEach(e => e.remove());
+
+        const nama = String(c.nama || '').trim();
+        const key = keyNama(nama);
+        const iso = cleanToISODate(c.tanggal);
+
+        // Data dari Supabase (galeri, seleksi, edit, chat FG, catatan)
+        let sup = null, conf = null, note = '';
+        if (typeof supabaseGalleryClient !== 'undefined' && supabaseGalleryClient) {
+            try {
+                const [r1, r2, r3] = await Promise.all([
+                    supabaseGalleryClient.from('clients').select('*').ilike('nama', nama.replace(/[%_]/g, '')).order('created_at', { ascending: false }).limit(1),
+                    supabaseGalleryClient.from('fg_confirm').select('*').eq('nama', nama).eq('tanggal', iso).limit(1),
+                    supabaseGalleryClient.from('client_notes').select('note').eq('key', key).limit(1)
+                ]);
+                sup = (r1.data && r1.data[0]) || null;
+                conf = (r2.data && r2.data[0]) || null;
+                note = (r3.data && r3.data[0]) ? (r3.data[0].note || '') : '';
+            } catch (e) { console.log('detail fetch error', e); }
+        }
+        if (token !== detailToken) return; // pengguna sudah pindah halaman
+
+        const header = content.firstElementChild && content.firstElementChild.firstElementChild;
+        if (!header) return;
+
+        // ---- Pembayaran ----
+        const h = parseInt(c.harga) || 0;
+        const dp = parseInt(c.dp) || 0;
+        const lunas = (c.payment || '').toUpperCase().trim() === 'LUNAS';
+        const sisa = lunas ? 0 : Math.max(0, h - dp);
+
+        // ---- Posisi alur ----
+        const galeri = !!(sup && sup.drive_link);
+        const seleksi = !!(sup && (sup.status_selection || '').toLowerCase() === 'submitted');
+        const edit = sup ? (sup.edit_status || '').toUpperCase() : '';
+        const st = [1, 1, lunas ? 1 : 0, galeri ? 1 : 0, seleksi ? 1 : 0, edit === 'SELESAI' ? 1 : (edit === 'PROSES' ? 2 : 0), edit === 'SELESAI' ? 1 : 0];
+
+        let editVal = 'Belum dimulai', editTone = 'todo';
+        if (edit === 'PROSES') {
+            editTone = 'run';
+            editVal = 'Berjalan';
+            if (sup.edit_deadline) {
+                const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+                const left = Math.round((parseISOLocal(sup.edit_deadline) - t0) / 86400000);
+                editVal += left < 0 ? ` • terlambat ${Math.abs(left)} hari` : (left === 0 ? ' • deadline hari ini' : ` • deadline ${left} hari lagi`);
+            }
+        } else if (edit === 'SELESAI') { editTone = 'ok'; editVal = 'Selesai'; }
+
+        const copied = !!(conf && conf.chat_copied_at);
+        const copiedJam = copied ? new Date(conf.chat_copied_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        // ---- Aksi cepat ----
+        const waRaw = getClientWhatsAppNumber(nama, c.noWa);
+        const waNum = digitsOf(waRaw).replace(/^0/, '62');
+        const portalLink = `${location.origin}/pay.html?nama=${encodeURIComponent(nama)}`;
+        const galleryLink = (sup && sup.slug && typeof GALLERY_BASE_DOMAIN !== 'undefined') ? `${GALLERY_BASE_DOMAIN}/${sup.slug}` : '';
+        const btnBase = 'py-2.5 px-2 font-bold text-[11px] rounded-xl text-center transition active:scale-95 ';
+        const off = 'bg-slate-100 text-slate-400 pointer-events-none';
+
+        // ---- Riwayat / repeat ----
+        const phone = digitsOf(waRaw).slice(-9);
+        const hist = (typeof cachedClients !== 'undefined' ? cachedClients : []).filter(x => {
+            if (!x || !x.nama) return false;
+            const same = keyNama(x.nama) === key;
+            const samePhone = phone.length >= 9 && digitsOf(x.noWa || x.no_wa || '').slice(-9) === phone;
+            if (!same && !samePhone) return false;
+            return !(same && x.tanggal === c.tanggal && (x.sheetName || '') === (c.sheetName || ''));
+        }).sort((a, b) => cleanToISODate(b.tanggal).localeCompare(cleanToISODate(a.tanggal)));
+        const isRepeat = hist.length > 0;
+
+        const histHtml = isRepeat
+            ? hist.map(x => {
+                const l = (x.payment || '').toUpperCase().trim() === 'LUNAS';
+                return `<div class="flex justify-between gap-2 py-2 border-b border-slate-100 last:border-0 text-xs"><div><b class="text-slate-800">${esc(x.paket || '-')}</b><div class="text-slate-400">${esc(x.tanggal || '-')} • ${esc(x.kampus || 'Umum')}</div></div><div class="text-right"><b class="text-slate-800">${rupiah(x.harga)}</b><div class="${l ? 'text-emerald-600' : 'text-amber-600'} font-semibold">${l ? 'Lunas' : esc(x.payment || 'DP')}</div></div></div>`;
+            }).join('')
+            : '<div class="py-2 text-xs text-slate-400">Belum ada booking lain atas nama atau nomor WA ini.</div>';
+
+        const html = `
+            <div data-enrich class="space-y-5 text-xs">
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">💰 Pembayaran
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${lunas ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'}">${lunas ? 'LUNAS' : 'BELUM LUNAS'}</span></h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-[9px] font-bold uppercase text-slate-400">Paket ${esc(c.paket || '-')}</div><b class="text-slate-900">${rupiah(h)}</b></div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-[9px] font-bold uppercase text-slate-400">DP Terbayar</div><b class="text-emerald-600">${rupiah(lunas ? h : dp)}</b></div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-[9px] font-bold uppercase text-slate-400">Sisa Tagihan</div><b class="${lunas ? 'text-emerald-600' : 'text-rose-600'}">${rupiah(sisa)}</b></div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-900 text-sm">🧭 Posisi Klien dalam Alur</h4>
+                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <div class="grid grid-cols-7 gap-0.5 text-center">${detailSteps(st)}</div>
+                        <div class="mt-3 px-3 py-2 bg-blue-50 text-blue-700 font-bold rounded-xl">${detailNextStep(lunas, galeri, seleksi, edit)}</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-3 pt-3 border-t border-slate-200">
+                            ${detailRow(seleksi ? 'ok' : (galeri ? 'wait' : 'todo'), 'Seleksi foto', seleksi ? 'Sudah dipilih klien' : (galeri ? 'Menunggu klien memilih' : 'Galeri belum dibuat'))}
+                            ${detailRow(editTone, 'Edit foto', editVal)}
+                            ${detailRow(copied ? 'ok' : 'wait', 'Fotografer', copied ? `Sudah salin chat (${copiedJam})` : 'Belum salin chat')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-900 text-sm">⚡ Aksi Cepat</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <a ${waNum.length >= 9 ? `href="https://wa.me/${waNum}" target="_blank"` : ''} class="${btnBase}${waNum.length >= 9 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : off}">💬 Chat Klien</a>
+                        <button data-t="${esc(portalLink)}" onclick="copyDetailText(this.dataset.t)" class="${btnBase}bg-slate-900 hover:bg-black text-white">🔗 Salin Link Portal</button>
+                        <a ${galeri ? `href="${esc(sup.drive_link)}" target="_blank"` : ''} class="${btnBase}${galeri ? 'bg-blue-600 hover:bg-blue-700 text-white' : off}">📁 Buka Drive</a>
+                        <a ${galleryLink ? `href="${esc(galleryLink)}" target="_blank"` : ''} class="${btnBase}${galleryLink ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : off}">🖼 Buka Galeri</a>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-2">🗂 Riwayat Klien Ini ${isRepeat ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">Repeat</span>' : ''}</h4>
+                    <div class="px-3 py-1 bg-slate-50 border border-slate-200 rounded-2xl">${histHtml}</div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h4 class="font-bold text-slate-900 text-sm">📝 Catatan Internal</h4>
+                    <textarea data-nama="${esc(nama)}" oninput="onClientNoteInput(this)" rows="3" placeholder="Catatan untuk admin: permintaan khusus, riwayat reschedule, dll." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-slate-800">${esc(note)}</textarea>
+                    <div id="clientNoteSaved" class="text-[10px] text-emerald-600 font-semibold h-3"></div>
+                </div>
+            </div>`;
+
+        header.insertAdjacentHTML('afterend', html);
+
+        // Label Repeat di samping nama
+        const nameEl = content.querySelector('h3');
+        if (nameEl && isRepeat && !nameEl.querySelector('[data-enrich-chip]')) {
+            nameEl.insertAdjacentHTML('beforeend', ` <span data-enrich-chip class="align-middle text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">⭐ Repeat ×${hist.length + 1}</span>`);
+        }
+    }
+
+    const originalOpenDetail = window.openClientDetailModal;
+    if (typeof originalOpenDetail === 'function') {
+        window.openClientDetailModal = function (idx) {
+            originalOpenDetail(idx);
+            enrichClientDetail();
+        };
+    }
+
     // ---------- Jalankan ----------
     injectUI();
     fetchEditClients(false);
