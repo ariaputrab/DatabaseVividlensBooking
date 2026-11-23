@@ -249,6 +249,150 @@
     window.renderEditList = renderEditList;
     window.setEditStatus = setEditStatus;
 
+    // ---------- Panel "Link untuk Fotografer" di tab Reminder H-1 ----------
+    const FG_PAGE = location.origin + '/fg.html';
+    window._fgMsgs = {};
+    window._fgNames = {};
+
+    function tomorrowISO() {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return dateToISO(d);
+    }
+
+    function injectFgLinkPanel() {
+        if (typeof activeScheduleSubTab === 'undefined' || activeScheduleSubTab !== 'tomorrow') return;
+        const box = document.getElementById('scheduleCardsContainer');
+        if (!box || typeof cachedClients === 'undefined') return;
+
+        const tgl = tomorrowISO();
+        const jobs = cachedClients.filter(c => cleanToISODate(c.tanggal) === tgl);
+        if (jobs.length === 0) return;
+
+        const byFg = {};
+        jobs.forEach(c => {
+            const f = String(c.fg || 'Raihan').trim();
+            byFg[f] = (byFg[f] || 0) + 1;
+        });
+
+        const rows = Object.keys(byFg).map((f, i) => {
+            const link = `${FG_PAGE}?fg=${encodeURIComponent(f)}&tgl=${tgl}`;
+            window._fgMsgs[i] = `Halo kak ${f} 👋\nIni jadwal, format chat ke klien, dan link Drive untuk sesi besok (${byFg[f]} sesi):\n${link}\n\nMohon dicek ya kak 🙏`;
+            window._fgNames[i] = { fg: f, names: jobs.filter(c => String(c.fg || 'Raihan').trim() === f).map(c => c.nama) };
+            return `
+                <div data-fgrow="${i}" class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                    <div>
+                        <span class="font-bold text-xs text-slate-800">${f}</span>
+                        <span class="text-[11px] text-slate-500 block">${byFg[f]} sesi besok</span>
+                        <span data-fglinkchip class="text-[10px] font-bold text-amber-700 hidden">📤 Link terkirim ke fotografer</span>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="copyFgMsg(${i}, this)" class="py-1.5 px-3 bg-slate-900 hover:bg-black text-white font-bold text-[11px] rounded-lg active:scale-95"><i class="fa-solid fa-copy mr-1"></i> Salin Pesan</button>
+                        <a href="${link}" target="_blank" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg">Lihat</a>
+                    </div>
+                </div>`;
+        }).join('');
+
+        box.insertAdjacentHTML('afterbegin', `
+            <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-2">
+                <div>
+                    <span class="text-xs font-bold text-blue-900 block"><i class="fa-solid fa-link mr-1"></i> Kirim ke Fotografer / Freelance</span>
+                    <span class="text-[11px] text-blue-700">Satu link per fotografer berisi jadwal, format chat klien, dan folder Drive.</span>
+                </div>
+                ${rows}
+            </div>`);
+    }
+
+    window.copyFgMsg = function (i, btn) {
+        const text = window._fgMsgs[i];
+        const done = () => {
+            const o = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Tersalin!';
+            setTimeout(() => btn.innerHTML = o, 1500);
+        };
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => { done(); markLinkSent(i); });
+    };
+
+    // ---------- Status konfirmasi FG (tersimpan di Supabase: tabel fg_confirm) ----------
+    const keyNama = s => String(s || '').toLowerCase().trim();
+    const unescNama = s => s.replace(/\\'/g, "'").replace(/&quot;/g, '"');
+
+    async function markLinkSent(i) {
+        const info = window._fgNames[i];
+        if (!info || typeof supabaseGalleryClient === 'undefined' || !supabaseGalleryClient) return;
+        const tgl = tomorrowISO();
+        const now = new Date().toISOString();
+        try {
+            await supabaseGalleryClient.from('fg_confirm').upsert(
+                info.names.map(n => ({ nama: n, tanggal: tgl, fg: info.fg, link_sent_at: now })),
+                { onConflict: 'nama,tanggal' }
+            );
+            decorateFgStatus();
+        } catch (e) { console.log('fg_confirm error', e); }
+    }
+
+    async function decorateFgStatus() {
+        if (typeof activeScheduleSubTab === 'undefined' || activeScheduleSubTab !== 'tomorrow') return;
+        if (typeof supabaseGalleryClient === 'undefined' || !supabaseGalleryClient) return;
+        const box = document.getElementById('scheduleCardsContainer');
+        if (!box) return;
+
+        let rows = [];
+        try {
+            const { data } = await supabaseGalleryClient.from('fg_confirm').select('*').eq('tanggal', tomorrowISO());
+            rows = data || [];
+        } catch (e) { return; }
+        const map = {};
+        rows.forEach(r => { map[keyNama(r.nama)] = r; });
+
+        // Kartu klien: tombol Chat FG + chip status
+        box.querySelectorAll('button[onclick*="prepareAndShowFGChat"]').forEach(btn => {
+            const m = (btn.getAttribute('onclick') || '').match(/markFGSent\('(.*?)'\);/);
+            if (!m) return;
+            const st = map[keyNama(unescNama(m[1]))];
+            const card = btn.closest('.p-4');
+            if (card) {
+                card.querySelectorAll('[data-fgchip]').forEach(e => e.remove());
+                const chipRow = card.querySelector('.flex-wrap');
+                if (st && chipRow) {
+                    let html = '';
+                    if (st.link_sent_at) html += '<span data-fgchip class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">📤 Link FG terkirim</span>';
+                    if (st.chat_copied_at) {
+                        const jam = new Date(st.chat_copied_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                        html += `<span data-fgchip class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">✅ FG sudah salin chat (${jam})</span>`;
+                    }
+                    chipRow.insertAdjacentHTML('beforeend', html);
+                }
+            }
+            if (st && st.chat_copied_at) {
+                btn.className = 'py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1 active:scale-95';
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> FG sudah salin';
+            }
+        });
+
+        // Baris panel fotografer: tanda link terkirim
+        document.querySelectorAll('[data-fgrow]').forEach(row => {
+            const info = window._fgNames[row.getAttribute('data-fgrow')];
+            const chip = row.querySelector('[data-fglinkchip]');
+            if (!info || !chip) return;
+            const sent = info.names.every(n => map[keyNama(n)] && map[keyNama(n)].link_sent_at);
+            chip.classList.toggle('hidden', !sent);
+        });
+    }
+
+    // Segarkan status tiap 20 detik saat tab Jadwal Sesi terbuka
+    setInterval(() => {
+        const sec = document.getElementById('sectionTodaySchedule');
+        if (sec && !sec.classList.contains('hidden')) decorateFgStatus();
+    }, 20000);
+
+    const originalRenderSchedule = window.renderCombinedSchedule;
+    window.renderCombinedSchedule = function () {
+        originalRenderSchedule.apply(this, arguments);
+        injectFgLinkPanel();
+        decorateFgStatus();
+    };
+
     // ---------- Jalankan ----------
     injectUI();
     fetchEditClients(false);
