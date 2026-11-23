@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Jadwal Fotografer - VIVIDLENS</title>
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://script.googleusercontent.com">
+    <link rel="preconnect" href="https://aizhweokxpxfrczqsuik.supabase.co">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,6 +28,7 @@
             </div>
         </div>
         <p id="hdDate" class="text-xs text-slate-300 mt-2"></p>
+        <p id="syncInfo" class="text-[10px] text-slate-400 mt-1"></p>
     </div>
 
     <div id="jobList" class="space-y-4">
@@ -108,47 +112,15 @@
         } catch (e) { console.log('fg_confirm error', e); }
     }
 
-    async function init() {
+    function renderJobs(data) {
         const box = document.getElementById('jobList');
-        if (!fgName) {
-            document.getElementById('hdTitle').textContent = 'Link tidak valid';
-            box.innerHTML = '<div class="p-6 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-500">Link ini belum berisi nama fotografer. Minta link terbaru ke admin ya.</div>';
+        const jobs = data.jobs || [], driveMap = data.driveMap || {}, noteMap = data.noteMap || {};
+        window._chats = {};
+        window._jobs = {};
+        if (jobs.length === 0) {
+            box.innerHTML = '<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-400">Tidak ada jadwal untuk kamu pada tanggal ini.</div>';
             return;
         }
-        document.getElementById('hdTitle').textContent = `Halo, ${fgName}! 👋`;
-
-        const now = new Date();
-        const todayISO = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-        if (tglParam) {
-            const d = new Date(tglParam + 'T00:00:00');
-            document.getElementById('hdDate').textContent = 'Jadwal sesi: ' + d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        } else {
-            document.getElementById('hdDate').textContent = 'Semua jadwal sesi kamu yang akan datang';
-        }
-
-        try {
-            const [res, drv, nts] = await Promise.all([
-                fetch(SCRIPT_URL).then(r => r.json()),
-                sb.from('clients').select('nama, drive_link').limit(1000),
-                sb.from('fg_confirm').select('nama, tanggal, note').not('note', 'is', null)
-            ]);
-            const clients = (res && res.clients) ? res.clients : [];
-            const driveMap = {};
-            (drv.data || []).forEach(r => { if (r.nama && r.drive_link) driveMap[r.nama.toLowerCase().trim()] = r.drive_link; });
-            const noteMap = {};
-            (nts.data || []).forEach(r => { if (r.nama && r.note && r.note.trim()) noteMap[r.nama.toLowerCase().trim() + '|' + r.tanggal] = r.note; });
-
-            const jobs = clients
-                .filter(c => (c.fg || '').toLowerCase().trim() === fgName.toLowerCase())
-                .map(c => ({ ...c, iso: toISO(c.tanggal) }))
-                .filter(c => tglParam ? c.iso === tglParam : c.iso >= todayISO)
-                .sort((a, b) => a.iso.localeCompare(b.iso) || (a.jam || '').localeCompare(b.jam || ''));
-
-            if (jobs.length === 0) {
-                box.innerHTML = '<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-400">Tidak ada jadwal untuk kamu pada tanggal ini.</div>';
-                return;
-            }
-
             box.innerHTML = jobs.map((c, i) => {
                 const chat = buildChat(c);
                 window._chats[i] = chat;
@@ -188,8 +160,82 @@
                     </div>
                 </div>`;
             }).join('');
+    }
+
+    function skeleton() {
+        const card = `<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 animate-pulse">
+            <div class="flex gap-2"><div class="h-5 w-28 bg-slate-200 rounded"></div><div class="h-5 w-14 bg-slate-200 rounded"></div></div>
+            <div class="h-5 w-2/3 bg-slate-200 rounded"></div>
+            <div class="h-3 w-1/2 bg-slate-100 rounded"></div>
+            <div class="h-10 bg-slate-100 rounded-xl"></div>
+            <div class="h-32 bg-slate-100 rounded-xl"></div>
+            <div class="flex gap-2"><div class="h-10 flex-1 bg-slate-200 rounded-xl"></div><div class="h-10 flex-1 bg-slate-200 rounded-xl"></div></div>
+        </div>`;
+        return card;
+    }
+
+    function showSync(text) {
+        const el = document.getElementById('syncInfo');
+        if (el) el.textContent = text || '';
+    }
+
+    async function init() {
+        const box = document.getElementById('jobList');
+        if (!fgName) {
+            document.getElementById('hdTitle').textContent = 'Link tidak valid';
+            box.innerHTML = '<div class="p-6 bg-white border border-slate-200 rounded-2xl text-center text-xs text-slate-500">Link ini belum berisi nama fotografer. Minta link terbaru ke admin ya.</div>';
+            return;
+        }
+        document.getElementById('hdTitle').textContent = `Halo, ${fgName}! 👋`;
+
+        const now = new Date();
+        const todayISO = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        if (tglParam) {
+            const d = new Date(tglParam + 'T00:00:00');
+            document.getElementById('hdDate').textContent = 'Jadwal sesi: ' + d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        } else {
+            document.getElementById('hdDate').textContent = 'Semua jadwal sesi kamu yang akan datang';
+        }
+
+        // 1) Tampilkan data tersimpan lebih dulu (instan), lalu perbarui di latar belakang
+        const cacheKey = `vl_fg_${fgName.toLowerCase()}_${tglParam || 'all'}`;
+        let hasCache = false;
+        try {
+            const raw = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+            if (raw && raw.data && (Date.now() - raw.t) < 24 * 3600 * 1000) {
+                renderJobs(raw.data);
+                hasCache = true;
+                showSync('Memperbarui data...');
+            }
+        } catch (e) {}
+        if (!hasCache) box.innerHTML = skeleton();
+
+        // 2) Ambil data terbaru
+        try {
+            const [res, drv, nts] = await Promise.all([
+                fetch(SCRIPT_URL).then(r => r.json()),
+                sb.from('clients').select('nama, drive_link').limit(1000),
+                sb.from('fg_confirm').select('nama, tanggal, note').not('note', 'is', null)
+            ]);
+            const clients = (res && res.clients) ? res.clients : [];
+            const driveMap = {};
+            (drv.data || []).forEach(r => { if (r.nama && r.drive_link) driveMap[r.nama.toLowerCase().trim()] = r.drive_link; });
+            const noteMap = {};
+            (nts.data || []).forEach(r => { if (r.nama && r.note && r.note.trim()) noteMap[r.nama.toLowerCase().trim() + '|' + r.tanggal] = r.note; });
+
+            const jobs = clients
+                .filter(c => (c.fg || '').toLowerCase().trim() === fgName.toLowerCase())
+                .map(c => ({ ...c, iso: toISO(c.tanggal) }))
+                .filter(c => tglParam ? c.iso === tglParam : c.iso >= todayISO)
+                .sort((a, b) => a.iso.localeCompare(b.iso) || (a.jam || '').localeCompare(b.jam || ''));
+
+            const data = { jobs, driveMap, noteMap };
+            renderJobs(data);
+            try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
+            showSync('');
         } catch (e) {
-            box.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs">Gagal memuat jadwal. Coba refresh halaman.</div>';
+            if (!hasCache) box.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs">Gagal memuat jadwal. Coba refresh halaman.</div>';
+            else showSync('Tidak bisa memperbarui, menampilkan data terakhir.');
         }
     }
 
