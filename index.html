@@ -11,20 +11,76 @@
     <!-- Library HTML to PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- PROTEKSI LOKAL & LOGOUT GIMMICK -->
+    <!-- PIN GATE: PIN wajib diisi setiap web dibuka. Hilang otomatis saat tab/browser ditutup -->
+    <style>
+        html.pin-locked body > *:not(#pinGate) { display: none !important; }
+        #pinGate { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 1rem; background: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; }
+        #pinGate .pin-card { width: 100%; max-width: 340px; padding: 2rem 1.5rem; border-radius: 1.75rem; background: rgba(15,23,42,.85); border: 1px solid rgba(51,65,85,.7); text-align: center; color: #f1f5f9; }
+        #pinGate h1 { margin: .75rem 0 .25rem; font-size: 1.15rem; font-weight: 800; letter-spacing: .02em; }
+        #pinGate p { margin: 0 0 1.25rem; font-size: .7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
+        #pinGate input { width: 100%; box-sizing: border-box; padding: .9rem 1rem; border-radius: 1rem; border: 1px solid #334155; background: rgba(2,6,23,.6); color: #fff; font-size: 1.4rem !important; letter-spacing: .5em; text-align: center; outline: none; }
+        #pinGate input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+        #pinGate .pin-err { height: 1.1rem; margin-top: .75rem; font-size: .75rem; color: #fb7185; }
+        #pinGate .shake { animation: pinShake .35s; }
+        @keyframes pinShake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    </style>
     <script>
-        // Cek apakah sudah login via memori browser
-        if (localStorage.getItem('vividlens_logged_in') !== 'true') {
-            window.location.href = '/login.html';
-        }
+        (function () {
+            // ===== GANTI PIN DI SINI =====
+            const PIN_CODE = '123456';
+            // =============================
+            const SESSION_KEY = 'vividlens_pin_ok';
 
-        // Fungsi Logout
-        function handleLogout() {
-            if (confirm('Yakin ingin keluar dari dasbor VividLens?')) {
-                localStorage.removeItem('vividlens_logged_in');
-                window.location.href = '/login.html';
-            }
-        }
+            // Bersihkan sisa sistem login lama
+            try { localStorage.removeItem('vividlens_logged_in'); } catch (e) {}
+
+            // Tombol keluar: kunci lagi dan minta PIN
+            window.handleLogout = function () {
+                if (confirm('Kunci dasbor VividLens? PIN akan diminta lagi.')) {
+                    sessionStorage.removeItem(SESSION_KEY);
+                    location.reload();
+                }
+            };
+
+            // Sudah memasukkan PIN di tab ini (reload tetap aman, tab ditutup = hilang)
+            if (sessionStorage.getItem(SESSION_KEY) === '1') return;
+
+            document.documentElement.classList.add('pin-locked');
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const gate = document.createElement('div');
+                gate.id = 'pinGate';
+                gate.innerHTML =
+                    '<div class="pin-card" id="pinCard">' +
+                        '<h1>VIVIDLENS</h1>' +
+                        '<p>Masukkan PIN</p>' +
+                        '<input id="pinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="' + PIN_CODE.length + '" autofocus>' +
+                        '<div class="pin-err" id="pinErr"></div>' +
+                    '</div>';
+                document.body.prepend(gate);
+
+                const input = document.getElementById('pinInput');
+                const card = document.getElementById('pinCard');
+                const err = document.getElementById('pinErr');
+                input.focus();
+
+                input.addEventListener('input', function () {
+                    input.value = input.value.replace(/\D/g, '');
+                    err.textContent = '';
+                    if (input.value.length < PIN_CODE.length) return;
+
+                    if (input.value === PIN_CODE) {
+                        sessionStorage.setItem(SESSION_KEY, '1');
+                        document.documentElement.classList.remove('pin-locked');
+                        gate.remove();
+                    } else {
+                        err.textContent = 'PIN salah';
+                        input.value = '';
+                        card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+                    }
+                });
+            });
+        })();
     </script>
 
     <style>
