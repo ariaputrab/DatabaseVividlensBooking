@@ -2,7 +2,7 @@
    VIVIDLENS - Menu "Status Edit" (patch untuk index.html)
    Dimuat SETELAH script utama di index.html.
    Status disimpan di Supabase (tabel clients) dan dibaca pay.html.
-   Tampilan: tabel mingguan (Senin-Minggu), satu baris per klien.
+   Tampilan: kartu per hari (Senin-Minggu), satu kartu per klien.
    ========================================================== */
 (function () {
     const EDIT_MAX_DAYS = 10;
@@ -81,7 +81,7 @@
         }
     }
 
-    // ---------- Render daftar (tabel mingguan) ----------
+    // ---------- Render daftar (tabel mingguan, gaya sama dgn tabel "Semua Booking") ----------
     let editWeekStart = null;
     const NAMA_HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const NAMA_BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -96,46 +96,59 @@
     function escE(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function sumNum(n, cls) {
-        return n ? `<b class="font-semibold ${cls}">${n}</b>` : '';
-    }
 
+    // Sel-sel satu klien: Klien | Status | Deadline (bar) | Aksi
     function editCells(c) {
         const sheet = findSheetClientByName(c.nama);
-        const isLunas = sheet ? (sheet.payment || '').toUpperCase().trim() === 'LUNAS' : null;
-        const done = c.state === 'selesai';
-        let status = '', deadline = '<span class="text-slate-300">-</span>', actions = '';
+        const belumLunas = sheet ? (sheet.payment || '').toUpperCase().trim() !== 'LUNAS' : false;
+        const late = c.state === 'proses' && c.daysLeft !== null && c.daysLeft < 0;
+        const badge = (cls, txt) => `<span class="px-2 py-0.5 rounded text-[10px] font-bold inline-block ${cls}">${txt}</span>`;
+
+        let status, deadline = '<span class="text-slate-300">-</span>', actions;
 
         if (c.state === 'siap') {
-            status = '<span class="inline-flex items-center gap-1.5 text-xs text-amber-700"><i class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></i>Siap diproses</span>';
-            actions = `<button onclick="setEditStatus('${c.slug}','PROSES')" class="text-xs font-semibold text-blue-600 hover:underline">Mulai edit</button>`;
+            status = badge('bg-amber-100 text-amber-800', 'Siap Diproses');
+            actions = `<button onclick="setEditStatus('${c.slug}','PROSES')" class="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 whitespace-nowrap"><i class="fa-solid fa-play text-[9px] mr-1"></i> Mulai Edit</button>`;
         } else if (c.state === 'proses') {
-            const late = c.daysLeft !== null && c.daysLeft < 0;
-            status = `<span class="inline-flex items-center gap-1.5 text-xs ${late ? 'text-rose-600' : 'text-blue-600'}"><i class="w-1.5 h-1.5 rounded-full ${late ? 'bg-rose-500' : 'bg-blue-500'} inline-block"></i>Sedang diedit</span>`;
+            status = late ? badge('bg-rose-100 text-rose-800', 'Terlambat') : badge('bg-blue-100 text-blue-800', 'Sedang Diedit');
+
             if (c.daysLeft !== null) {
-                const cls = late ? 'text-rose-600' : (c.daysLeft <= 3 ? 'text-amber-700' : 'text-slate-500');
+                // bar = seberapa jauh waktu 10 hari sudah terpakai
+                const used = late ? 100 : Math.min(100, Math.max(4, ((EDIT_MAX_DAYS - c.daysLeft) / EDIT_MAX_DAYS) * 100));
+                const barCls = late ? 'bg-rose-500' : (c.daysLeft <= 3 ? 'bg-amber-500' : 'bg-blue-500');
+                const txtCls = late ? 'text-rose-600' : (c.daysLeft <= 3 ? 'text-amber-700' : 'text-slate-700');
                 const txt = late ? `Telat ${Math.abs(c.daysLeft)} hari` : (c.daysLeft === 0 ? 'Hari ini' : `Sisa ${c.daysLeft} hari`);
-                deadline = `<span class="text-xs ${cls}">${txt}</span>`;
+                const batas = c.deadline ? `${c.deadline.getDate()} ${NAMA_BULAN[c.deadline.getMonth()].slice(0, 3)}` : '';
+                deadline = `
+                    <div class="min-w-[130px]">
+                        <div class="flex items-baseline justify-between gap-2 mb-1">
+                            <span class="text-[11px] font-bold ${txtCls}">${txt}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${batas}</span>
+                        </div>
+                        <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full ${barCls}" style="width:${used}%"></div>
+                        </div>
+                    </div>`;
             } else {
-                deadline = '<span class="text-xs text-slate-400">Belum diset</span>';
+                deadline = '<span class="text-[11px] text-slate-400">Belum diset</span>';
             }
+
             actions = `
-                <button onclick="setEditStatus('${c.slug}','SELESAI')" class="text-xs font-semibold text-emerald-600 hover:underline">Selesai</button>
-                <button onclick="setEditStatus('${c.slug}','RESET')" title="Batalkan" aria-label="Batalkan edit" class="text-slate-400 hover:text-slate-700 text-xs"><i class="fa-solid fa-rotate-left"></i></button>`;
+                <button onclick="setEditStatus('${c.slug}','SELESAI')" class="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 whitespace-nowrap"><i class="fa-solid fa-check text-[10px] mr-1"></i> Selesai</button>
+                <button onclick="setEditStatus('${c.slug}','RESET')" title="Batalkan" aria-label="Batalkan edit" class="py-2 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition ml-1.5"><i class="fa-solid fa-rotate-left text-xs"></i></button>`;
         } else {
-            status = '<span class="inline-flex items-center gap-1.5 text-xs text-emerald-600"><i class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></i>Selesai</span>';
-            actions = `<button onclick="setEditStatus('${c.slug}','RESET')" title="Reset status" aria-label="Reset status" class="text-slate-400 hover:text-slate-700 text-xs"><i class="fa-solid fa-rotate-left"></i></button>`;
+            status = badge('bg-emerald-100 text-emerald-800', 'Selesai');
+            actions = `<button onclick="setEditStatus('${c.slug}','RESET')" title="Reset status" aria-label="Reset status" class="py-2 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition"><i class="fa-solid fa-rotate-left text-xs"></i></button>`;
         }
 
         return `
-            <td class="py-2 px-2 border-b border-slate-100">
-                <div class="text-[13px] truncate ${done ? 'text-slate-400' : 'text-slate-900 font-semibold'}">${escE(c.nama)}</div>
-                ${isLunas === false ? '<div class="text-[10px] text-rose-500">Belum lunas</div>' : ''}
+            <td class="py-3 px-3">
+                <span class="font-bold ${c.state === 'selesai' ? 'text-slate-400' : 'text-slate-900'} block">${escE(c.nama)}</span>
+                <span class="text-[11px] text-slate-400 font-medium">${escE(c.univ || 'Umum')}</span>${belumLunas ? ' <span class="text-[10px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded ml-1">Belum lunas</span>' : ''}
             </td>
-            <td class="py-2 px-2 border-b border-slate-100 text-xs text-slate-500">${escE(c.univ || 'Umum')}</td>
-            <td class="py-2 px-2 border-b border-slate-100">${status}</td>
-            <td class="py-2 px-2 border-b border-slate-100">${deadline}</td>
-            <td class="py-2 px-2 border-b border-slate-100"><div class="flex items-center justify-end gap-3">${actions}</div></td>`;
+            <td class="py-3 px-3 whitespace-nowrap">${status}</td>
+            <td class="py-3 px-3">${deadline}</td>
+            <td class="py-3 px-3 text-right whitespace-nowrap">${actions}</td>`;
     }
 
     function renderEditList() {
@@ -165,7 +178,6 @@
             badge.classList.toggle('hidden', siapCount === 0);
         }
 
-        // Kelompokkan per tanggal sesi
         const byDate = {};
         const noDate = [];
         items.forEach(i => {
@@ -179,84 +191,78 @@
         const order = { siap: 0, proses: 1, selesai: 2 };
         const sortFn = (a, b) => (order[a.state] - order[b.state]) || ((a.daysLeft ?? 999) - (b.daysLeft ?? 999));
 
-        // Judul minggu
         const we = new Date(editWeekStart);
         we.setDate(we.getDate() + 6);
         const sameMonth = editWeekStart.getMonth() === we.getMonth();
         const rentang = `${editWeekStart.getDate()}${sameMonth ? '' : ' ' + NAMA_BULAN[editWeekStart.getMonth()]} - ${we.getDate()} ${NAMA_BULAN[we.getMonth()]} ${we.getFullYear()}`;
 
-        let html = `
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div class="flex items-center gap-1">
-                    <button onclick="editWeekMove(-1)" aria-label="Minggu sebelumnya" class="w-7 h-7 rounded-lg text-slate-500 hover:bg-slate-100"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                    <span class="text-sm font-bold text-slate-900 px-1.5">${rentang}</span>
-                    <button onclick="editWeekMove(1)" aria-label="Minggu berikutnya" class="w-7 h-7 rounded-lg text-slate-500 hover:bg-slate-100"><i class="fa-solid fa-chevron-right text-xs"></i></button>
-                    <button onclick="editWeekNow()" class="text-xs text-slate-500 hover:text-slate-900 ml-2">Minggu ini</button>
-                </div>
-                <div class="flex flex-wrap gap-3 text-[11px] text-slate-500">
-                    <span class="inline-flex items-center gap-1"><i class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block"></i>Siap</span>
-                    <span class="inline-flex items-center gap-1"><i class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></i>Proses</span>
-                    <span class="inline-flex items-center gap-1"><i class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></i>Selesai</span>
-                    <span class="inline-flex items-center gap-1"><i class="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block"></i>Terlambat</span>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[600px]">
-                <colgroup><col style="width:17%"><col style="width:21%"><col style="width:10%"><col style="width:19%"><col style="width:12%"><col style="width:21%"></colgroup>
-                <thead>
-                    <tr class="text-[11px] text-slate-400 border-b border-slate-300">
-                        <th class="py-1.5 px-2 font-normal">Tanggal</th>
-                        <th class="py-1.5 px-2 font-normal">Klien</th>
-                        <th class="py-1.5 px-2 font-normal">Kampus</th>
-                        <th class="py-1.5 px-2 font-normal">Status</th>
-                        <th class="py-1.5 px-2 font-normal">Deadline</th>
-                        <th class="py-1.5 px-2 font-normal"></th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
+        // Kelompok per hari (hari tanpa sesi tidak ditampilkan)
         const todayKey = dateToISO(today);
+        const groups = [];
         for (let i = 0; i < 7; i++) {
             const d = new Date(editWeekStart);
             d.setDate(d.getDate() + i);
             const k = dateToISO(d);
-            const all = byDate[k] || [];
-            const rows = all.filter(x => filter === 'all' || x.state === filter).sort(sortFn);
-
-            const n = { siap: 0, proses: 0, selesai: 0, late: 0 };
-            all.forEach(x => { n[x.state]++; if (x.state === 'proses' && x.daysLeft !== null && x.daysLeft < 0) n.late++; });
-
+            const rows = (byDate[k] || []).filter(x => filter === 'all' || x.state === filter).sort(sortFn);
+            if (!rows.length) continue;
             const isToday = k === todayKey;
-            const dayCell = `
-                <td rowspan="${Math.max(1, rows.length)}" class="align-top py-2.5 px-2 border-b border-slate-300">
-                    <div class="text-[11px] text-slate-400">${NAMA_HARI[d.getDay()]}</div>
-                    <div class="text-lg font-bold leading-tight ${isToday ? 'text-blue-600' : 'text-slate-900'}">${d.getDate()}</div>
-                    <div class="flex gap-1.5 text-xs mt-0.5">${sumNum(n.siap, 'text-amber-600')}${sumNum(n.proses, 'text-blue-600')}${sumNum(n.selesai, 'text-emerald-600')}${sumNum(n.late, 'text-rose-600')}</div>
-                </td>`;
-
-            if (rows.length === 0) {
-                html += `<tr>${dayCell}<td colspan="5" class="py-2 px-2 border-b border-slate-300 text-xs text-slate-400">${all.length ? 'Tidak ada di filter ini' : 'Tidak ada sesi'}</td></tr>`;
-                continue;
-            }
-            rows.forEach((c, idx) => {
-                html += `<tr>${idx === 0 ? dayCell : ''}${editCells(c)}</tr>`;
+            groups.push({
+                rows,
+                dayHtml: `
+                    <span class="text-[10px] font-bold uppercase tracking-wider ${isToday ? 'text-blue-600' : 'text-slate-400'} block">${NAMA_HARI[d.getDay()].slice(0, 3)}</span>
+                    <span class="${isToday ? 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm' : 'text-lg text-slate-900'} font-bold leading-none mt-0.5">${d.getDate()}</span>
+                    <span class="text-[10px] text-slate-400 block mt-1">${rows.length} sesi</span>`
             });
         }
-        html += '</tbody></table></div>';
-
-        // Klien tanpa tanggal sesi (jarang, tapi jangan sampai hilang)
         const orphans = noDate.filter(x => filter === 'all' || x.state === filter).sort(sortFn);
         if (orphans.length) {
-            html += `
-                <div class="mt-4">
-                    <div class="text-[11px] text-slate-400 mb-1">Tanpa tanggal sesi</div>
-                    <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]"><tbody>${orphans.map(c => `<tr>${editCells(c)}</tr>`).join('')}</tbody></table>
-                    </div>
-                </div>`;
+            groups.push({ rows: orphans, dayHtml: '<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">Tanpa<br>tanggal</span>' });
         }
 
-        container.innerHTML = html;
+        let body = '';
+        groups.forEach(g => {
+            body += '<tbody class="divide-y divide-slate-100 border-b border-slate-200 last:border-b-0 text-xs text-slate-700 bg-white">';
+            g.rows.forEach((c, idx) => {
+                const dayCell = idx === 0 ? `<td rowspan="${g.rows.length}" class="align-top py-3 px-4 w-24 bg-slate-50/50 border-r border-slate-100">${g.dayHtml}</td>` : '';
+                body += `<tr class="hover:bg-slate-50/80 transition">${dayCell}${editCells(c)}</tr>`;
+            });
+            body += '</tbody>';
+        });
+        if (!groups.length) {
+            body = '<tbody><tr><td colspan="5" class="p-8 text-center text-slate-400 text-xs italic">Tidak ada sesi pada minggu ini.</td></tr></tbody>';
+        }
+
+        container.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <button onclick="editWeekMove(-1)" aria-label="Minggu sebelumnya" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center transition text-slate-700"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-900">${rentang}</h2>
+                    <button onclick="editWeekMove(1)" aria-label="Minggu berikutnya" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center transition text-slate-700"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                </div>
+                <button onclick="editWeekNow()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl transition">Minggu Ini</button>
+            </div>
+            <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="overflow-x-auto touch-scroll">
+                    <table class="w-full text-left border-collapse min-w-[640px]">
+                        <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                            <tr>
+                                <th class="py-3 px-4">Tanggal</th>
+                                <th class="py-3 px-3">Klien & Kampus</th>
+                                <th class="py-3 px-3">Status</th>
+                                <th class="py-3 px-3">Deadline</th>
+                                <th class="py-3 px-3 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        ${body}
+                    </table>
+                </div>
+            </div>`;
+    }
+
+    function setEditFilter(v) {
+        const sel = document.getElementById('filterEditStatus');
+        if (sel) sel.value = v;
+        renderEditList();
     }
 
     function editWeekMove(dir) {
@@ -327,6 +333,7 @@
     window.setEditStatus = setEditStatus;
     window.editWeekMove = editWeekMove;
     window.editWeekNow = editWeekNow;
+    window.setEditFilter = setEditFilter;
 
     // ==========================================================
     // STRIP FG DI TIAP KARTU REMINDER H-1
